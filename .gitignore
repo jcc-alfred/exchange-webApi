@@ -3,5 +3,3 @@ logs
 
 .idea
 *.iml
-
-core/Base/config.js
