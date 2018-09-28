@@ -313,6 +313,85 @@ class EntrustModel {
             throw error;
         }
     }
+
+    async getBuyEntrustListByCEId(coinExchangeId, refresh = false) {
+        try {
+
+            let cache = await Cache.init(config.cacheDB.order);
+            let ckey = config.cacheKey.Buy_Entrust + coinExchangeId;
+            if (await cache.exists(ckey) && !refresh) {
+                let buyRes = await cache.hgetall(ckey);
+                if (buyRes) {
+                    let data = [];
+                    for (let i in buyRes) {
+                        let item = buyRes[i];
+                        data.push(JSON.parse(item));
+                    }
+                    cache.close();
+                    return data;
+                }
+            }
+            let cnt = await DB.cluster('slave');
+            let sql = `SELECT * FROM m_entrust WHERE coin_exchange_id = ? and entrust_type_id = 1 and (entrust_status = 0 or entrust_status = 1) ORDER BY entrust_price DESC, entrust_id ASC LIMIT 20`;
+            let res = await cnt.execQuery(sql, coinExchangeId);
+            cnt.close();
+
+            let chRes = await Promise.all(res.map((info) => {
+                return cache.hset(
+                    ckey,
+                    info.entrust_id,
+                    info
+                )
+            }));
+
+            cache.close();
+
+            return res;
+
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getSellEntrustListByCEId(coinExchangeId, refresh = false) {
+        try {
+
+            let cache = await Cache.init(config.cacheDB.order);
+            let ckey = config.cacheKey.Sell_Entrust + coinExchangeId;
+            if (await cache.exists(ckey) && !refresh) {
+                let sellRes = await cache.hgetall(ckey);
+                if (sellRes) {
+                    let data = [];
+                    for (let i in sellRes) {
+                        let item = sellRes[i];
+                        data.push(JSON.parse(item));
+                    }
+                    cache.close();
+                    return data;
+                }
+            }
+
+            let cnt = await DB.cluster('slave');
+            let sql = `SELECT * FROM m_entrust WHERE coin_exchange_id = ? and entrust_type_id = 0 and (entrust_status = 0 or entrust_status = 1) ORDER BY entrust_price ASC, entrust_id ASC LIMIT 20`;
+            let res = await cnt.execQuery(sql, coinExchangeId);
+            cnt.close();
+
+            let chRes = await Promise.all(res.map((info) => {
+                return cache.hset(
+                    ckey,
+                    info.entrust_id,
+                    info
+                )
+            }));
+
+            cache.close();
+
+            return res;
+
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 module.exports = new EntrustModel();

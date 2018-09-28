@@ -233,4 +233,24 @@ router.post('/getEntrustList', async (req, res, next) => {
     }
 });
 
+router.post('/buyList', async (req, res, next) => {
+    try {
+        let data = await EntrustModel.getBuyEntrustListByCEId(req.body.coinExchangeId);
+        res.send({code: 1, msg: '', data: data});
+    } catch (error) {
+        res.status(500).end();
+        throw error;
+    }
+});
+
+router.post('/sellList', async (req, res, next) => {
+    try {
+        let data = await EntrustModel.getSellEntrustListByCEId(req.body.coinExchangeId);
+        res.send({code: 1, msg: '', data: data});
+    } catch (error) {
+        res.status(500).end();
+        throw error;
+    }
+});
+
 module.exports = router;
