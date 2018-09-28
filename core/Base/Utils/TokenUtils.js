@@ -40,7 +40,7 @@ let TokenUtils = {
             // }else{
             //     return false
             // }
-            return cdata;
+            return data;
         } catch (error) {
             return false;
         }
