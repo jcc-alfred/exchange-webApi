@@ -209,9 +209,9 @@ router.post('/doBatchEntrust',async(req,res,next)=>{
     let entrusts = req.body.data;
     let entrustIds = [];
 
-    if (entrusts.length > 300) {
-        return res.status(400).end();
-    }
+    // if (entrusts.length > 1000) {
+    //     return res.status(400).end();
+    // }
 
     let user_id = req.token.user_id;
     // let user_id = 144;
@@ -328,9 +328,9 @@ router.post('/doBatchCancelEntrust', async (req, res, next) => {
     let user_id = req.token.user_id;
     let entrust_sns = req.body.entrust_sns;
 
-    if (!entrust_sns || entrust_sns.length > 10) {
-        return res.status(400).end();
-    }
+    // if (!entrust_sns || entrust_sns.length > 10) {
+    //     return res.status(400).end();
+    // }
 
     for (let i = 0; i < entrust_sns.length; i++) {
         try {
