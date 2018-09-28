@@ -1,4 +1,4 @@
-const HOST = process.env.HOST || '54.169.107.53';
+const HOST = '54.169.107.53';
 const config = {
 
     socketDomain: `http://${HOST}:5000/`,
