@@ -266,7 +266,7 @@ router.post('/getEntrustList', async (req, res, next) => {
 
 router.post('/entrustList', async (req, res, next) => {
     try {
-        let buyList = await EntrustModel.getBuyEntrustListByCEId(data.coin_exchange_id);
+        let buyList = await EntrustModel.getBuyEntrustListByCEId(req.body.coinExchangeId);
         var newBuyList = Enumerable.from(buyList)
             .groupBy("parseFloat($.entrust_price)", null,
                 function (key, g) {
@@ -277,7 +277,7 @@ router.post('/entrustList', async (req, res, next) => {
                     }
                 }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
 
-        let sellList = await EntrustModel.getSellEntrustListByCEId(data.coin_exchange_id);
+        let sellList = await EntrustModel.getSellEntrustListByCEId(req.body.coinExchangeId);
         var newSellList = Enumerable.from(sellList)
             .groupBy("parseFloat($.entrust_price)", null,
                 function (key, g) {
