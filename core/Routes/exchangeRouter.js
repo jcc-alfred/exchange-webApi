@@ -232,7 +232,7 @@ router.post('/doBatchCancelEntrust',async(req,res,next)=>{
         return res.status(400).end();
     }
 
-    for (let i = 1; i <= entrust_sns.length; i++) {
+    for (let i = 0; i < entrust_sns.length; i++) {
         try {
             let result = await EntrustModel.cancelEntrust({
                 userId: user_id,
