@@ -392,6 +392,150 @@ class EntrustModel {
             throw error;
         }
     }
+  
+  async getKlineData(coinExchangeId,range,refresh=false){
+    try{
+      
+      let cache = await Cache.init(config.cacheDB.kline);
+      let ckey = config.cacheKey.KlineData_CEID_Range + coinExchangeId + '_' + range;
+      if(await cache.exists(ckey) && !refresh){
+        let cRes = await cache.hgetall(ckey);
+        if(cRes){
+          let data = [];
+          for (let i in cRes) {
+            let item = cRes[i];
+            data.push(JSON.parse(item));
+          }
+          cache.close();
+          return data;
+        }
+      }
+      let cnt =  await DB.cluster('slave');
+      let sql = '';
+      let minArr = [300000,900000,1800000];//5 15 30
+      let hourArr = [14400000,21600000,43200000];//4 6 12
+      if(minArr.includes(range)){
+        sql = ` SELECT DATE_ADD(DATE_FORMAT(create_time,'%Y-%m-%d %H:00:00'), INTERVAL FLOOR(EXTRACT(MINUTE FROM create_time)/{0})*{0} MINUTE) as datestamp,
+                FLOOR(UNIX_TIMESTAMP(DATE_ADD(DATE_FORMAT(create_time,'%Y-%m-%d %H:00:00'), INTERVAL FLOOR(EXTRACT(MINUTE FROM create_time)/{0})*{0} MINUTE))) as timestamp,
+                (
+                select trade_price from m_order where coin_exchange_id = {1} and
+                DATE_ADD(DATE_FORMAT(create_time,'%Y-%m-%d %H:00:00'), INTERVAL FLOOR(EXTRACT(MINUTE FROM create_time)/{0})*{0} MINUTE) = datestamp
+                ORDER BY create_time LIMIT 1
+                ) as open_price,
+                (
+                select trade_price from m_order where coin_exchange_id = {1} and
+                DATE_ADD(DATE_FORMAT(create_time,'%Y-%m-%d %H:00:00'), INTERVAL FLOOR(EXTRACT(MINUTE FROM create_time)/{0})*{0} MINUTE) = datestamp
+                ORDER BY create_time DESC LIMIT 1
+                ) as close_price,
+                MAX(trade_price) as high_price,
+                MIN(trade_price) as low_price,
+                SUM(trade_volume) as volume
+                FROM m_order as tr WHERE coin_exchange_id = {1}
+                GROUP BY datestamp,timestamp
+                ORDER BY timestamp `;
+        sql = Utils.formatString(sql,[range/60000,coinExchangeId]);
+      }else if(range == 60000){//1m
+        sql = `SELECT DATE_FORMAT(create_time,'%Y-%m-%d %H:%i:00') as datestamp,
+                FLOOR(UNIX_TIMESTAMP(DATE_FORMAT(create_time,'%Y-%m-%d %H:%i:00'))) as timestamp,
+                (
+                 select trade_price from m_order where coin_exchange_id = {0} and
+                 DATE_FORMAT(create_time,'%Y-%m-%d %H:%i:00') = datestamp
+                 ORDER BY create_time LIMIT 1
+                ) as open_price,
+                (
+                 select trade_price from m_order where coin_exchange_id = {0} and
+                 DATE_FORMAT(create_time,'%Y-%m-%d %H:%i:00') = datestamp
+                 ORDER BY create_time DESC LIMIT 1
+                ) as close_price,
+                MAX(trade_price) as high_price,
+                MIN(trade_price) as low_price,
+                SUM(trade_volume) as volume
+                FROM m_order as tr WHERE coin_exchange_id = {0}
+                GROUP BY datestamp,timestamp
+                ORDER BY timestamp`;
+        sql = Utils.formatString(sql,[coinExchangeId]);
+      }else if(range == 3600000){//1h
+        sql = `SELECT DATE_FORMAT(create_time,'%Y-%m-%d %H:00:00') as datestamp,
+                FLOOR(UNIX_TIMESTAMP(DATE_FORMAT(create_time,'%Y-%m-%d %H:00:00'))) as timestamp,
+                (
+                 select trade_price from m_order where coin_exchange_id = {0} and
+                 DATE_FORMAT(create_time,'%Y-%m-%d %H:00:00') = datestamp
+                 ORDER BY create_time LIMIT 1
+                ) as open_price,
+                (
+                 select trade_price from m_order where coin_exchange_id = {0} and
+                 DATE_FORMAT(create_time,'%Y-%m-%d %H:00:00') = datestamp
+                 ORDER BY create_time DESC LIMIT 1
+                ) as close_price,
+                MAX(trade_price) as high_price,
+                MIN(trade_price) as low_price,
+                SUM(trade_volume) as volume
+                FROM m_order as tr WHERE coin_exchange_id = {0}
+                GROUP BY datestamp,timestamp
+                ORDER BY timestamp`;
+        sql = Utils.formatString(sql,[coinExchangeId]);
+      }else if(range == 86400000){//1d
+        sql = `SELECT DATE_FORMAT(create_time,'%Y-%m-%d 00:00:00') as datestamp,
+                FLOOR(UNIX_TIMESTAMP(DATE_FORMAT(create_time,'%Y-%m-%d 00:00:00'))) as timestamp,
+                (
+                 select trade_price from m_order where coin_exchange_id = {0} and
+                 DATE_FORMAT(create_time,'%Y-%m-%d 00:00:00') = datestamp
+                 ORDER BY create_time LIMIT 1
+                ) as open_price,
+                (
+                 select trade_price from m_order where coin_exchange_id = {0} and
+                 DATE_FORMAT(create_time,'%Y-%m-%d 00:00:00') = datestamp
+                 ORDER BY create_time DESC LIMIT 1
+                ) as close_price,
+                MAX(trade_price) as high_price,
+                MIN(trade_price) as low_price,
+                SUM(trade_volume) as volume
+                FROM m_order as tr WHERE coin_exchange_id = {0}
+                GROUP BY datestamp,timestamp
+                ORDER BY timestamp`;
+        sql = Utils.formatString(sql,[coinExchangeId]);
+      }
+      else if(hourArr.includes(range)){
+        sql = ` SELECT DATE_ADD(DATE_FORMAT(create_time,'%Y-%m-%d 00:00:00'), INTERVAL FLOOR(EXTRACT(HOUR FROM create_time)/{0})*{0} HOUR) as datestamp,
+                FLOOR(UNIX_TIMESTAMP(DATE_ADD(DATE_FORMAT(create_time,'%Y-%m-%d 00:00:00'), INTERVAL FLOOR(EXTRACT(HOUR FROM create_time)/{0})*{0} HOUR))) as timestamp,
+                (
+                 select trade_price from m_order where coin_exchange_id = {1} and
+                 DATE_ADD(DATE_FORMAT(create_time,'%Y-%m-%d 00:00:00'), INTERVAL FLOOR(EXTRACT(HOUR FROM create_time)/{0})*{0} HOUR) = datestamp
+                 ORDER BY create_time LIMIT 1
+                ) as open_price,
+                (
+                 select trade_price from m_order where coin_exchange_id = {1} and
+                 DATE_ADD(DATE_FORMAT(create_time,'%Y-%m-%d 00:00:00'), INTERVAL FLOOR(EXTRACT(HOUR FROM create_time)/{0})*{0} HOUR) = datestamp
+                 ORDER BY create_time DESC LIMIT 1
+                ) as close_price,
+                MAX(trade_price) as high_price,
+                MIN(trade_price) as low_price,
+                SUM(trade_volume) as volume
+                FROM m_order as tr WHERE coin_exchange_id = {1}
+                GROUP BY datestamp,timestamp
+                ORDER BY timestamp `;
+        sql = Utils.formatString(sql,[range/3600000,coinExchangeId]);
+      }
+      
+      let res =  await cnt.execQuery(sql);
+      cnt.close();
+      
+      let chRes = await Promise.all(res.map((info)=>{
+        return cache.hset(
+          ckey,
+          info.timestamp,
+          info
+        )
+      }));
+      
+      cache.close();
+      
+      return res;
+      
+    }catch(error){
+      throw error;
+    }
+  }
 }
 
 module.exports = new EntrustModel();

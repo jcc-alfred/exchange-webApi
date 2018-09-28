@@ -90,6 +90,7 @@ app.use('/safe', require('./Routes/safeRouter'));
 app.use('/assets', require('./Routes/assetsRouter'));
 app.use('/exchange', require('./Routes/exchangeRouter'));
 app.use('/doc', require('./Routes/docRouter'));
+app.use('/market', require('./Routes/marketRouter'));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
