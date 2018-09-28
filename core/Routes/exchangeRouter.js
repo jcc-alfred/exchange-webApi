@@ -17,6 +17,8 @@ let EntrustModel = require('../Model/EntrustModel');
 let Cache = require('../Base/Data/Cache');
 let MQ = require('../Base/Data/MQ');
 
+let Enumerable = require('linq');
+
 //获取加密货币列表
 router.post('/getCoinList', async (req, res, next) => {
     try {
