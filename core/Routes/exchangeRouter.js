@@ -201,6 +201,101 @@ router.post('/doEntrust', async (req, res, next) => {
         throw error;
     }
 });
+
+//批量提交委托
+router.post('/doBatchEntrust',async(req,res,next)=>{
+    let entrusts = req.body.data;
+
+    if (entrusts.length > 300) {
+        return res.status(400).end();
+    }
+
+    let user_id = req.token.user_id;
+
+    for (let i = 0; i < entrusts.length; i++) {
+        try {
+            let userInfo = await UserModel.getUserById(user_id);
+            if(!userInfo.safe_pass){
+                res.send({code:0,msg:'您还未设置资金密码'});
+                return;
+            }
+            if (!entrusts[i].isExchangeSafe)
+            {
+                if(!entrusts[i].safePass || Utils.md5(entrusts[i].safePass) != userInfo.safe_pass){
+                    res.send({code:0,msg:'资金密码错误'});
+                    return;
+                }
+                UserSafePassLogModel.addSafePassLog(user_id);
+            }
+            let coinExchangeListRes =  await CoinModel.getCoinExchangeList();
+            let coinEx = coinExchangeListRes.find((item)=>item.coin_exchange_id == entrusts[i].coin_exchange_id);
+            if(coinEx.is_enable_trade !== 1 || userInfo.is_enable_trade !== 1){
+                res.send({code:0,msg:'暂不支持交易功能'});
+                return;
+            }
+            if(coinEx.entrust_min_price > entrusts[i].entrustPrice){
+                res.send({code:0,msg:'委托价格不能低于：' + coinEx.entrust_min_price});
+                return;
+            }
+            if(coinEx.entrust_min_amount > entrusts[i].entrustVolume){
+                res.send({code:0,msg:'委托数量不能低于：' + coinEx.entrust_min_amount});
+                return;
+            }
+            let assetsList =  await AssetsModel.getUserAssetsByUserId(user_id);
+            let assets = assetsList.find((item)=>item.coin_id == coinEx.coin_id);
+            let exchangeAssets = assetsList.find((item)=>item.coin_id == coinEx.exchange_coin_id);
+            if (entrusts[i].entrustTypeId == 1){
+                if (exchangeAssets.available < Utils.mul(entrusts[i].entrustPrice,entrusts[i].entrustVolume) || exchangeAssets.balance < Utils.mul(entrusts[i].entrustPrice,entrusts[i].entrustVolume)){
+                    res.send({code:0,msg:'委托数量大于可用数量'});
+                    return;
+                }
+            }
+            else if (entrusts[i].entrustTypeId == 0){
+                if (assets.available < entrusts[i].entrustVolume || assets.balance < entrusts[i].entrustVolume){
+                    res.send({code:0,msg:'委托数量大于可用数量'});
+                    return;
+                }
+            }
+            else{
+                res.send({code:0,msg:'参数错误'});
+                return;
+            }
+
+            //1. 交易时段
+            //2. 检验涨跌幅20%
+
+            let params = {
+                userId:user_id,
+                coinExchangeId:coinEx.coin_exchange_id,
+                entrustTypeId:entrusts[i].entrustTypeId,
+                coinId:coinEx.coin_id,
+                exchangeCoinId:coinEx.exchange_coin_id,
+                buyFeesRate:coinEx.buy_fees_rate,
+                sellFeesRate:coinEx.sell_fees_rate,
+                entrustPrice:entrusts[i].entrustPrice,
+                entrustVolume:entrusts[i].entrustVolume
+            };
+            let entrustRes = await EntrustModel.addEntrust(params);
+            if(entrustRes){
+                res.send({code:1,msg:'委托成功',data:{entrustId:entrustRes.entrust_id}});
+                MQ.push(config.MQKey.Entrust_Queue + coinEx.coin_exchange_id,{
+                        ...entrustRes
+                    ,comments:'发送委托了'
+            });
+            }else{
+                res.send({code:0,msg:'委托失败'});
+                return;
+            }
+
+        } catch (error) {
+            res.status(500).end();
+            throw error;
+        }
+    }
+
+    return res.send({code:1,msg:'操作成功'});
+});
+
 //取消委托
 router.post('/doCancelEntrust', async (req, res, next) => {
     try {
