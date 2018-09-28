@@ -1,0 +1,19 @@
+{
+    "apps": [
+        {
+            "name": "Melt_WebAPI",
+            "script": "./bin/www",
+            "exec_mode": "fork",
+            "watch": [
+                "core"
+            ],
+            "watch_options": {
+                "usePolling": true
+            },
+            "merge_logs": true,
+            "out_file"   : "./logs/out.log",
+            "error_file" : "./logs/err.log",
+            "log_date_format": "YYYY-MM-DD HH:mm:ss"
+        }
+    ]
+}
