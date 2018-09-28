@@ -223,6 +223,37 @@ router.post('/doCancelEntrust', async (req, res, next) => {
     }
 });
 
+//批量取消委托
+router.post('/doBatchCancelEntrust',async(req,res,next)=>{
+    let user_id = req.token.user_id;
+    let entrust_sns = req.body.entrust_sns;
+
+    if (!entrust_sns || entrust_sns.length > 10) {
+        return res.status(400).end();
+    }
+
+    for (let i = 1; i <= entrust_sns.length; i++) {
+        try {
+            let result = await EntrustModel.cancelEntrust({
+                userId: user_id,
+                entrustId: entrust_sns[i].entrustId,
+                coinExchangeId: entrust_sns[i].coinExchangeId,
+                entrustTypeId: entrust_sns[i].entrustTypeId
+            });
+
+            if (!(result > 0)) {
+                res.send({code:0,msg:'操作失败'});
+                return;
+            }
+        } catch (error) {
+            res.status(500).end();
+            throw error;
+        }
+    }
+
+    res.send({code:1,msg:'操作成功'});
+});
+
 router.post('/getEntrustList', async (req, res, next) => {
     try {
         let data = await EntrustModel.getEntrustListByUserId(req.token.user_id);
