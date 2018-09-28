@@ -1,6 +1,6 @@
 const config = {
 
-    socketDomain: 'http://54.169.107.53:5000/',
+    socketDomain: 'http://127.0.0.1:5000/',
 
     sys: {
         domain: 'getdax.com',     //域名
@@ -21,7 +21,7 @@ const config = {
 
     DB: {
         master: {
-            host: '54.169.107.53',
+            host: '127.0.0.1',
             user: 'root',
             password: 'gtdollar',
             database: 'MeltEx', // 前面建的user表位于这个数据库中
@@ -29,14 +29,14 @@ const config = {
             connectionLimit: 100,
         },
         slaves: [{
-            host: '54.169.107.53',
+            host: '127.0.0.1',
             user: 'root',
             password: 'gtdollar',
             database: 'MeltEx', // 前面建的user表位于这个数据库中
             port: 3306,
             connectionLimit: 100,
         }, {
-            host: '54.169.107.53',
+            host: '127.0.0.1',
             user: 'root',
             password: 'gtdollar',
             database: 'MeltEx', // 前面建的user表位于这个数据库中
@@ -47,7 +47,7 @@ const config = {
 
 
     redis: {
-        host: '54.169.107.53',
+        host: '127.0.0.1',
         port: '6379',
         password: 'gtdollar',
         db: 0,
@@ -101,7 +101,7 @@ const config = {
 
     MQ: {
         protocol: 'amqp',
-        hostname: '54.169.107.53',
+        hostname: '127.0.0.1',
         port: 5672,
         username: 'gtuser',
         password: 'gtdollar',

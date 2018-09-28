@@ -3,7 +3,7 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
-var cookieSession = require('cookie-session')
+var cookieSession = require('cookie-session');
 var bodyParser = require('body-parser');
 var url = require('url');
 var TokenUtils = require('./Base/Utils/TokenUtils');
@@ -11,15 +11,16 @@ var TokenUtils = require('./Base/Utils/TokenUtils');
 
 var app = express();
 app.set('env', 'production');
-let domainList = ['http://54.169.107.53:8888','http://54.169.107.53:3006', 'http://54.169.107.53:8080']
-app.use(function(req, res, next) {
-    if(domainList.includes(req.headers.origin)){
+let domainList = ['http://54.169.107.53:8888', 'http://54.169.107.53:3006', 'http://54.169.107.53:8080'];
+app.use(function (req, res, next) {
+    if (domainList.includes(req.headers.origin)) {
         res.header('Access-Control-Allow-Origin', req.headers.origin);
         res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
         res.header('Access-Control-Allow-Headers', 'Content-Type,Content-Length,Authorization,Accept,X-Requested-With,token,language');
-        res.header('Access-Control-Allow-Credentials',true);
+        res.header('Access-Control-Allow-Credentials', true);
     }
-    req.method=="OPTIONS" ?  res.status(200).end() : next(); /*让options请求快速返回*/
+    req.method == "OPTIONS" ? res.status(200).end() : next();
+    /*让options请求快速返回*/
 });
 
 
@@ -31,7 +32,7 @@ app.set('view engine', 'ejs');
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(cookieSession({
     name: 'session',
@@ -41,9 +42,7 @@ app.use(cookieSession({
 
 app.use(express.static(path.join(__dirname, '../public')));
 
-app.all('*',async (req, res, next)=>{
-
-
+app.all('*', async (req, res, next) => {
     let allowList = [
         '/',
         '/upload',
@@ -62,11 +61,11 @@ app.all('*',async (req, res, next)=>{
         '/doc/getNewsList',
         '/doc/getNewsModelById',
         '/doc/getArticleModelById',
-    ]
-    let urlParse =  url.parse(req.url);
+    ];
+    let urlParse = url.parse(req.url);
 
     for (let aUrl of allowList) {
-        if(aUrl.toLowerCase() == urlParse.pathname.toLowerCase() ){
+        if (aUrl.toLowerCase() == urlParse.pathname.toLowerCase()) {
             req.token = TokenUtils.decodeToken(req.headers.token) || null;
             next();
             return;
@@ -75,15 +74,15 @@ app.all('*',async (req, res, next)=>{
 
     let data = await TokenUtils.verifyToken(req.headers.token);
 
-    if(data){
+    if (data) {
         req.token = data;
         next();
-    }else{
+    } else {
         //没有token 403 有token无效是401
         res.status(401).end();
     }
-    
-})
+
+});
 
 app.use('/', require('./Routes/indexRouter'));
 app.use('/user', require('./Routes/userRouter'));
