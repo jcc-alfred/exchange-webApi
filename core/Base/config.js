@@ -24,7 +24,7 @@ const config = {
             host: '127.0.0.1',
             user: 'root',
             password: 'gtdollar',
-            database: 'MeltEx', // 前面建的user表位于这个数据库中 
+            database: 'MeltEx', // 前面建的user表位于这个数据库中
             port: 3306,
             connectionLimit:100,
         },
@@ -32,14 +32,14 @@ const config = {
             host: '127.0.0.1',
             user: 'root',
             password: 'gtdollar',
-            database: 'MeltEx', // 前面建的user表位于这个数据库中 
+            database: 'MeltEx', // 前面建的user表位于这个数据库中
             port: 3306,
             connectionLimit:100,
         },{
             host: '127.0.0.1',
             user: 'root',
             password: 'gtdollar',
-            database: 'MeltEx', // 前面建的user表位于这个数据库中 
+            database: 'MeltEx', // 前面建的user表位于这个数据库中
             port: 3306,
             connectionLimit:100,
         }]
@@ -57,7 +57,8 @@ const config = {
     cacheDB:{
         users:15,
         system:0,
-        order:1
+        order:1,
+        kline:2,
     },
 
     cacheKey:{
@@ -65,10 +66,10 @@ const config = {
         User_Login_Pass_Retry:'User_Login_Pass_Retry_',         // 用户登录密码重试 data:15 String
         User_Token:"User_Token_",                               // 用户token data:15 String
 
-        User_Auth_Strategy:'User_Auth_Strategy_',               // 用户安全策略 data:15 
-        User_Auth_Strategy_Type:'User_Auth_Strategy_Type',      // 用户安全策略类型 data:15 hash 
+        User_Auth_Strategy:'User_Auth_Strategy_',               // 用户安全策略 data:15
+        User_Auth_Strategy_Type:'User_Auth_Strategy_Type',      // 用户安全策略类型 data:15 hash
 
-        User_Alert:'User_Alert_',                               // 用户通知 data:15 hash 
+        User_Alert:'User_Alert_',                               // 用户通知 data:15 hash
         User_Alert_Type:'User_Alert_Type',                      // 用户通知类型 data:15 hash
         User_Code:'User_Code_',                                 // 用户验证码
         
@@ -96,6 +97,7 @@ const config = {
         Entrust_UserId:"Entrust_UserId_",                       //用户委托
         Order_Coin_Exchange_Id:"Order_Coin_Exchange_Id_",       //成交订单列表
         Market_List:"Market_List",                              //盘口行情数据
+        KlineData_CEID_Range:"KlineData_CEID_Range_",           //K线数据
 
     },
 
