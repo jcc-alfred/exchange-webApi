@@ -242,7 +242,7 @@ router.post('/doBatchCancelEntrust',async(req,res,next)=>{
             });
 
             if (!(result > 0)) {
-                res.send({code:0,msg:'操作失败'});
+                res.send({code:0,msg:'操作失败' + entrust_sns[i]});
                 return;
             }
         } catch (error) {
