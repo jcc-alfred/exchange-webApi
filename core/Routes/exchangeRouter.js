@@ -357,8 +357,8 @@ router.post('/doBatchCancelEntrust', async (req, res, next) => {
 router.post('/getEntrustList', async (req, res, next) => {
     try {
         let data = await EntrustModel.getEntrustListByUserId(req.token.user_id);
-        if (req.headers.coinexchangeid) {
-          data = data.filter(item => item.coin_exchange_id == req.headers.coinexchangeid);
+        if (req.body.coinExchangeId) {
+          data = data.filter(item => item.coin_exchange_id == req.body.coinExchangeId);
         }
         res.send({code: 1, msg: '', data: data})
     } catch (error) {
