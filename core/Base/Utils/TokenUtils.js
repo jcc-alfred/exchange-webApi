@@ -4,47 +4,47 @@ let Cache = require('../Data/Cache');
 
 let TokenUtils = {
 
-    signToken(data){
-        let  exp = Math.floor(Date.now() / 1000) + (data.client_info.client_type == 'Web' ?  config.token.expire_Web : config.token.expire_APP);
+    signToken(data) {
+        let exp = Math.floor(Date.now() / 1000) + (data.client_info.client_type == 'Web' ? config.token.expire_Web : config.token.expire_APP);
         return jwt.sign({
             ...data,
-            exp:exp
-        },config.token.secret);
+            exp: exp
+        }, config.token.secret);
 
     },
 
-    decodeToken(token){
+    decodeToken(token) {
         let data = false;
         try {
-            data =  jwt.verify(token,config.token.secret);
+            data = jwt.verify(token, config.token.secret);
 
         } catch (error) {
             data = false;
-        } finally{
+        } finally {
             return data;
         }
     },
 
-    async verifyToken(token){
-        
+    async verifyToken(token) {
+
         try {
-            let data =  jwt.verify(token,config.token.secret);
-            if(!data.verify){
+            let data = jwt.verify(token, config.token.secret);
+            if (!data.verify) {
                 return false;
             }
 
             let cache = await Cache.init(config.cacheDB.users);
-            let cdata = await cache.get(config.cacheKey.User_Token+data.user_id);
-            if(cdata === token){
-                return data
-            }else{
-                return false
-            }
-            
+            let cdata = await cache.get(config.cacheKey.User_Token + data.user_id);
+            // if(cdata === token){
+            //     return data
+            // }else{
+            //     return false
+            // }
+            return data;
         } catch (error) {
             return false;
         }
     }
-}
+};
 
 module.exports = TokenUtils;

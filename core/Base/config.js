@@ -15,7 +15,7 @@ const config = {
     
     token:{
         secret:'Melt@998',
-        expire_Web:7200,
+        expire_Web:720000,
         expire_APP:'7d'
     },
 

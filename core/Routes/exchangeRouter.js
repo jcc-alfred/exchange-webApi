@@ -174,7 +174,7 @@ router.post('/doEntrust', async (req, res, next) => {
         }
 
         //1. 交易时段
-        //2. 检验涨跌幅20% 
+        //2. 检验涨跌幅20%
 
         let params = {
             userId: req.token.user_id,
@@ -357,6 +357,9 @@ router.post('/doBatchCancelEntrust', async (req, res, next) => {
 router.post('/getEntrustList', async (req, res, next) => {
     try {
         let data = await EntrustModel.getEntrustListByUserId(req.token.user_id);
+        if (req.body.coinExchangeId) {
+          data = data.filter(item => item.coin_exchange_id == req.body.coinExchangeId);
+        }
         res.send({code: 1, msg: '', data: data})
     } catch (error) {
         res.status(500).end();
