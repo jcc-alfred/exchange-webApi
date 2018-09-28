@@ -207,12 +207,14 @@ router.post('/doEntrust', async (req, res, next) => {
 //批量提交委托
 router.post('/doBatchEntrust',async(req,res,next)=>{
     let entrusts = req.body.data;
+    let entrustIds = [];
 
     if (entrusts.length > 300) {
         return res.status(400).end();
     }
 
     let user_id = req.token.user_id;
+    // let user_id = 144;
 
     for (let i = 0; i < entrusts.length; i++) {
         try {
@@ -278,8 +280,9 @@ router.post('/doBatchEntrust',async(req,res,next)=>{
                 entrustVolume:entrusts[i].entrustVolume
             };
             let entrustRes = await EntrustModel.addEntrust(params);
+            entrustIds.push(entrustRes.entrust_id);
+
             if(entrustRes){
-                res.send({code:1,msg:'委托成功',data:{entrustId:entrustRes.entrust_id}});
                 MQ.push(config.MQKey.Entrust_Queue + coinEx.coin_exchange_id,{
                         ...entrustRes
                     ,comments:'发送委托了'
@@ -295,7 +298,7 @@ router.post('/doBatchEntrust',async(req,res,next)=>{
         }
     }
 
-    return res.send({code:1,msg:'操作成功'});
+    res.send({code:1,msg:'委托成功',data:{entrustIds: entrustIds.join()}});
 });
 
 //取消委托
