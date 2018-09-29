@@ -13,9 +13,16 @@ router.post('/trade/kline',async(req,res,next)=>{
       let tmpArray = [item.timestamp * 1000,item.open_price,item.high_price,item.low_price,item.close_price,item.volume];
       klineArray.push(tmpArray);
     });
-    res.send({code:0,kline:klineArray,date:new Date().getTime()});
+    res.send({
+      code:1,
+      msg: '获取kline成功',
+      data: {
+        kline:klineArray,
+        date:new Date().getTime()
+      }
+    });
   } catch (error) {
-    res.send({code:1,error:error})
+    res.send({code:0,msg:'获取kline失败',error:error})
   }
 });
 module.exports = router;
