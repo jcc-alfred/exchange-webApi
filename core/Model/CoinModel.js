@@ -1,6 +1,6 @@
 let DB = require('../Base/Data/DB');
 let Cache = require('../Base/Data/Cache');
-let config = require('../Base/config')
+let config = require('../Base/config');
 
 class CoinModel {
 
@@ -10,9 +10,8 @@ class CoinModel {
   }
 
   async getCoinList() {
+    let cacheCnt = await Cache.init(config.cacheDB.system);
     try {
-
-      let cacheCnt = await Cache.init(config.cacheDB.system);
       let cRes = await cacheCnt.hgetall(config.cacheKey.Sys_Coin);
 
       if (cRes) {
@@ -44,13 +43,14 @@ class CoinModel {
 
     } catch (error) {
       throw error;
+    } finally {
+      cacheCnt.close();
     }
   }
 
   async getCoinExchangeAreaList() {
+    let cacheCnt = await Cache.init(config.cacheDB.system);
     try {
-
-      let cacheCnt = await Cache.init(config.cacheDB.system);
       let cRes = await cacheCnt.hgetall(config.cacheKey.Sys_Coin_Exchange_Area);
 
       if (cRes) {
@@ -82,13 +82,14 @@ class CoinModel {
 
     } catch (error) {
       throw error;
+    } finally {
+      cacheCnt.close();
     }
   }
 
   async getCoinExchangeList() {
+    let cacheCnt = await Cache.init(config.cacheDB.system);
     try {
-
-      let cacheCnt = await Cache.init(config.cacheDB.system);
       let cRes = await cacheCnt.hgetall(config.cacheKey.Sys_Coin_Exchange);
 
       if (cRes) {
@@ -140,7 +141,7 @@ class CoinModel {
                             LEFT JOIN m_coin as c ON a.coin_id = c.coin_id
                             LEFT JOIN m_coin as d ON a.exchange_coin_id = d.coin_id
                             WHERE a.record_status = 1 AND a.is_enable_trade = 1
-                            ORDER BY a.order_by_num ASC`
+                            ORDER BY a.order_by_num ASC`;
       let res = await cnt.execQuery(sql);
       cnt.close();
 
@@ -158,6 +159,8 @@ class CoinModel {
 
     } catch (error) {
       throw error;
+    } finally {
+      cacheCnt.close();
     }
   }
 
@@ -167,9 +170,9 @@ class CoinModel {
       let data = await this.getCoinExchangeList();
       let [coin_name, exchange_coin_name] = exchangeName.toUpperCase().split('/');
       // console.log(coin_name,exchange_coin_name);
-      let exchange = data.filter((item) => item.coin_name == coin_name).filter((item) => item.exchange_coin_name == exchange_coin_name)
+      let exchange = data.filter((item) => item.coin_name == coin_name).filter((item) => item.exchange_coin_name == exchange_coin_name);
       if (exchange) {
-        return  exchange[0].coin_exchange_id
+        return exchange[0].coin_exchange_id
       }
       return null;
 
@@ -179,4 +182,5 @@ class CoinModel {
   }
 
 }
+
 module.exports = new CoinModel();

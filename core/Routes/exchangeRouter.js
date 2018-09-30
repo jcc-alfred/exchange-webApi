@@ -157,13 +157,13 @@ router.post('/doEntrust', async (req, res, next) => {
         let assets = assetsList.find((item) => item.coin_id == coinEx.coin_id);
         let exchangeAssets = assetsList.find((item) => item.coin_id == coinEx.exchange_coin_id);
         if (req.body.entrustTypeId == 1) {
-            if (exchangeAssets.available < Utils.mul(req.body.entrustPrice, req.body.entrustVolume) || exchangeAssets.balance < Utils.mul(req.body.entrustPrice, req.body.entrustVolume)) {
+          if (parseFloat(exchangeAssets.available) < parseFloat(Utils.mul(req.body.entrustPrice, req.body.entrustVolume)) || parseFloat(exchangeAssets.balance) < parseFloat(Utils.mul(req.body.entrustPrice, req.body.entrustVolume))) {
                 res.send({code: 0, msg: '委托数量大于可用数量'});
                 return;
             }
         }
         else if (req.body.entrustTypeId == 0) {
-            if (assets.available < req.body.entrustVolume || assets.balance < req.body.entrustVolume) {
+          if (parseFloat(assets.available) < parseFloat(req.body.entrustVolume) || parseFloat(assets.balance) < parseFloat(req.body.entrustVolume)) {
                 res.send({code: 0, msg: '委托数量大于可用数量'});
                 return;
             }
@@ -342,7 +342,7 @@ router.post('/doBatchCancelEntrust', async (req, res, next) => {
             });
 
             if (!(result > 0)) {
-                res.send({code: 0, msg: '操作失败' + entrust_sns[i]});
+              res.send({code: 0, msg: '操作失败' + JSON.stringify(entrust_sns[i])});
                 return;
             }
         } catch (error) {
@@ -356,7 +356,7 @@ router.post('/doBatchCancelEntrust', async (req, res, next) => {
 
 router.post('/getEntrustList', async (req, res, next) => {
     try {
-        let data = await EntrustModel.getEntrustListByUserId(req.token.user_id);
+      let data = await EntrustModel.getEntrustListByUserId(req.token.user_id, req.body.refresh || false);
         if (req.body.coinExchangeId) {
           data = data.filter(item => item.coin_exchange_id == req.body.coinExchangeId);
         }
@@ -369,7 +369,7 @@ router.post('/getEntrustList', async (req, res, next) => {
 
 router.post('/entrustList', async (req, res, next) => {
     try {
-        let refresh =req.body.refresh || true
+      let refresh = req.body.refresh || false;
         let buyList = await EntrustModel.getBuyEntrustListByCEId(req.body.coinExchangeId,refresh);
         var newBuyList = Enumerable.from(buyList)
             .groupBy("parseFloat($.entrust_price)", null,

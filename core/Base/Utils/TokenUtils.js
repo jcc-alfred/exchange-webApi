@@ -26,24 +26,23 @@ let TokenUtils = {
     },
 
     async verifyToken(token) {
-
+      // let cache = await Cache.init(config.cacheDB.users);
         try {
             let data = jwt.verify(token, config.token.secret);
             if (!data.verify) {
                 return false;
             }
-
-            let cache = await Cache.init(config.cacheDB.users);
-            let cdata = await cache.get(config.cacheKey.User_Token + data.user_id);
+          // let cdata = await cache.get(config.cacheKey.User_Token + data.user_id);
             // if(cdata === token){
             //     return data
             // }else{
             //     return false
             // }
-            cache.close();
             return data;
         } catch (error) {
             return false;
+        } finally {
+          // cache.close();
         }
     }
 };

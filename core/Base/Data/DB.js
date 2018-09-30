@@ -59,7 +59,7 @@ class DBHepler{
             });
         })
     }
-    
+
     /**
      * 开启事务
      */
@@ -67,7 +67,7 @@ class DBHepler{
         return new Promise((resolve,reject)=>{
             this.cnt.beginTransaction((err)=>{
                 if(err){
-                    reject(err) 
+                  reject(err)
                 }else{
                     resolve(true);
                     this.isOpenTransaction = true;
@@ -107,13 +107,13 @@ class DBHepler{
 
     /**
      * 分页 分组聚合的情况下慎用
-     * @param {String} sql 
+     * @param {String} sql
      * @param {int} page
      * @param {int} pageSize
      */
     async page(sql,data,page,pageSize){
         try {
-            //获取 count 
+          //获取 count
             let countSQl =  sql.replace(/select.*from/ig,'select count(1) from');
             let count = await this.execScalar(countSQl,data);
             if(!count){
@@ -131,7 +131,7 @@ class DBHepler{
             }
 
             let rows = await this.execQuery(sql,data);
-          
+
             return rows ? { rowCount:count, pageCount:pageCount, list:rows } : false;
 
         } catch (error) {
@@ -165,10 +165,10 @@ class DBHepler{
     //组装data 或是修改值
     _buildSQL(data,join='and'){
         let dataArray = [];
-            //循环data 
+      //循环data
         for(let index in data){
             //组装data字符串 并且添加到dataArray中
-            dataArray.push(`${index} = ${this.escape(data[index])}` ) 
+          dataArray.push(`${index} = ${this.escape(data[index])}`)
         }
         return  dataArray.join(` ${join} `);
     }
@@ -192,7 +192,7 @@ class DB{
      */
     static async cluster(selector = "slave"){
         return new Promise((resolve,reject)=>{
-            let pool = selector === 'slave' ? this.poolCluster.of('SLAVE*') : this.poolCluster.of('MASTER')
+          let pool = selector === 'slave' ? this.poolCluster.of('SLAVE*') : this.poolCluster.of('MASTER');
             pool.getConnection((error,cnt)=>{
                 error ? reject(error) : resolve(new DBHepler(cnt));
             })
