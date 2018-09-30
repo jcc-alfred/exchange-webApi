@@ -2,108 +2,108 @@ let DB = require('../Base/Data/DB');
 let Cache = require('../Base/Data/Cache');
 let config = require('../Base/config')
 
-class CoinModel{
+class CoinModel {
 
-            
-    constructor(){
-        
-    }
-    
-    async getCoinList(){
-        try{
 
-            let cacheCnt = await Cache.init(config.cacheDB.system);
-            let cRes = await cacheCnt.hgetall(config.cacheKey.Sys_Coin);
+  constructor() {
 
-            if(cRes){
+  }
 
-                let data = [];
-                for (let i in cRes) {
-                    let item = cRes[i];
-                    data.push(JSON.parse(item));
-                }
-                cacheCnt.close();
-                return data;
-            }
+  async getCoinList() {
+    try {
 
-            let cnt =  await DB.cluster('slave');
-            let res =  await cnt.execQuery("select * from m_coin where record_status=1 order by order_by_num asc");
-            cnt.close();
+      let cacheCnt = await Cache.init(config.cacheDB.system);
+      let cRes = await cacheCnt.hgetall(config.cacheKey.Sys_Coin);
 
-            let chRes = await Promise.all(res.map((info)=>{
-                return cacheCnt.hset(
-                    config.cacheKey.Sys_Coin,
-                    info.coin_id,
-                    info
-                )
-            }));
+      if (cRes) {
 
-            cacheCnt.close();
-
-            return res;
-
-        }catch(error){
-            throw error;
+        let data = [];
+        for (let i in cRes) {
+          let item = cRes[i];
+          data.push(JSON.parse(item));
         }
+        cacheCnt.close();
+        return data;
+      }
+
+      let cnt = await DB.cluster('slave');
+      let res = await cnt.execQuery("select * from m_coin where record_status=1 order by order_by_num asc");
+      cnt.close();
+
+      let chRes = await Promise.all(res.map((info) => {
+        return cacheCnt.hset(
+          config.cacheKey.Sys_Coin,
+          info.coin_id,
+          info
+        )
+      }));
+
+      cacheCnt.close();
+
+      return res;
+
+    } catch (error) {
+      throw error;
     }
+  }
 
-    async getCoinExchangeAreaList(){
-        try{
+  async getCoinExchangeAreaList() {
+    try {
 
-            let cacheCnt = await Cache.init(config.cacheDB.system);
-            let cRes = await cacheCnt.hgetall(config.cacheKey.Sys_Coin_Exchange_Area);
+      let cacheCnt = await Cache.init(config.cacheDB.system);
+      let cRes = await cacheCnt.hgetall(config.cacheKey.Sys_Coin_Exchange_Area);
 
-            if(cRes){
+      if (cRes) {
 
-                let data = [];
-                for (let i in cRes) {
-                    let item = cRes[i];
-                    data.push(JSON.parse(item));
-                }
-                cacheCnt.close();
-                return data;
-            }
-
-            let cnt =  await DB.cluster('slave');
-            let res =  await cnt.execQuery("select * from m_coin_exchange_area where record_status=1 order by order_by_num asc");
-            cnt.close();
-
-            let chRes = await Promise.all(res.map((info)=>{
-                return cacheCnt.hset(
-                    config.cacheKey.Sys_Coin_Exchange_Area,
-                    info.coin_exchange_area_id,
-                    info
-                )
-            }));
-
-            cacheCnt.close();
-
-            return res;
-
-        }catch(error){
-            throw error;
+        let data = [];
+        for (let i in cRes) {
+          let item = cRes[i];
+          data.push(JSON.parse(item));
         }
+        cacheCnt.close();
+        return data;
+      }
+
+      let cnt = await DB.cluster('slave');
+      let res = await cnt.execQuery("select * from m_coin_exchange_area where record_status=1 order by order_by_num asc");
+      cnt.close();
+
+      let chRes = await Promise.all(res.map((info) => {
+        return cacheCnt.hset(
+          config.cacheKey.Sys_Coin_Exchange_Area,
+          info.coin_exchange_area_id,
+          info
+        )
+      }));
+
+      cacheCnt.close();
+
+      return res;
+
+    } catch (error) {
+      throw error;
     }
+  }
 
-    async getCoinExchangeList(){
-        try{
+  async getCoinExchangeList() {
+    try {
 
-            let cacheCnt = await Cache.init(config.cacheDB.system);
-            let cRes = await cacheCnt.hgetall(config.cacheKey.Sys_Coin_Exchange);
+      let cacheCnt = await Cache.init(config.cacheDB.system);
+      let cRes = await cacheCnt.hgetall(config.cacheKey.Sys_Coin_Exchange);
 
-            if(cRes){
+      if (cRes) {
 
-                let data = [];
-                for (let i in cRes) {
-                    let item = cRes[i];
-                    data.push(JSON.parse(item));
-                }
-                cacheCnt.close();
-                return data;
-            }
+        let data = [];
+        for (let i in cRes) {
+          let item = cRes[i];
+          data.push(JSON.parse(item));
+        }
+        cacheCnt.close();
+        return data;
+      }
 
-            let cnt =  await DB.cluster('slave');
-            let sql = `SELECT
+      let cnt = await DB.cluster('slave');
+      let sql = `SELECT
                             a.coin_exchange_id,
                             a.coin_exchange_area_id,
                             b.coin_exchange_area_name,
@@ -141,25 +141,42 @@ class CoinModel{
                             LEFT JOIN m_coin as d ON a.exchange_coin_id = d.coin_id
                             WHERE a.record_status = 1 AND a.is_enable_trade = 1
                             ORDER BY a.order_by_num ASC`
-            let res =  await cnt.execQuery(sql);
-            cnt.close();
+      let res = await cnt.execQuery(sql);
+      cnt.close();
 
-            let chRes = await Promise.all(res.map((info)=>{
-                return cacheCnt.hset(
-                    config.cacheKey.Sys_Coin_Exchange,
-                    info.coin_exchange_id,
-                    info
-                )
-            }));
+      let chRes = await Promise.all(res.map((info) => {
+        return cacheCnt.hset(
+          config.cacheKey.Sys_Coin_Exchange,
+          info.coin_exchange_id,
+          info
+        )
+      }));
 
-            cacheCnt.close();
+      cacheCnt.close();
 
-            return res;
+      return res;
 
-        }catch(error){
-            throw error;
-        }
+    } catch (error) {
+      throw error;
     }
-}
+  }
 
+
+  async getCoinIDbyName(exchangeName) {
+    try {
+      let data = await this.getCoinExchangeList();
+      let [coin_name, exchange_coin_name] = exchangeName.toUpperCase().split('/');
+      // console.log(coin_name,exchange_coin_name);
+      let exchange = data.filter((item) => item.coin_name == coin_name).filter((item) => item.exchange_coin_name == exchange_coin_name)
+      if (exchange) {
+        return  exchange[0].coin_exchange_id
+      }
+      return null;
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
+}
 module.exports = new CoinModel();

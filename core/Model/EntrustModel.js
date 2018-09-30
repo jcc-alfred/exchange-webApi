@@ -392,10 +392,10 @@ class EntrustModel {
             throw error;
         }
     }
-  
+
   async getKlineData(coinExchangeId,range,refresh=false){
     try{
-      
+
       let cache = await Cache.init(config.cacheDB.kline);
       let ckey = config.cacheKey.KlineData_CEID_Range + coinExchangeId + '_' + range;
       if(await cache.exists(ckey) && !refresh){
@@ -516,10 +516,10 @@ class EntrustModel {
                 ORDER BY timestamp `;
         sql = Utils.formatString(sql,[range/3600000,coinExchangeId]);
       }
-      
+
       let res =  await cnt.execQuery(sql);
       cnt.close();
-      
+
       let chRes = await Promise.all(res.map((info)=>{
         return cache.hset(
           ckey,
@@ -527,15 +527,48 @@ class EntrustModel {
           info
         )
       }));
-      
+
       cache.close();
-      
+
       return res;
-      
+
     }catch(error){
       throw error;
     }
   }
+  async ResetEntrust(coin_exchange_id) {
+    try {
+      //delete mysql entrusts for coin_exchange_id
+      let cnt = await DB.cluster('master');
+      let delete_entrust_sql = `delete from m_entrust where coin_exchange_id = ?`;
+      let delete_entrust= await cnt.execQuery(delete_entrust_sql,coin_exchange_id);
+      //delet mysql orders for coin_exchange_id
+      let delete_order_sql = `delete from m_order where coin_exchange_id = ?`;
+      let reset_balance_sql= `update m_user_assets set available=1000000, balance=1000000,frozen=0 where user_id=144`;
+      let reset_balance = await cnt.execQuery(reset_balance_sql,[]);
+      let delete_order = await cnt.execQuery(delete_order_sql,[coin_exchange_id]);
+
+      let chRes = await Promise.all([delete_entrust,delete_order,reset_balance]);
+      cnt.close();
+      // delete redis hash key for entrust, user,kline
+      let cachecnt = await Cache.init(config.cacheDB.order);
+      let flushorder = await cachecnt.flushdb();
+      // await ordercnt.delete(config.cacheKey.Sell_Entrust+coin_exchange_id);
+      // await ordercnt.delete(config.cacheKey.Buy_Entrust+coin_exchange_id);
+      cachecnt.select(config.cacheDB.kline);
+      let flushkline= await cachecnt.flushdb();
+      cachecnt.select(config.cacheDB.users);
+      let flushuser= await cachecnt.flushdb();
+      // let chRes = await Promise.all([flushkline,flushuser,flushorder]);
+      cachecnt.close();
+      return true;
+
+    } catch (error) {
+      throw error;
+      return false
+    }
+  }
+
 }
 
 module.exports = new EntrustModel();

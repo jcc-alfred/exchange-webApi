@@ -369,7 +369,8 @@ router.post('/getEntrustList', async (req, res, next) => {
 
 router.post('/entrustList', async (req, res, next) => {
     try {
-        let buyList = await EntrustModel.getBuyEntrustListByCEId(req.body.coinExchangeId);
+        let refresh =req.body.refresh || true
+        let buyList = await EntrustModel.getBuyEntrustListByCEId(req.body.coinExchangeId,refresh);
         var newBuyList = Enumerable.from(buyList)
             .groupBy("parseFloat($.entrust_price)", null,
                 function (key, g) {
@@ -380,7 +381,7 @@ router.post('/entrustList', async (req, res, next) => {
                     }
                 }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
 
-        let sellList = await EntrustModel.getSellEntrustListByCEId(req.body.coinExchangeId);
+        let sellList = await EntrustModel.getSellEntrustListByCEId(req.body.coinExchangeId,refresh);
         var newSellList = Enumerable.from(sellList)
             .groupBy("parseFloat($.entrust_price)", null,
                 function (key, g) {
@@ -398,4 +399,25 @@ router.post('/entrustList', async (req, res, next) => {
     }
 });
 
+
+router.post('/reset',async(req,res,next)=>{
+  try {
+    if (!req.body.exchange_pair_name){
+      return res.send({"msg":"exchange_pair_name required, example: BTC/USDT"});
+    }
+    let coin_exchange_id = await CoinModel.getCoinIDbyName(req.body.exchange_pair_name);
+    let reset=await EntrustModel.ResetEntrust(coin_exchange_id);
+    if(reset){
+      res.send({code:200,msg:"reset done"})
+    }
+    else {
+      res.send({code:200,msg:"reset done"})
+    }
+  }
+  catch (e) {
+    res.status(500).end();
+    throw e;
+  }
+
+});
 module.exports = router;

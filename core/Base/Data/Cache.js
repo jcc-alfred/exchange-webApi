@@ -16,7 +16,7 @@ class RedisHelper {
         this.client =  redis.createClient(config.redis);
         this.client.select(db)
     }
-    
+
     async select(database){
         let async =  promisify(this.client.select).bind(this.client);
         return async(database)
@@ -31,18 +31,21 @@ class RedisHelper {
     }
     async del(key){
         let async = promisify(this.client.del).bind(this.client);
-        return async(key); 
+        return async(key);
     }
     async hdel(key,field){
         let async = promisify(this.client.hdel).bind(this.client);
-        return async(key,field); 
+        return async(key,field);
     }
 
     async close(){
         let async = promisify(this.client.quit).bind(this.client);
         return async();
     }
-    
+    async flushdb(){
+      let async = promisify(this.client.flushdb).bind(this.client);
+      return async();
+    }
     async expire(key,second){
         if(!second){
             return;
