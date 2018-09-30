@@ -40,6 +40,7 @@ let TokenUtils = {
             // }else{
             //     return false
             // }
+            cache.close();
             return data;
         } catch (error) {
             return false;
