@@ -1,0 +1,18 @@
+execution:
+- concurrency: 1
+  iterations: 10
+  scenario: entrustlist
+
+reporting:
+- module: blazemeter
+
+scenarios:
+  entrustlist:
+    headers:
+      Content-Type: application/json
+      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNDQsImxvZ2luX2lwIjoiMTMyLjE0Ny45OC4yNCIsImNsaWVudF9pbmZvIjp7ImNsaWVudF90eXBlIjoiV2ViIn0sInZlcmlmeSI6dHJ1ZSwiZXhwIjoxNTM4OTE0NzgzLCJpYXQiOjE1MzgxOTQ3ODN9.OBlKdJEuAWAMTv-Cy5acgZuoYBfFwzliKpJTyoqpnI8
+    requests:
+    - url: http://54.169.107.53:3000/exchange/entrustlist
+      method: POST
+      body:
+        coinExchangeId: 5
