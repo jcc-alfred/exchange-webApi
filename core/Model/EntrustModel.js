@@ -129,10 +129,16 @@ class EntrustModel {
                 let updAssets = null;
                 if (entrust.entrust_type_id == 1) {
                     updAssets = await cnt.execQuery(`update m_user_assets set available = available + ? , frozen = frozen - ? 
-                    where user_id = ? and coin_id = ?`, [totalNoCompleteAmount, totalNoCompleteAmount, userId, coinEx.exchange_coin_id]);
+                    where user_id = ? and coin_id = ? and frozen >= ?`, [totalNoCompleteAmount, totalNoCompleteAmount, userId, coinEx.exchange_coin_id, totalNoCompleteAmount]);
+                    if (updAssets.affectedRows == 0) {
+                        console.log(entrust);
+                    }
                 } else {
                     updAssets = await cnt.execQuery(`update m_user_assets set available = available + ? , frozen = frozen - ? 
-                    where user_id = ? and coin_id = ?`, [entrust.no_completed_volume, entrust.no_completed_volume, userId, coinEx.coin_id]);
+                    where user_id = ? and coin_id = ? and frozen >= ?`, [entrust.no_completed_volume, entrust.no_completed_volume, userId, coinEx.coin_id, entrust.no_completed_volume]);
+                    if (updAssets.affectedRows == 0) {
+                        console.log(entrust);
+                    }
                 }
                 if (updEntrust.affectedRows) {
                     cnt.commit();
