@@ -93,7 +93,7 @@ class EntrustModel {
                 entrust_status_name: '待成交'
             };
             let entrustRes = await cnt.edit('m_entrust', params);
-            if (entrustRes.affectedRows) {
+          if (entrustRes.affectedRows && updAssets.affectedRows) {
                 cnt.commit();
                 await AssetsModel.getUserAssetsByUserId(userId, true);
                 res = {...params, entrust_id: entrustRes.insertId, create_time: Date.now()};
@@ -115,7 +115,7 @@ class EntrustModel {
         let cnt = await DB.cluster('master');
         let res = 0;
         try {
-            let entrust = await this.getEntrustByEntrustId(entrustId, coinExchangeId, entrustTypeId);
+          let entrust = await this.getEntrustByEntrustId(entrustId, coinExchangeId, entrustTypeId, true);
             if (entrust && entrust.user_id == userId && (entrust.entrust_status == 0 || entrust.entrust_status == 1)) {
                 //0 待成交 1 部分成交 2 已完成 3 已取消
                 let coinExchangeList = await CoinModel.getCoinExchangeList();
@@ -140,7 +140,7 @@ class EntrustModel {
                         console.log(entrust);
                     }
                 }
-                if (updEntrust.affectedRows) {
+              if (updEntrust.affectedRows && updAssets.affectedRows) {
                     cnt.commit();
                     let refreshAssets = await AssetsModel.getUserAssetsByUserId(userId, true);
                     let cache = await Cache.init(config.cacheDB.order);
