@@ -11,7 +11,7 @@ var TokenUtils = require('./Base/Utils/TokenUtils');
 
 var app = express();
 app.set('env', 'production');
-let domainList = ['http://54.169.107.53:8888', 'http://54.169.107.53:3006', 'http://54.169.107.53:8080'];
+let domainList = ['https://www.asiaedx.com', 'http://localhost:8888', 'http://54.169.107.53:8888', 'http://54.169.107.53:3006', 'http://54.169.107.53:8080'];
 app.use(function (req, res, next) {
     if (domainList.includes(req.headers.origin)) {
         res.header('Access-Control-Allow-Origin', req.headers.origin);
@@ -61,6 +61,10 @@ app.all('*', async (req, res, next) => {
         '/doc/getNewsList',
         '/doc/getNewsModelById',
         '/doc/getArticleModelById',
+
+        // Add for no login
+        '/exchange/getCoinExchangeList',
+        '/exchange/getCoinList',
     ];
     let urlParse = url.parse(req.url);
 
