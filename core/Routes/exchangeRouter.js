@@ -406,7 +406,7 @@ router.post('/reset',async(req,res,next)=>{
       return res.send({"msg":"exchange_pair_name required, example: BTC/USDT"});
     }
     let coin_exchange_id = await CoinModel.getCoinIDbyName(req.body.exchange_pair_name);
-    let reset=await EntrustModel.ResetEntrust(coin_exchange_id);
+    let reset = await EntrustModel.ResetEntrust(coin_exchange_id, req.token.user_id);
     if(reset){
       res.send({code:200,msg:"reset done"})
     }
