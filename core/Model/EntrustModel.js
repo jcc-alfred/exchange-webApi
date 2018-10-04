@@ -551,7 +551,7 @@ class EntrustModel {
         }
     }
 
-    async ResetEntrust(coin_exchange_id) {
+  async ResetEntrust(coin_exchange_id, user_id) {
         let cache = await Cache.init(config.cacheDB.order);
         try {
             //delete mysql entrusts for coin_exchange_id
@@ -560,8 +560,8 @@ class EntrustModel {
             let delete_entrust = await cnt.execQuery(delete_entrust_sql, coin_exchange_id);
             //delet mysql orders for coin_exchange_id
             let delete_order_sql = `delete from m_order where coin_exchange_id = ?`;
-          let reset_balance_sql = `update m_user_assets set available=100000000, balance=100000000,frozen=0 where user_id=144`;
-            let reset_balance = await cnt.execQuery(reset_balance_sql, []);
+          let reset_balance_sql = `update m_user_assets set available=100000000, balance=100000000,frozen=0 where user_id=?`;
+          let reset_balance = await cnt.execQuery(reset_balance_sql, [user_id]);
             let delete_order = await cnt.execQuery(delete_order_sql, [coin_exchange_id]);
 
             let chRes = await Promise.all([delete_entrust, delete_order, reset_balance]);

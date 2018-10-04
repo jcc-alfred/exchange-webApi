@@ -411,7 +411,7 @@ router.post('/reset',async(req,res,next)=>{
       res.send({code:200,msg:"reset done"})
     }
     else {
-      res.send({code:200,msg:"reset done"})
+      res.send({code: 400, msg: "reset failed"})
     }
   }
   catch (e) {
