@@ -215,7 +215,6 @@ class UserModel {
       if (!await cache.exists(ckey)) {
         await UserAlertModel.getUserAlertByUserId(userId)
       }
-
       let cRes = await cache.hget(ckey, type);
       return cRes.user_alert_status == 1 ? true : false;
     } catch (error) {

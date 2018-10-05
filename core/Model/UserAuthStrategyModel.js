@@ -61,7 +61,6 @@ class UserAuthStrategyModel {
       let ckey = config.cacheKey.User_Auth_Strategy + userId;
       if (await cache.exists(ckey) && !refresh) {
         let cRes = cache.hgetall(ckey);
-        cache.close();
         return cRes
       }
 
@@ -75,8 +74,6 @@ class UserAuthStrategyModel {
       await cache.expire(ckey, 7200);
 
       let cRes = await cache.hgetall(ckey);
-      cache.close();
-
       return cRes;
 
     } catch (error) {

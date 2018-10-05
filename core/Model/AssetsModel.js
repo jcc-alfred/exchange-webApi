@@ -59,7 +59,6 @@ class AssetsModel {
       let ckey = config.cacheKey.User_Assets + userId;
       if (await cache.exists(ckey) && !refresh) {
         let cRes = await cache.hgetall(ckey);
-        cache.close();
         return Object.keys(cRes).map((key) => {
           return JSON.parse(cRes[key])
         })
@@ -79,7 +78,6 @@ class AssetsModel {
       await cache.expire(ckey, 7200);
 
       let cRes = await cache.hgetall(ckey);
-      cache.close();
       return res;
 
     } catch (error) {

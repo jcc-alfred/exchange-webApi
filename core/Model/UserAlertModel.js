@@ -60,7 +60,6 @@ class UserAlertModel {
 
       if (await cache.exists(ckey) && !refresh) {
         let cRes = cache.hgetall(ckey);
-        cache.close();
         return cRes
       }
       let cnt = await DB.cluster('salve');
@@ -70,10 +69,9 @@ class UserAlertModel {
         return cache.hset(ckey, row.user_alert_type_id, row);
       }));
 
-      cache.expire(ckey, 7200);
+      await cache.expire(ckey, 7200);
 
       let cRes = await cache.hgetall(ckey);
-      cache.close();
 
       return cRes;
     } catch (error) {
