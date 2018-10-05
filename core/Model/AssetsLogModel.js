@@ -70,7 +70,7 @@ class AssetsLogModel {
     } catch (error) {
       throw error;
     } finally {
-      cache.close();
+      cacheCnt.close();
     }
   }
 
