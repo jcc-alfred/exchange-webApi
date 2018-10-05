@@ -57,7 +57,8 @@ const config = {
     cacheDB: {
         users: 15,
         system: 0,
-        order: 1
+        order: 1,
+        kline:2
     },
 
     cacheKey: {
@@ -96,7 +97,7 @@ const config = {
         Entrust_UserId: "Entrust_UserId_",                       //用户委托
         Order_Coin_Exchange_Id: "Order_Coin_Exchange_Id_",       //成交订单列表
         Market_List: "Market_List",                              //盘口行情数据
-
+        KlineData_CEID_Range:"KlineData_CEID_Range_",           //K线数据
     },
 
     MQ: {
