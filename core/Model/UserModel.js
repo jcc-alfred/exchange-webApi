@@ -195,7 +195,7 @@ class UserModel {
   async tokenToCache(user_id, token, clientType = 'Web') {
     let cache = await Cache.init(config.cacheDB.users);
     try {
-      cache.set(
+        await cache.set(
         config.cacheKey.User_Token + user_id,
         token,
         clientType == 'Web' ? config.token.expire_Web : config.token.expire_APP
