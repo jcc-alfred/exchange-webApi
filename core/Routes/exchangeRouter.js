@@ -89,7 +89,7 @@ router.post('/getMarketList', async (req, res, next) => {
   try {
 
     let data = await EntrustModel.getMarketList(true);
-    if (req.header.noprice) {
+    if (!req.header.noprice) {
       try {
         let coin_prices = await axios.get(config.GTdollarAPI);
         data.map(x => Object.assign(x, coin_prices.data.find(y => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
