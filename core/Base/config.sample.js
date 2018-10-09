@@ -1,5 +1,6 @@
 const config = {
-
+  
+    GTdollarAPI: 'http://api.gttdollar.com/ticker.json',
     socketDomain: 'http://127.0.0.1:5000/',
 
     sys: {
