@@ -92,7 +92,7 @@ router.post('/getMarketList', async (req, res, next) => {
     if (!req.header.noprice) {
       try {
         let coin_prices = await axios.get(config.GTdollarAPI);
-        data.map(x => Object.assign(x, coin_prices.data.find(y => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
+        data.map(x => Object.assign(x, coin_prices.data.find(y => y.name.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
       } catch (e) {
         console.error("cannot get price from " + config.GTdollarAPI);
         console.error(e);
