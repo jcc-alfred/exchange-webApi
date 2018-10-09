@@ -181,7 +181,7 @@ class UserModel {
 
       retry = parseInt(retry, 10) + 1;
 
-      cache.set(config.cacheKey.User_Login_Pass_Retry + user_id, retry, 7200);
+      await cache.set(config.cacheKey.User_Login_Pass_Retry + user_id, retry, 7200);
 
       return config.sys.loginPassRetryNum - retry
 
@@ -195,7 +195,7 @@ class UserModel {
   async tokenToCache(user_id, token, clientType = 'Web') {
     let cache = await Cache.init(config.cacheDB.users);
     try {
-        await cache.set(
+      await cache.set(
         config.cacheKey.User_Token + user_id,
         token,
         clientType == 'Web' ? config.token.expire_Web : config.token.expire_APP
