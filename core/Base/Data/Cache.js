@@ -1,6 +1,6 @@
 var config = require('../config');
-var redis = require('redis')
-var {promisify} = require('util')
+var redis = require('redis');
+var {promisify} = require('util');
 
 
 class Cache {
@@ -61,27 +61,27 @@ class RedisHelper {
 
     async get(key){
         let async =  promisify(this.client.get).bind(this.client);
-        let data = await async(key)
+      let data = await async(key);
         return JSON.parse(data);
     }
 
     async set(key,value,ex=0){
         let async =  promisify(this.client.set).bind(this.client);
         let res = await async(key,JSON.stringify(value));
-        this.expire(key,ex);
+      await this.expire(key, ex);
         return res
     }
 
     async hget(key,field){
         let async = promisify(this.client.hget).bind(this.client);
-        let data = await async(key,field)
+      let data = await async(key, field);
         return JSON.parse(data);
     }
 
     async hset(key,field,value,ex=0){
         let async =  promisify(this.client.hset).bind(this.client);
         let res = await async(key,field,JSON.stringify(value));
-        await this.expire(key,ex)
+      await this.expire(key, ex);
         return res
     }
 
