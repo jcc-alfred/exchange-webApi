@@ -97,7 +97,7 @@ class EntrustModel {
       let entrustMQ = false;
       if (entrustRes) {
         entrustMQ = await MQ.push(config.MQKey.Entrust_Queue + coinExchangeId, {
-          ...entrustRes
+          ...{...params, entrust_id: entrustRes.insertId, create_time: Date.now()}
           , comments: '发送委托了'
         });
       }
