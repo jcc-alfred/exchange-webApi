@@ -9,6 +9,7 @@ let socket = io(config.socketDomain);
 let AssetsModel = require('../Model/AssetsModel');
 let CoinModel = require('../Model/CoinModel');
 let MQ = require('../Base/Data/MQ');
+
 class EntrustModel {
 
   constructor() {
@@ -93,10 +94,13 @@ class EntrustModel {
         entrust_status_name: '待成交'
       };
       let entrustRes = await cnt.edit('m_entrust', params);
-      let entrustMQ = await MQ.push(config.MQKey.Entrust_Queue + coinExchangeId, {
-        ...entrustRes
-        , comments: '发送委托了'
-      });
+      let entrustMQ = false;
+      if (entrustRes) {
+        entrustMQ = await MQ.push(config.MQKey.Entrust_Queue + coinExchangeId, {
+          ...entrustRes
+          , comments: '发送委托了'
+        });
+      }
       if (entrustRes.affectedRows && updAssets.affectedRows && entrustMQ) {
         cnt.commit();
         await AssetsModel.getUserAssetsByUserId(userId, true);
