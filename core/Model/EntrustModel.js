@@ -230,7 +230,7 @@ class EntrustModel {
             marketModel.high_price = marketRes.high_price;
             marketModel.low_price = marketRes.low_price;
             marketModel.total_volume = marketRes.total_volume;
-            marketModel.total_amount = marketRes.total_amount;
+            marketModel.total_amount = marketRes.total_amount + item.base_amount;
             marketModel.change_rate = (marketModel.last_price - pre24PriceRes.trade_price) / pre24PriceRes.trade_price;
           }
         }
