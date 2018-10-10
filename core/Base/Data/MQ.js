@@ -1,8 +1,8 @@
 
 let amqp = require('amqplib');
-let config = require('../config')
+let config = require('../config');
 class MQ {
-    
+
     static async init(){
         try{
             this.open =  await amqp.connect(config.MQ);
@@ -15,15 +15,16 @@ class MQ {
 
     static async push(key,data){
         try{
-            await this.ch.assertQueue(key, {durable: true})
+          await this.ch.assertQueue(key, {durable: true});
             return this.ch.sendToQueue(key,new Buffer(JSON.stringify(data)),{persistent: true});
         }catch(error){
+          console.error(error);
             throw error;
         }
     }
 
 }
 
-MQ.init()
+MQ.init();
 
 module.exports = MQ;
