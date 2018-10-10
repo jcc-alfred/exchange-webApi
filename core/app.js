@@ -8,7 +8,6 @@ var bodyParser = require('body-parser');
 var url = require('url');
 var TokenUtils = require('./Base/Utils/TokenUtils');
 
-
 var app = express();
 app.set('env', 'production');
 let domainList = ['https://www.asiaedx.com', 'http://localhost:8888', 'http://54.169.107.53:8888', 'http://54.169.107.53:3006', 'http://54.169.107.53:8080'];

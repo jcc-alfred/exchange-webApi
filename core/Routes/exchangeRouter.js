@@ -198,14 +198,9 @@ router.post('/doEntrust', async (req, res, next) => {
     let entrustRes = await EntrustModel.addEntrust(params);
     if (entrustRes) {
       res.send({code: 1, msg: '委托成功', data: {entrustId: entrustRes.entrust_id}});
-      MQ.push(config.MQKey.Entrust_Queue + coinEx.coin_exchange_id, {
-        ...entrustRes
-        , comments: '发送委托了'
-      });
     } else {
-      res.send({code: 0, msg: '委托失败'})
+      res.status(500).end();
     }
-
   } catch (error) {
     res.status(500).end();
     throw error;
@@ -288,16 +283,6 @@ router.post('/doBatchEntrust', async (req, res, next) => {
       };
       let entrustRes = await EntrustModel.addEntrust(params);
       entrustIds.push(entrustRes.entrust_id);
-
-      if (entrustRes) {
-        MQ.push(config.MQKey.Entrust_Queue + coinEx.coin_exchange_id, {
-          ...entrustRes
-          , comments: '发送委托了'
-        });
-      } else {
-        res.send({code: 0, msg: '委托失败'});
-        return;
-      }
 
     } catch (error) {
       res.status(500).end();
