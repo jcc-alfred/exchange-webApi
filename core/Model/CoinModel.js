@@ -135,7 +135,8 @@ class CoinModel {
                             a.order_by_num,
                             a.update_time,
                             a.create_time,
-                            a.record_status
+                            a.record_status,
+                            a.base_amount
                             FROM m_coin_exchange as a 
                             LEFT JOIN m_coin_exchange_area as b ON a.coin_exchange_area_id = b.coin_exchange_area_id
                             LEFT JOIN m_coin as c ON a.coin_id = c.coin_id
