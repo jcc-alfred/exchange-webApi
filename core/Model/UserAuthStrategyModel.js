@@ -117,12 +117,10 @@ class UserAuthStrategyModel {
    * @param {int} userId
    */
   async insertUserStrategy(userId) {
+    let cnt = await DB.cluster('master');
     try {
-
       let types = await this.getStrategyTypeAll();
-      let cnt = await DB.cluster('master');
       let res = await Promise.all(types.map(async (type) => {
-
         if (type.default_status === 1) {
           return cnt.edit('m_user_auth_strategy', {
             user_id: userId,
@@ -132,13 +130,12 @@ class UserAuthStrategyModel {
           });
         }
       }));
-
-      this.getUserStrategyAllByUserId(userId, true);
-      cnt.close();
+      await this.getUserStrategyAllByUserId(userId, true);
       return res;
-
     } catch (error) {
       throw error;
+    } finally {
+      cnt.close();
     }
   }
 

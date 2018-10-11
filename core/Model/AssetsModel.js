@@ -17,7 +17,6 @@ class AssetsModel {
     let cnt = await DB.cluster('master');
     try {
       let coins = await CoinModel.getCoinList();
-
       let res = await Promise.all(coins.map((coin) => {
         return cnt.edit('m_user_assets', {
           user_id: user_id,
@@ -30,8 +29,6 @@ class AssetsModel {
           loan: 0,
         })
       }));
-
-
     } catch (error) {
       throw error;
     } finally {

@@ -17,18 +17,15 @@ class UserModel {
     try {
       if (await cache.exists(config.cacheKey.Users + id) && !refresh) {
         let res = cache.get(config.cacheKey.Users + id);
-        cache.close();
         return res;
       }
       let cnt = await DB.cluster('slave');
       let sql = `select * from m_user where record_status=1 and user_id = ? `;
       let res = await cnt.execReader(sql, [id]);
       cnt.close();
-
       if (res) {
         await cache.set(config.cacheKey.Users + res.user_id, res, 3600);
       }
-      cache.close;
       return res;
     } catch (error) {
       console.error(error);
@@ -39,22 +36,22 @@ class UserModel {
   }
 
   async getUserByEmail(email) {
-
+    let cnt = await DB.cluster('slave');
+    let cache = await Cache.init(config.cacheDB.users);
     try {
-      let cnt = await DB.cluster('slave');
       let sql = `select * from m_user where record_status=1 and email = ?`;
       let res = await cnt.execReader(sql, [email]);
-      cnt.close();
 
       if (res) {
-        let cache = await Cache.init(config.cacheDB.users);
         await cache.set(config.cacheKey.Users + res.user_id, res, 3600);
-        cache.close();
       }
       return res;
     } catch (error) {
       console.error(error);
       throw error;
+    } finally {
+      cnt.close();
+      cache.close();
     }
   }
 
@@ -83,7 +80,6 @@ class UserModel {
     try {
       let res = null;
       if (type == "email") {
-
         res = await cnt.edit('m_user', {
           email: data.email,
           login_pass: data.login_pass,
@@ -107,7 +103,6 @@ class UserModel {
         })
 
       } else {
-
         res = await cnt.edit('m_user', {
           phone_number: data.phone_number,
           area_code: data.area_code,
@@ -120,19 +115,16 @@ class UserModel {
           comments: '', full_name: '', google_secret: '', identity_status: '0', is_enable_trade: '1', email: '',
           is_enable_withdraw: '1', login_location: '', register_location: '', safe_pass: '', safe_pass_level: '0'
         })
-
       }
 
       if (res.insertId) {
         //初始化安全信息
-        UserAuthStrategyModel.insertUserStrategy(res.insertId);
+        await UserAuthStrategyModel.insertUserStrategy(res.insertId);
         //初始化提醒信息
-        UserAlertModel.insertUserAlert(res.insertId);
+        await UserAlertModel.insertUserAlert(res.insertId);
         //初始化资产信息
-        AssetsModel.insertUserAssets(res.insertId);
+        await AssetsModel.insertUserAssets(res.insertId);
       }
-
-
       return res.insertId || false;
     } catch (error) {
       throw error;
@@ -208,28 +200,27 @@ class UserModel {
   }
 
   async isOpenAlert(userId, type) {
-    let cache = await Cache.init(config.cacheDB.users);
     try {
-      let ckey = config.cacheKey.User_Alert + userId;
-
-      if (!await cache.exists(ckey)) {
-        await UserAlertModel.getUserAlertByUserId(userId)
+      let userAlerts = await UserAlertModel.getUserAlertByUserId(userId);
+      let cRes = userAlerts.get(type);
+      if (cRes) {
+        return cRes.user_alert_status == 1 ? true : false;
+      } else {
+        return false
       }
-      let cRes = await cache.hget(ckey, type);
-      return cRes.user_alert_status == 1 ? true : false;
     } catch (error) {
       throw error;
-    } finally {
-      cache.close();
     }
   }
 
   async sendAlert(userId, type, lang, arg1, arg2) {
     try {
-      if (!await this.isOpenAlert(userId, type)) {
+      if (!await this.isOpenAlert(userId, type)
+      ) {
         return;
       }
-      let userInfo = await this.getUserById(userId);
+      let userInfo = await
+        this.getUserById(userId);
 
       let send = {};
       if (config.sys.sendAlertType === 1) {
@@ -282,7 +273,8 @@ class UserModel {
         send.amount = arg1;
         send.unit = arg2;
       }
-      let mRes = await MQ.push(config.MQKey.Send_Alert, send);
+      let mRes = await
+        MQ.push(config.MQKey.Send_Alert, send);
     } catch (error) {
       throw error;
     }

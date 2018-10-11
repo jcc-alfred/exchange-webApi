@@ -171,7 +171,7 @@ router.post('/signUp', async (req, res, next) => {
 
       res.send({code: 1, msg: '注册成功', data: {token: token, userInfo: Utils.userInfoFormat(userInfo)}});
 
-      UserModel.tokenToCache(userInfo.user_id, token, Utils.getClientInfo(req).client_type);
+      await UserModel.tokenToCache(userInfo.user_id, token, Utils.getClientInfo(req).client_type);
       req.session.imgCode = null;
       CodeUtils.delCode(req.body.areaCode + req.body.phoneNumber);
       //发送注册奖励
@@ -180,7 +180,6 @@ router.post('/signUp', async (req, res, next) => {
     else {
       res.send({code: 0, msg: '账号格式错误', data: {}})
     }
-
 
   } catch (error) {
     res.status(500).end();
@@ -314,8 +313,6 @@ router.post('/login', async (req, res, next) => {
       }, LogModel.userLogTypeMap.login);
 
     }
-
-
   } catch (error) {
     res.status(500).end();
     throw error;

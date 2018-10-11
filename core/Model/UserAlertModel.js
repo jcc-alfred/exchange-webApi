@@ -28,14 +28,12 @@ class UserAlertModel {
           let item = cRes[i];
           data.push(JSON.parse(item));
         }
-        cacheCnt.close();
         return data;
       }
 
       let cnt = await DB.cluster('slave');
       let res = await cnt.execQuery("select * from m_user_alert_type where record_status=1");
       cnt.close();
-
       let chRes = await Promise.all(res.map((info) => {
         return cacheCnt.hset(
           config.cacheKey.User_Alert_Type,
@@ -43,8 +41,6 @@ class UserAlertModel {
           info
         )
       }));
-
-      cacheCnt.close();
       return res;
     } catch (error) {
       throw error;
@@ -57,7 +53,6 @@ class UserAlertModel {
     let cache = await Cache.init(config.cacheDB.users);
     try {
       let ckey = config.cacheKey.User_Alert + userId;
-
       if (await cache.exists(ckey) && !refresh) {
         let cRes = cache.hgetall(ckey);
         return cRes
@@ -68,11 +63,8 @@ class UserAlertModel {
       await Promise.all(res.map((row) => {
         return cache.hset(ckey, row.user_alert_type_id, row);
       }));
-
       await cache.expire(ckey, 7200);
-
       let cRes = await cache.hgetall(ckey);
-
       return cRes;
     } catch (error) {
       throw error;
@@ -86,15 +78,12 @@ class UserAlertModel {
     try {
       let alerts = await this.getAlertAll();
       let res = await Promise.all(alerts.map(async (alert) => {
-
         return cnt.edit('m_user_alert', {
           user_id: userId,
           user_alert_type_id: alert.user_alert_type_id,
           user_alert_status: alert.default_status,
         });
-
       }));
-
       this.getUserAlertByUserId(userId);
       return res;
     } catch (error) {
