@@ -200,9 +200,14 @@ class UserModel {
   }
 
   async isOpenAlert(userId, type) {
+    let cache = await Cache.init(config.cacheDB.users);
     try {
-      let userAlerts = await UserAlertModel.getUserAlertByUserId(userId);
-      let cRes = userAlerts.get(type);
+      let ckey = config.cacheKey.User_Alert + userId;
+
+      if (!await cache.exists(ckey)) {
+        await UserAlertModel.getUserAlertByUserId(userId)
+      }
+      let cRes = await cache.hget(ckey, type);
       if (cRes) {
         return cRes.user_alert_status == 1 ? true : false;
       } else {
@@ -210,6 +215,8 @@ class UserModel {
       }
     } catch (error) {
       throw error;
+    } finally {
+      cache.close();
     }
   }
 
