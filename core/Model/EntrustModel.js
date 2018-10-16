@@ -9,6 +9,7 @@ let axios = require('axios');
 let AssetsModel = require('../Model/AssetsModel');
 let CoinModel = require('../Model/CoinModel');
 let MQ = require('../Base/Data/MQ');
+let Enumerable = require('linq');
 
 class EntrustModel {
 
@@ -336,85 +337,70 @@ class EntrustModel {
     }
   }
 
-  async getBuyEntrustListByCEId(coinExchangeId, refresh = false) {
+  async getEntrustList(coin_exchange_id, refresh = false) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
-      let ckey = config.cacheKey.Buy_Entrust + coinExchangeId;
+      let ckey = config.cacheKey.Entrust_List + coin_exchange_id;
       if (await cache.exists(ckey) && !refresh) {
-        let buyRes = await cache.hgetall(ckey);
-        if (buyRes) {
-          let data = [];
-          for (let i in buyRes) {
-            let item = buyRes[i];
-            data.push(JSON.parse(item));
-          }
-          cache.close();
-          return data;
-        }
+        let cRes = await cache.get(ckey);
+        return cRes
+      } else {
+        let buyList = await this.getBuyEntrustListByCEId(coin_exchange_id);
+        let newBuyList = Enumerable.from(buyList)
+          .groupBy("parseFloat($.entrust_price)", null,
+            function (key, g) {
+              return {
+                entrust_price: key,
+                entrust_volume: g.sum("parseFloat($.entrust_volume)"),
+                no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
+              }
+            }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
+        let sellList = await this.getSellEntrustListByCEId(coin_exchange_id);
+        let newSellList = Enumerable.from(sellList)
+          .groupBy("parseFloat($.entrust_price)", null,
+            function (key, g) {
+              return {
+                entrust_price: key,
+                entrust_volume: g.sum("parseFloat($.entrust_volume)"),
+                no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
+              }
+            }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
+        await cache.set(ckey, {"buyList": newBuyList, "sellList": newSellList}, 10);
+        return {buyList: newBuyList, sellList: newSellList};
       }
-      let cnt = await DB.cluster('slave');
-      let sql = `SELECT * FROM m_entrust WHERE coin_exchange_id = ? and entrust_type_id = 1 and (entrust_status = 0 or entrust_status = 1) ORDER BY entrust_price DESC, entrust_id ASC LIMIT 20`;
-      let res = await cnt.execQuery(sql, coinExchangeId);
-      cnt.close();
-
-      let chRes = await Promise.all(res.map((info) => {
-        return cache.hset(
-          ckey,
-          info.entrust_id,
-          info
-        )
-      }));
-
-      cache.close();
-
-      return res;
-
-    } catch (error) {
-      throw error;
+    } catch (e) {
+      console.error(e);
+      return {buyList: [], sellList: []};
     } finally {
       cache.close();
     }
   }
 
-  async getSellEntrustListByCEId(coinExchangeId, refresh = false) {
-    let cache = await Cache.init(config.cacheDB.order);
+  async getBuyEntrustListByCEId(coinExchangeId) {
+    let cnt = await DB.cluster('slave');
     try {
-      let ckey = config.cacheKey.Sell_Entrust + coinExchangeId;
-      if (await cache.exists(ckey) && !refresh) {
-        let sellRes = await cache.hgetall(ckey);
-        if (sellRes) {
-          let data = [];
-          for (let i in sellRes) {
-            let item = sellRes[i];
-            data.push(JSON.parse(item));
-          }
-          cache.close();
-          return data;
-        }
-      }
+      let sql = `SELECT * FROM m_entrust WHERE coin_exchange_id = ? and entrust_type_id = 1 and (entrust_status = 0 or entrust_status = 1) ORDER BY entrust_price DESC, entrust_id ASC LIMIT 20`;
+      let res = await cnt.execQuery(sql, coinExchangeId);
+      return res;
+    } catch (error) {
+      throw error;
+    } finally {
+      cnt.close();
+    }
+  }
 
-      let cnt = await DB.cluster('slave');
+  async getSellEntrustListByCEId(coinExchangeId, refresh = false) {
+    let cnt = await DB.cluster('slave');
+    try {
       let sql = `SELECT * FROM m_entrust WHERE coin_exchange_id = ? and entrust_type_id = 0 and (entrust_status = 0 or entrust_status = 1) ORDER BY entrust_price ASC, entrust_id ASC LIMIT 20`;
       let res = await cnt.execQuery(sql, coinExchangeId);
-      cnt.close();
-
-      let chRes = await Promise.all(res.map((info) => {
-        return cache.hset(
-          ckey,
-          info.entrust_id,
-          info
-        )
-      }));
-
-      cache.close();
-
       return res;
 
     } catch (error) {
       throw error;
     }
     finally {
-      cache.close();
+      cnt.close();
     }
   }
 

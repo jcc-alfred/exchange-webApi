@@ -351,30 +351,31 @@ router.post('/getEntrustList', async (req, res, next) => {
 
 router.post('/entrustList', async (req, res, next) => {
   try {
-    let refresh = req.body.refresh || false;
-    let buyList = await EntrustModel.getBuyEntrustListByCEId(req.body.coinExchangeId, refresh);
-    var newBuyList = Enumerable.from(buyList)
-      .groupBy("parseFloat($.entrust_price)", null,
-        function (key, g) {
-          return {
-            entrust_price: key,
-            entrust_volume: g.sum("parseFloat($.entrust_volume)"),
-            no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
-          }
-        }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
-
-    let sellList = await EntrustModel.getSellEntrustListByCEId(req.body.coinExchangeId, refresh);
-    var newSellList = Enumerable.from(sellList)
-      .groupBy("parseFloat($.entrust_price)", null,
-        function (key, g) {
-          return {
-            entrust_price: key,
-            entrust_volume: g.sum("parseFloat($.entrust_volume)"),
-            no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
-          }
-        }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
-
-    res.send({code: 1, msg: '', data: {buyList: newBuyList, sellList: newSellList}});
+    // let buyList = await EntrustModel.getBuyEntrustListByCEId(req.body.coinExchangeId);
+    // var newBuyList = Enumerable.from(buyList)
+    //   .groupBy("parseFloat($.entrust_price)", null,
+    //     function (key, g) {
+    //       return {
+    //         entrust_price: key,
+    //         entrust_volume: g.sum("parseFloat($.entrust_volume)"),
+    //         no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
+    //       }
+    //     }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
+    //
+    // let sellList = await EntrustModel.getSellEntrustListByCEId(req.body.coinExchangeId);
+    // var newSellList = Enumerable.from(sellList)
+    //   .groupBy("parseFloat($.entrust_price)", null,
+    //     function (key, g) {
+    //       return {
+    //         entrust_price: key,
+    //         entrust_volume: g.sum("parseFloat($.entrust_volume)"),
+    //         no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
+    //       }
+    //     }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
+    //
+    // res.send({code: 1, msg: '', data: {buyList: newBuyList, sellList: newSellList}});
+    let entrustList = await EntrustModel.getEntrustList(req.body.coinExchangeId);
+    res.send({code: 1, msg: '', data: entrustList});
   } catch (error) {
     res.status(500).end();
     throw error;
