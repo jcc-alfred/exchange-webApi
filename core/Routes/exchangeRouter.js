@@ -6,7 +6,6 @@ let CodeUtils = require('../Base/Utils/CodeUtils');
 let TokenUtils = require('../Base/Utils/TokenUtils');
 
 let config = require('../Base/config');
-let axios = require('axios');
 let UserModel = require('../Model/UserModel');
 let AssetsModel = require('../Model/AssetsModel');
 let CoinModel = require('../Model/CoinModel');
@@ -88,16 +87,7 @@ router.post('/getCoinExchangeList', async (req, res, next) => {
 router.post('/getMarketList', async (req, res, next) => {
   try {
 
-    let data = await EntrustModel.getMarketList(true);
-    if (!req.header.noprice) {
-      try {
-        let coin_prices = await axios.get(config.GTdollarAPI);
-        data.map(x => Object.assign(x, coin_prices.data.find(y => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
-      } catch (e) {
-        console.error("cannot get price from " + config.GTdollarAPI);
-        console.error(e);
-      }
-    }
+    let data = await EntrustModel.getMarketList();
     res.send({code: 1, msg: '', data: data})
   } catch (error) {
     res.status(500).end();

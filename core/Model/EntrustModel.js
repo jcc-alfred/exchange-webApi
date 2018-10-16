@@ -5,7 +5,7 @@ let Utils = require('../Base/Utils/Utils');
 let moment = require('moment');
 let io = require('socket.io-client');
 let socket = io(config.socketDomain);
-
+let axios = require('axios');
 let AssetsModel = require('../Model/AssetsModel');
 let CoinModel = require('../Model/CoinModel');
 let MQ = require('../Base/Data/MQ');
@@ -238,12 +238,14 @@ class EntrustModel {
 
       }));
       cnt.close();
-
+      let coin_prices = await axios.get(config.GTdollarAPI);
+      marketList.map(x => Object.assign(x, coin_prices.data.find(y => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
       let chRes = await Promise.all(marketList.map((market) => {
         return cache.hset(
           ckey,
           market.coin_exchange_id,
-          market
+          market,
+          60
         )
       }));
 
