@@ -566,9 +566,15 @@ class EntrustModel {
       cnt.close();
 
       // delete redis hash key for entrust, user,kline
-      let flushorder = await cache.flushdb();
+      await cache.del(config.cacheKey.Buy_Entrust + coin_exchange_id);
+      await cache.del(config.cacheKey.Sell_Entrust + coin_exchange_id);
+      await cache.del(config.cacheKey.Order_Coin_Exchange_Id + coin_exchange_id);
+      await cache.del(config.cacheKey.Entrust_UserId + user_id);
       cache.select(config.cacheDB.kline);
-      await cache.flushdb();
+      let range_list = [300000, 900000, 1800000, 14400000, 21600000, 43200000, 60000];
+      await Promise.all(range_list.map((range) => {
+        return cache.del(config.cacheKey.KlineData_CEID_Range + coin_exchange_id + '_' + range)
+      }));
       cache.select(config.cacheDB.users);
       await cache.flushdb();
       cache.close();

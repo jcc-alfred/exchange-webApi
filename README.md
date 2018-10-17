@@ -2,7 +2,7 @@
 
 ## Development
 
-Rename config.production.js to config.js
+Rename config-pro.js to config.js
 
 Change config.js
 

@@ -351,29 +351,7 @@ router.post('/getEntrustList', async (req, res, next) => {
 
 router.post('/entrustList', async (req, res, next) => {
   try {
-    // let buyList = await EntrustModel.getBuyEntrustListByCEId(req.body.coinExchangeId);
-    // var newBuyList = Enumerable.from(buyList)
-    //   .groupBy("parseFloat($.entrust_price)", null,
-    //     function (key, g) {
-    //       return {
-    //         entrust_price: key,
-    //         entrust_volume: g.sum("parseFloat($.entrust_volume)"),
-    //         no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
-    //       }
-    //     }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
-    //
-    // let sellList = await EntrustModel.getSellEntrustListByCEId(req.body.coinExchangeId);
-    // var newSellList = Enumerable.from(sellList)
-    //   .groupBy("parseFloat($.entrust_price)", null,
-    //     function (key, g) {
-    //       return {
-    //         entrust_price: key,
-    //         entrust_volume: g.sum("parseFloat($.entrust_volume)"),
-    //         no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
-    //       }
-    //     }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
-    //
-    // res.send({code: 1, msg: '', data: {buyList: newBuyList, sellList: newSellList}});
+
     let entrustList = await EntrustModel.getEntrustList(req.body.coinExchangeId);
     res.send({code: 1, msg: '', data: entrustList});
   } catch (error) {
@@ -385,17 +363,23 @@ router.post('/entrustList', async (req, res, next) => {
 
 router.post('/reset', async (req, res, next) => {
   try {
-    if (!req.body.exchange_pair_name) {
-      return res.send({"msg": "exchange_pair_name required, example: BTC/USDT"});
+    if (config.reset && config.reset.status && config.reset.status == 1 && config.reset.token && req.body.super_token && req.body.super_token == config.reset.token) {
+      console.log(req.body.super_token == config.reset.token);
+      if (!req.body.exchange_pair_name) {
+        return res.send({"msg": "exchange_pair_name required, example: BTC/USDT"});
+      }
+      let coin_exchange_id = await CoinModel.getCoinIDbyName(req.body.exchange_pair_name);
+      let reset = await EntrustModel.ResetEntrust(coin_exchange_id, req.token.user_id);
+      if (reset) {
+        res.send({code: 200, msg: "reset done"})
+      }
+      else {
+        res.send({code: 400, msg: "reset failed"})
+      }
+    } else {
+      res.status(404).end();
     }
-    let coin_exchange_id = await CoinModel.getCoinIDbyName(req.body.exchange_pair_name);
-    let reset = await EntrustModel.ResetEntrust(coin_exchange_id, req.token.user_id);
-    if (reset) {
-      res.send({code: 200, msg: "reset done"})
-    }
-    else {
-      res.send({code: 400, msg: "reset failed"})
-    }
+
   }
   catch (e) {
     res.status(500).end();
