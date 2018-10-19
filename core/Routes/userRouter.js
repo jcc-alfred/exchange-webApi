@@ -100,7 +100,7 @@ router.post('/signUp', async (req, res, next) => {
       req.session.imgCode = null;
       CodeUtils.delCode(req.body.email);
       //发送注册奖励
-        // UserBonusModel.addRegBonus(userInfo.user_id, userInfo.referral_path);
+      UserBonusModel.addRegBonus(userInfo.user_id, userInfo.referral_path);
     }
 
     else if (req.body.accountType === 'phone') {
