@@ -227,8 +227,13 @@ class EntrustModel {
 
       }));
       cnt.close();
-      let coin_prices = await axios.get(config.GTdollarAPI);
-      marketList.map(x => Object.assign(x, coin_prices.data.find(y => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
+      try {
+        let coin_prices = await axios.get(config.GTdollarAPI, {timeout: 2000});
+        marketList.map(x => Object.assign(x, coin_prices.data.find(y => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
+      } catch (e) {
+        console.error("error get prices from " + config.GTdollarAPI);
+        console.error(e);
+      }
       let chRes = await Promise.all(marketList.map((market) => {
         return cache.hset(
           ckey,
@@ -237,7 +242,6 @@ class EntrustModel {
           60
         )
       }));
-
       return marketList;
 
     } catch (error) {
@@ -266,7 +270,6 @@ class EntrustModel {
       let sql = `SELECT * FROM m_order WHERE coin_exchange_id = ? ORDER BY create_time DESC LIMIT 30 `;
       let res = await cnt.execQuery(sql, coinExchangeId);
       cnt.close();
-
       let chRes = await Promise.all(res.map((info) => {
         return cache.hset(
           ckey,
