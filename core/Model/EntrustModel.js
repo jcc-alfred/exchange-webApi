@@ -17,36 +17,24 @@ class EntrustModel {
 
   }
 
-  async getEntrustByEntrustId(entrustId, coinExchangeId, entrustTypeId, refresh = false) {
+  async getOpenEntrustByEntrustId(entrustId, coinExchangeId, entrustTypeId, refresh = false) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = (entrustTypeId == 1 ? config.cacheKey.Buy_Entrust : config.cacheKey.Sell_Entrust) + coinExchangeId;
       if (await cache.exists(ckey) && !refresh) {
         let cRes = await cache.hgetall(ckey);
         if (Object.keys(cRes) && await Object.keys(cRes).includes(entrustId.toString())) {
-          cache.close();
           return JSON.parse(cRes[entrustId])
-        } else {
-          let cnt = await DB.cluster('salve');
-          let sql = `select * from m_entrust where entrust_id = ? and (entrust_status = 0 or entrust_status = 1)  `;
-          let res = await cnt.execReader(sql, entrustId);
-          cnt.close();
-          if (res) {
-            await cache.hset(ckey, res.entrust_id, res);
-            cache.close();
-          }
-          return res;
         }
       }
       let cnt = await DB.cluster('salve');
       let sql = `select * from m_entrust where entrust_id = ? and (entrust_status = 0 or entrust_status = 1)  `;
       let res = await cnt.execReader(sql, entrustId);
       cnt.close();
-      if (res) {
-        await cache.hset(ckey, res.entrust_id, res);
-        //let cRes = await cache.hgetall(ckey);
-      }
-      cache.close();
+      // if (res) {
+      //   await cache.hset(ckey, res.entrust_id, res,);
+      //   //let cRes = await cache.hgetall(ckey);
+      // }
       return res;
 
     } catch (error) {
@@ -124,7 +112,7 @@ class EntrustModel {
     let cnt = await DB.cluster('master');
     let res = 0;
     try {
-      let entrust = await this.getEntrustByEntrustId(entrustId, coinExchangeId, entrustTypeId, true);
+      let entrust = await this.getOpenEntrustByEntrustId(entrustId, coinExchangeId, entrustTypeId, true);
       if (entrust && entrust.user_id == userId && (entrust.entrust_status == 0 || entrust.entrust_status == 1)) {
         //0 待成交 1 部分成交 2 已完成 3 已取消
         let coinExchangeList = await CoinModel.getCoinExchangeList();
@@ -537,9 +525,6 @@ class EntrustModel {
           info
         )
       }));
-
-      cache.close();
-
       return res;
 
     } catch (error) {
