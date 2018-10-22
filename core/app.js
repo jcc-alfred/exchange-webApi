@@ -64,6 +64,7 @@ app.all('*', async (req, res, next) => {
         // Add for no login
         '/exchange/getCoinExchangeList',
         '/exchange/getCoinList',
+      '/market/trade/kline'
     ];
     let urlParse = url.parse(req.url);
 

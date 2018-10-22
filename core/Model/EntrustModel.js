@@ -238,7 +238,6 @@ class EntrustModel {
         )
       }));
 
-      cache.close();
       return marketList;
 
     } catch (error) {
@@ -333,28 +332,37 @@ class EntrustModel {
         let cRes = await cache.get(ckey);
         return cRes
       } else {
-        let buyList = await this.getBuyEntrustListByCEId(coin_exchange_id);
-        let newBuyList = Enumerable.from(buyList)
-          .groupBy("parseFloat($.entrust_price)", null,
-            function (key, g) {
-              return {
-                entrust_price: key,
-                entrust_volume: g.sum("parseFloat($.entrust_volume)"),
-                no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
-              }
-            }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
-        let sellList = await this.getSellEntrustListByCEId(coin_exchange_id);
-        let newSellList = Enumerable.from(sellList)
-          .groupBy("parseFloat($.entrust_price)", null,
-            function (key, g) {
-              return {
-                entrust_price: key,
-                entrust_volume: g.sum("parseFloat($.entrust_volume)"),
-                no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
-              }
-            }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
-        await cache.set(ckey, {"buyList": newBuyList, "sellList": newSellList}, 10);
-        return {buyList: newBuyList, sellList: newSellList};
+        // let buyList = await this.getBuyEntrustListByCEId(coin_exchange_id);
+        // let newBuyList = Enumerable.from(buyList)
+        //   .groupBy("parseFloat($.entrust_price)", null,
+        //     function (key, g) {
+        //       return {
+        //         entrust_price: key,
+        //         entrust_volume: g.sum("parseFloat($.entrust_volume)"),
+        //         no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
+        //       }
+        //     }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
+        // let sellList = await this.getSellEntrustListByCEId(coin_exchange_id);
+        // let newSellList = Enumerable.from(sellList)
+        //   .groupBy("parseFloat($.entrust_price)", null,
+        //     function (key, g) {
+        //       return {
+        //         entrust_price: key,
+        //         entrust_volume: g.sum("parseFloat($.entrust_volume)"),
+        //         no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
+        //       }
+        //     }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
+        // await cache.set(ckey, {"buyList": newBuyList, "sellList": newSellList}, 10);
+        // return {buyList: newBuyList, sellList: newSellList};
+        let cnt = DB.cluster('slave');
+        sql = 'select entrust_price, sum(e.entrust_volume) as entrust_volume, sum(e.no_completed_volume) from \n' +
+          '(SELECT * FROM m_entrust WHERE coin_exchange_id = {0} and entrust_type_id = {1} and entrust_status in (0,1) ) as e\n' +
+          'group by e.entrust_price \n' +
+          'order by entrust_price desc limit 10\n';
+        let BuyList = await cnt.execQuery(sql, [coin_exchange_id, 1]);
+        let SellList = await cnt.execQuery(sql, [coin_exchange_id, 0]);
+        await cache.set(ckey, {"buyList": BuyList, "sellList": SellList}, 10);
+        return {buyList: BuyList, sellList: SellList};
       }
     } catch (e) {
       console.error(e);

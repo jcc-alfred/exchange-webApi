@@ -21,7 +21,6 @@ class CoinModel {
           let item = cRes[i];
           data.push(JSON.parse(item));
         }
-        cacheCnt.close();
         return data;
       }
 
@@ -36,9 +35,6 @@ class CoinModel {
           info
         )
       }));
-
-      cacheCnt.close();
-
       return res;
 
     } catch (error) {
@@ -60,7 +56,6 @@ class CoinModel {
           let item = cRes[i];
           data.push(JSON.parse(item));
         }
-        cacheCnt.close();
         return data;
       }
 
@@ -75,8 +70,6 @@ class CoinModel {
           info
         )
       }));
-
-      cacheCnt.close();
 
       return res;
 
@@ -99,7 +92,6 @@ class CoinModel {
           let item = cRes[i];
           data.push(JSON.parse(item));
         }
-        cacheCnt.close();
         return data;
       }
 
@@ -153,9 +145,6 @@ class CoinModel {
           info
         )
       }));
-
-      cacheCnt.close();
-
       return res;
 
     } catch (error) {
