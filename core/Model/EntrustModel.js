@@ -355,7 +355,7 @@ class EntrustModel {
         // await cache.set(ckey, {"buyList": newBuyList, "sellList": newSellList}, 10);
         // return {buyList: newBuyList, sellList: newSellList};
         let cnt = await DB.cluster('slave');
-        let sql = 'select entrust_price, sum(e.entrust_volume) as entrust_volume, sum(e.no_completed_volume) from ' +
+        let sql = 'select entrust_price, sum(e.entrust_volume) as entrust_volume, sum(e.no_completed_volume) as no_completed_volume from ' +
           '(SELECT * FROM m_entrust WHERE coin_exchange_id = ? and entrust_type_id = ? and entrust_status in (0,1) ) as e ' +
           'group by e.entrust_price ' +
           'order by entrust_price desc limit 10';
