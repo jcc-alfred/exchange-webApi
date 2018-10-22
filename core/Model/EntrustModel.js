@@ -259,7 +259,6 @@ class EntrustModel {
             let item = cRes[i];
             data.push(JSON.parse(item));
           }
-          cache.close();
           return data;
         }
       }
@@ -272,7 +271,8 @@ class EntrustModel {
         return cache.hset(
           ckey,
           info.order_id,
-          info
+          info,
+          60000
         )
       }));
       return res;
