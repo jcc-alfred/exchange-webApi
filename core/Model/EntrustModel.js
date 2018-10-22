@@ -297,12 +297,11 @@ class EntrustModel {
             let item = cRes[i];
             data.push(JSON.parse(item));
           }
-          cache.close();
           return data;
         }
       }
       let cnt = await DB.cluster('slave');
-      let sql = `SELECT * FROM m_entrust WHERE user_id = ? and (entrust_status = 0 or entrust_status = 1) `;
+      let sql = `SELECT * FROM m_entrust WHERE user_id = ? and (entrust_status = 0 or entrust_status = 1) limit 300 `;
       let res = await cnt.execQuery(sql, userId);
       cnt.close();
 
@@ -310,12 +309,11 @@ class EntrustModel {
         return cache.hset(
           ckey,
           info.entrust_id,
-          info
+          info,
+          6000
         )
       }));
-
       return res;
-
     } catch (error) {
       throw error;
     }
