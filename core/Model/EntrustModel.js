@@ -324,7 +324,7 @@ class EntrustModel {
     }
   }
 
-  async getEntrustList(coin_exchange_id, refresh = false) {
+  async getEntrustList(coin_exchange_id, refresh = true) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Entrust_List + coin_exchange_id;
@@ -372,7 +372,7 @@ class EntrustModel {
     }
   }
 
-  async getBuyEntrustListByCEId(coinExchangeId, refresh = false) {
+  async getBuyEntrustListByCEId(coinExchangeId, refresh = true) {
     let cache = await Cache.init(config.cacheDB.order);
     let cnt = await DB.cluster('slave');
     try {
@@ -408,7 +408,7 @@ class EntrustModel {
     }
   }
 
-  async getSellEntrustListByCEId(coinExchangeId, refresh = false) {
+  async getSellEntrustListByCEId(coinExchangeId, refresh = true) {
     let cache = await Cache.init(config.cacheDB.order);
     let cnt = await DB.cluster('slave');
     try {
