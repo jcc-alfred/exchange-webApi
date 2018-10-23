@@ -90,8 +90,9 @@ class AssetsLogModel {
         whereStr += ` and create_time < DATE_ADD('` + endDate + `',INTERVAL 1 DAY)`;
       }
 
-      let sql = `select * from m_user_assets_log where ` + whereStr + ` order by create_time desc`;
+      let sql = `select * from m_user_assets_log where ` + whereStr + ` order by user_assets_log_id desc`;
       let cnt = await DB.cluster('slave');
+      // console.log(sql);
       let res = cnt.page(sql, null, page, pageSize);
 
       cnt.close();

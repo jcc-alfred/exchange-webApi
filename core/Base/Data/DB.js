@@ -130,7 +130,6 @@ class DBHepler {
 
         sql += ` LIMIT ${page},${pageSize}`
       }
-
       let rows = await this.execQuery(sql, data);
 
       return rows ? {rowCount: count, pageCount: pageCount, list: rows} : false;
