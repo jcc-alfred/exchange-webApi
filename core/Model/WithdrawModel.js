@@ -15,7 +15,7 @@ class WithdrawModel {
   async getUserWithdrawListByCoinId(userId, coinId, page, pageSize = 10) {
     let cnt = await DB.cluster('slave');
     try {
-      let sql = "select * from m_user_withdraw where record_status=1 and user_id=? and coin_id = ? order by create_time desc";
+      let sql = "select * from m_user_withdraw where record_status=1 and user_id=? and coin_id = ? order by user_withdraw_id desc";
       var params = [
         userId,
         coinId

@@ -41,7 +41,7 @@ class LogModel {
   async getUserSafeLogs(userId, page, pageSize = 10) {
     try {
 
-      let sql = "select * from m_user_log where record_status=1 and user_id=? and create_time >= ? order by create_time desc";
+      let sql = "select * from m_user_log where record_status=1 and user_id=? and create_time >= ? order by user_log_id desc";
       let cnt = await DB.cluster('slave');
 
 

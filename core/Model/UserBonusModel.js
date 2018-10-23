@@ -38,7 +38,7 @@ class UserBonusModel {
   async getUserBonusListByUserId(userId, page, pageSize = 10) {
     let cnt = await DB.cluster('slave');
     try {
-      let sql = "SELECT * FROM m_user_bonus WHERE user_id = ? and record_status = 1 ORDER BY create_time DESC ";
+      let sql = "SELECT * FROM m_user_bonus WHERE user_id = ? and record_status = 1 ORDER BY user_bonus_id DESC ";
       var params = [userId];
       let res = cnt.page(sql, params, page, pageSize);
       return res;

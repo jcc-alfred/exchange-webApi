@@ -115,7 +115,7 @@ class DBHepler {
   async page(sql, data, page, pageSize) {
     try {
       //获取 count
-      let countSQl = sql.replace(/select.*from/ig, 'select count(1) from');
+      let countSQl = sql.replace(/select.*from/ig, 'select count(1) from').replace(/order\s+by.*/ig, '');
       let count = await this.execScalar(countSQl, data);
       if (!count) {
         return {count: 0, pageCount: 0, list: []}
