@@ -352,6 +352,9 @@ class EntrustModel {
                 no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
               }
             }).orderBy("parseFloat($.entrust_price)").take(10).toArray();
+        newSellList.sort((item1, item2) => {
+          return item2.entrust_price - item1.entrust_price
+        });
         await cache.set(ckey, {"buyList": newBuyList, "sellList": newSellList}, 10);
         return {buyList: newBuyList, sellList: newSellList};
         // let cnt = await DB.cluster('slave');
