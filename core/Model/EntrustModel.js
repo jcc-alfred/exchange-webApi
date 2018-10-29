@@ -189,8 +189,12 @@ class EntrustModel {
         }
       }
       let cnt = await DB.cluster('slave');
+      console.log(new Date());
       let coinExList = await CoinModel.getCoinExchangeList();
       let marketList = [];
+      // let lastOrderList = await this.getLastOrder();
+      let Pre24FristOrderList = await this.getPre24FirstOrder();
+      let Pre24Market = await this.getMarkets();
       await Promise.all(coinExList.map(async (item) => {
         let marketModel = {
           last_price: 0,
@@ -201,20 +205,23 @@ class EntrustModel {
           total_amount: 0
         };
         //1. LastPrice
-        // let orderList = await this.getOrderListByCoinExchangeId(item.coin_exchange_id);
-        // let lastOrder = orderList.sort((item1, item2) => {
-        //   return item2.order_id - item1.order_id
-        // })[0];
-        let lastOrder = await this.getLastOrderByCoinExchangeID((item.coin_exchange_id));
+        let orderList = await this.getOrderListByCoinExchangeId(item.coin_exchange_id);
+        let lastOrder = orderList.sort((item1, item2) => {
+          return item2.order_id - item1.order_id
+        })[0];
+        // let lastOrder = lastOrderList.find((a) => a.coin_exchange_id == item.coin_exchange_id);
         if (lastOrder && lastOrder.trade_price) {
           marketModel.last_price = lastOrder.trade_price;
           //2. highPrice lowPrice total_volume total_amount
-          let marketSQL = `SELECT max(trade_price) as high_price,min(trade_price) as low_price,sum(trade_volume) as total_volume,sum(trade_amount) as total_amount
-                    FROM m_order Where coin_exchange_id = ? and create_time >= (now() - interval 24 hour) `;
-          let marketRes = await cnt.execReader(marketSQL, item.coin_exchange_id);
+          let marketRes = Pre24Market.find(a => a.coin_exchange_id == item.coin_exchange_id);
+
+          // let marketSQL = `SELECT max(trade_price) as high_price,min(trade_price) as low_price,sum(trade_volume) as total_volume,sum(trade_amount) as total_amount
+          //           FROM m_order Where coin_exchange_id = ? and create_time >= (now() - interval 24 hour) `;
+          // let marketRes = await cnt.execReader(marketSQL, item.coin_exchange_id);
           //3. pre24HourPrice
-          let pre24PriceSQL = `SELECT trade_price FROM m_order Where coin_exchange_id = ? and create_time >= (now() - interval 24 hour) ORDER BY order_id ASC LIMIT 1 `;
-          let pre24PriceRes = await cnt.execReader(pre24PriceSQL, item.coin_exchange_id);
+          // let pre24PriceSQL = `SELECT trade_price FROM m_order Where coin_exchange_id = ? and create_time >= (now() - interval 24 hour) ORDER BY order_id ASC LIMIT 1 `;
+          // let pre24PriceRes = await cnt.execReader(pre24PriceSQL, item.coin_exchange_id);
+          let pre24PriceRes = Pre24FristOrderList.find(a => a.coin_exchange_id == item.coin_exchange_id);
           if (marketRes && marketRes.high_price && pre24PriceRes && pre24PriceRes.trade_price) {
             marketModel.high_price = marketRes.high_price;
             marketModel.low_price = marketRes.low_price;
@@ -224,7 +231,6 @@ class EntrustModel {
           }
         }
         marketList.push({coin_exchange_id: item.coin_exchange_id, market: marketModel, coinEx: item});
-
       }));
       cnt.close();
       try {
@@ -251,13 +257,20 @@ class EntrustModel {
     }
   }
 
-  async getLastOrderByCoinExchangeID(coinExchangeID) {
+  async getMarkets() {
     let cnt = await DB.cluster('slaves');
     try {
-      let sql = 'select * from m_order where coin_exchange_id=? order by order_id desc limit 1';
-      let res = await cnt.execQuery(sql, coinExchangeID);
+      let sql = 'SELECT max(last24.trade_price) as high_price,' +
+        'min(last24.trade_price) as low_price,' +
+        'sum(last24.trade_volume) as total_volume,' +
+        'sum(last24.trade_amount) as total_amount,' +
+        'last24.coin_exchange_id ' +
+        'from (select * FROM m_order Where  create_time >= (now() - interval 24 hour) ) as last24 ' +
+        ' group by coin_exchange_id;';
+      console.log(sql);
+      let res = await cnt.execQuery(sql);
       if (res) {
-        return res[0]
+        return res
       } else {
         return null
       }
@@ -267,6 +280,63 @@ class EntrustModel {
       cnt.close();
     }
   }
+
+  async getLastOrder(coinExchangeID = null) {
+    let cnt = await DB.cluster('slaves');
+    try {
+      if (coinExchangeID) {
+        let sql = 'select * from m_order where coin_exchange_id=? order by order_id desc limit 1';
+        let res = await cnt.execQuery(sql, coinExchangeID);
+        if (res) {
+          return res[0]
+        } else {
+          return null
+        }
+      } else {
+        let sql = 'select * from m_order where order_id in (select max(order_id) from m_order where  create_time >= (now() - interval 24 hour) group by coin_exchange_id)';
+        let res = await cnt.execQuery(sql);
+        if (res) {
+          return res
+        } else {
+          return null
+        }
+      }
+
+    } catch (e) {
+      console.error(e);
+    } finally {
+      cnt.close();
+    }
+  }
+
+  async getPre24FirstOrder(coinExchangeID = null) {
+    let cnt = await DB.cluster('slaves');
+    try {
+      if (coinExchangeID) {
+        let sql = 'select * from m_order where coin_exchange_id=? and create_time >= (now() - interval 24 hour) order by order_id asc limit 1';
+        let res = await cnt.execQuery(sql, coinExchangeID);
+        if (res) {
+          return res[0]
+        } else {
+          return null
+        }
+      } else {
+        let sql = 'select coin_exchange_id,trade_price from m_order where order_id in (select min(order_id) from m_order where  create_time >= (now() - interval 24 hour) group by coin_exchange_id)';
+        let res = await cnt.execQuery(sql);
+        if (res) {
+          return res
+        } else {
+          return null
+        }
+      }
+
+    } catch (e) {
+      console.error(e);
+    } finally {
+      cnt.close();
+    }
+  }
+
 
   async getOrderListByCoinExchangeId(coinExchangeId, refresh = false) {
     let cache = await Cache.init(config.cacheDB.order);
