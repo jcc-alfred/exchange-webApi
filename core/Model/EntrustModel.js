@@ -254,7 +254,7 @@ class EntrustModel {
   async getLastOrderByCoinExchangeID(coinExchangeID) {
     let cnt = await DB.cluster('slaves');
     try {
-      let sql = 'select * from m_oder where coin_exchange_id=? order by order_id desc limit 1';
+      let sql = 'select * from m_order where coin_exchange_id=? order by order_id desc limit 1';
       let res = await cnt.execQuery(sql, coinExchangeID);
       if (res) {
         return res[0]
