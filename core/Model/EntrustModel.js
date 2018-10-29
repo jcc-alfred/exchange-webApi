@@ -303,7 +303,7 @@ class EntrustModel {
         }
       }
       let cnt = await DB.cluster('slave');
-      let sql = `SELECT * FROM m_entrust WHERE user_id = ? and (entrust_status = 0 or entrust_status = 1) limit 300 `;
+      let sql = `SELECT * FROM m_entrust WHERE user_id = ? and (entrust_status = 0 or entrust_status = 1) `;
       let res = await cnt.execQuery(sql, userId);
       cnt.close();
 
