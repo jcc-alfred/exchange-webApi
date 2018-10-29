@@ -274,7 +274,7 @@ class EntrustModel {
           ckey,
           info.order_id,
           info,
-          60000
+          600
         )
       }));
       return res;
