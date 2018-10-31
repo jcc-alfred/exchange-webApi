@@ -172,7 +172,7 @@ class EntrustModel {
     return res;
   }
 
-  async getMarketList(refresh = false) {
+  async getMarketList(refresh = true) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Market_List;
@@ -184,7 +184,6 @@ class EntrustModel {
             let item = cRes[i];
             data.push(JSON.parse(item));
           }
-          cache.close();
           return data;
         }
       }
@@ -193,8 +192,8 @@ class EntrustModel {
       let coinExList = await CoinModel.getCoinExchangeList();
       let marketList = [];
       // let lastOrderList = await this.getLastOrder();
-      let Pre24FristOrderList = await this.getPre24FirstOrder();
-      let Pre24Market = await this.getMarkets();
+      // let Pre24FristOrderList = await this.getPre24FirstOrder();
+      // let Pre24Market = await this.getMarkets();
       await Promise.all(coinExList.map(async (item) => {
         let marketModel = {
           last_price: 0,
@@ -204,32 +203,46 @@ class EntrustModel {
           total_volume: 0,
           total_amount: 0
         };
-        //1. LastPrice
-        let orderList = await this.getOrderListByCoinExchangeId(item.coin_exchange_id);
-        let lastOrder = orderList.sort((item1, item2) => {
-          return item2.order_id - item1.order_id
-        })[0];
-        // let lastOrder = lastOrderList.find((a) => a.coin_exchange_id == item.coin_exchange_id);
-        if (lastOrder && lastOrder.trade_price) {
-          marketModel.last_price = lastOrder.trade_price;
-          //2. highPrice lowPrice total_volume total_amount
-          let marketRes = Pre24Market.find(a => a.coin_exchange_id == item.coin_exchange_id);
-
-          // let marketSQL = `SELECT max(trade_price) as high_price,min(trade_price) as low_price,sum(trade_volume) as total_volume,sum(trade_amount) as total_amount
-          //           FROM m_order Where coin_exchange_id = ? and create_time >= (now() - interval 24 hour) `;
-          // let marketRes = await cnt.execReader(marketSQL, item.coin_exchange_id);
-          //3. pre24HourPrice
-          // let pre24PriceSQL = `SELECT trade_price FROM m_order Where coin_exchange_id = ? and create_time >= (now() - interval 24 hour) ORDER BY order_id ASC LIMIT 1 `;
-          // let pre24PriceRes = await cnt.execReader(pre24PriceSQL, item.coin_exchange_id);
-          let pre24PriceRes = Pre24FristOrderList.find(a => a.coin_exchange_id == item.coin_exchange_id);
-          if (marketRes && marketRes.high_price && pre24PriceRes && pre24PriceRes.trade_price) {
-            marketModel.high_price = marketRes.high_price;
-            marketModel.low_price = marketRes.low_price;
-            marketModel.total_volume = marketRes.total_volume;
-            marketModel.total_amount = marketRes.total_amount + item.base_amount;
-            marketModel.change_rate = (marketModel.last_price - pre24PriceRes.trade_price) / pre24PriceRes.trade_price;
-          }
+        let klinecache= await Cache.init(config.cacheDB.kline);
+        let klineckey = config.cacheKey.KlineData_CEID_Range + item.coin_exchange_id + '_' + '86400000';
+        let timestamp=new Date(new Date().toLocaleDateString()).getTime()/1000;
+        if (!klinecache.exists(klineckey)) {
+          await this.getKlineData(item.coin_exchange_id, 86400000);
         }
+        let marketRes = await klinecache.hget(klineckey,timestamp);
+        // marketRes = JSON.parse(marketRes);
+        marketModel.high_price = marketRes.high_price;
+        marketModel.low_price = marketRes.low_price;
+        marketModel.total_volume = marketRes.volume;
+        marketModel.total_amount = marketRes.volume*marketRes.close_price + item.base_amount;
+        marketModel.change_rate = (marketRes.close_price - marketRes.open_price) / marketRes.open_price;
+        marketModel.last_price = marketRes.close_price;
+        //1. LastPrice
+        // let orderList = await this.getOrderListByCoinExchangeId(item.coin_exchange_id);
+        // let lastOrder = orderList.sort((item1, item2) => {
+        //   return item2.order_id - item1.order_id
+        // })[0];
+        // let lastOrder = lastOrderList.find((a) => a.coin_exchange_id == item.coin_exchange_id);
+        // if (lastOrder && lastOrder.trade_price) {
+        //   marketModel.last_price = lastOrder.trade_price;
+        //   //2. highPrice lowPrice total_volume total_amount
+        //   let marketRes = Pre24Market.find(a => a.coin_exchange_id == item.coin_exchange_id);
+        //
+        //   // let marketSQL = `SELECT max(trade_price) as high_price,min(trade_price) as low_price,sum(trade_volume) as total_volume,sum(trade_amount) as total_amount
+        //   //           FROM m_order Where coin_exchange_id = ? and create_time >= (now() - interval 24 hour) `;
+        //   // let marketRes = await cnt.execReader(marketSQL, item.coin_exchange_id);
+        //   //3. pre24HourPrice
+        //   // let pre24PriceSQL = `SELECT trade_price FROM m_order Where coin_exchange_id = ? and create_time >= (now() - interval 24 hour) ORDER BY order_id ASC LIMIT 1 `;
+        //   // let pre24PriceRes = await cnt.execReader(pre24PriceSQL, item.coin_exchange_id);
+        //   let pre24PriceRes = Pre24FristOrderList.find(a => a.coin_exchange_id == item.coin_exchange_id);
+        //   if (marketRes && marketRes.high_price && pre24PriceRes && pre24PriceRes.trade_price) {
+        //     marketModel.high_price = marketRes.high_price;
+        //     marketModel.low_price = marketRes.low_price;
+        //     marketModel.total_volume = marketRes.total_volume;
+        //     marketModel.total_amount = marketRes.total_amount + item.base_amount;
+        //     marketModel.change_rate = (marketModel.last_price - pre24PriceRes.trade_price) / pre24PriceRes.trade_price;
+        //   }
+        // }
         marketList.push({coin_exchange_id: item.coin_exchange_id, market: marketModel, coinEx: item});
       }));
       cnt.close();
@@ -258,6 +271,8 @@ class EntrustModel {
   }
 
   async getMarkets() {
+    // let cache=''
+
     let cnt = await DB.cluster('slaves');
     try {
       let sql = 'SELECT max(last24.trade_price) as high_price,' +
