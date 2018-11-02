@@ -392,7 +392,7 @@ class EntrustModel {
     }
   }
 
-  async getEntrustList(coin_exchange_id, refresh = false) {
+  async getEntrustList(coin_exchange_id, refresh = true) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Entrust_List + coin_exchange_id;
@@ -409,7 +409,7 @@ class EntrustModel {
         let sellsql = Utils.formatString(sql, [coin_exchange_id, 0, "asc"]);
         let BuyList = await cnt.execQuery(buysql);
         let SellList = await cnt.execQuery(sellsql);
-      let NewSellList = Enumerable.from(SellList).orderByDescending("parseFloat($.entrust_price)");
+        let NewSellList = Enumerable.from(SellList).orderByDescending("parseFloat($.entrust_price)").toArray();
       await cache.set(ckey, {"buyList": BuyList, "sellList": NewSellList}, 10);
       return {buyList: BuyList, sellList: NewSellList};
       }
