@@ -201,7 +201,7 @@ class EntrustModel {
         };
         let timestamp=new Date(new Date().toLocaleDateString()).getTime()/1000;
         let Day_Klinedata = await this.getKlineData(item.coin_exchange_id, 86400000);
-        let marketRes = Day_Klinedata.find(a => a.timestamp = timestamp);
+        let marketRes = Day_Klinedata.find(a => a.timestamp == timestamp);
         if (marketRes) {
           marketModel.high_price = marketRes.high_price;
           marketModel.low_price = marketRes.low_price;
