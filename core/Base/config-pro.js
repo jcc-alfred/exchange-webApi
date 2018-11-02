@@ -72,6 +72,7 @@ const config = {
 
     User_Auth_Strategy: 'User_Auth_Strategy_',               // 用户安全策略 data:15
     User_Auth_Strategy_Type: 'User_Auth_Strategy_Type',      // 用户安全策略类型data:15 hash
+    User_Exchange_Safe: 'User_Exchange_Safe_',                 //用户交易密码验证 策略为6，每6小时验证
 
     User_Alert: 'User_Alert_',                               // 用户通知 data:15 hash
     User_Alert_Type: 'User_Alert_Type',                      // 用户通知类型 data:15 hash

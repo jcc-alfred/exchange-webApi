@@ -54,7 +54,7 @@ router.post('/getCoinList', async (req, res, next) => {
     res.send({code: 1, msg: '', data: coinList})
   } catch (error) {
     res.status(500).end();
-    throw error;
+    console.error(error);
   }
 });
 
@@ -67,7 +67,7 @@ router.post('/getCoinExchangeAreaList', async (req, res, next) => {
     res.send({code: 1, msg: '', data: data})
   } catch (error) {
     res.status(500).end();
-    throw error;
+    console.error(error);
   }
 });
 
@@ -80,7 +80,7 @@ router.post('/getCoinExchangeList', async (req, res, next) => {
     res.send({code: 1, msg: '', data: data})
   } catch (error) {
     res.status(500).end();
-    throw error;
+    console.error(error);
   }
 });
 //获取市场行情列表
@@ -91,7 +91,7 @@ router.post('/getMarketList', async (req, res, next) => {
     res.send({code: 1, msg: '', data: data})
   } catch (error) {
     res.status(500).end();
-    throw error;
+    console.error(error);
   }
 });
 //获取交易是否安全
@@ -118,7 +118,7 @@ router.post('/getIsExchangeSafe', async (req, res, next) => {
     res.send({code: 1, msg: '', data: {isExchangeSafe: isExchangeSafe}});
   } catch (error) {
     res.status(500).end();
-    throw error;
+    console.error(error);
   }
 });
 
@@ -193,7 +193,7 @@ router.post('/doEntrust', async (req, res, next) => {
     }
   } catch (error) {
     res.status(500).end();
-    throw error;
+    console.error(error);
   }
 });
 
@@ -276,7 +276,7 @@ router.post('/doBatchEntrust', async (req, res, next) => {
 
     } catch (error) {
       res.status(500).end();
-      throw error;
+      console.error(error);
     }
   }
 
@@ -301,7 +301,7 @@ router.post('/doCancelEntrust', async (req, res, next) => {
     }
   } catch (error) {
     res.status(500).end();
-    throw error;
+    console.error(error);
   }
 });
 
@@ -329,7 +329,7 @@ router.post('/doBatchCancelEntrust', async (req, res, next) => {
       }
     } catch (error) {
       res.status(500).end();
-      throw error;
+      console.error(error);
     }
   }
 
@@ -345,7 +345,7 @@ router.post('/getEntrustList', async (req, res, next) => {
     res.send({code: 1, msg: '', data: data})
   } catch (error) {
     res.status(500).end();
-    throw error;
+    console.error(error);
   }
 });
 
@@ -356,7 +356,7 @@ router.post('/entrustList', async (req, res, next) => {
     res.send({code: 1, msg: '', data: entrustList});
   } catch (error) {
     res.status(500).end();
-    throw error;
+    console.error(error);
   }
 });
 
@@ -383,8 +383,7 @@ router.post('/reset', async (req, res, next) => {
   }
   catch (e) {
     res.status(500).end();
-    throw e;
+    console.error(e);
   }
-
 });
 module.exports = router;
