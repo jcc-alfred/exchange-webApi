@@ -172,7 +172,7 @@ class EntrustModel {
     return res;
   }
 
-  async getMarketList(refresh = true) {
+  async getMarketList(refresh = false) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Market_List;
