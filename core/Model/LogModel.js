@@ -29,7 +29,7 @@ class LogModel {
         log_type_id: type.id,
         log_type_name: type.name,
       });
-      cnt.close();
+      await cnt.close();
       return res;
 
     } catch (error) {
@@ -52,7 +52,7 @@ class LogModel {
 
       let res = cnt.page(sql, params, page, pageSize);
 
-      cnt.close();
+      await cnt.close();
       return res;
 
     }

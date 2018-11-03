@@ -19,7 +19,7 @@ class WithdrawAccountModel {
     catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -45,7 +45,7 @@ class WithdrawAccountModel {
     } catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -62,7 +62,7 @@ class WithdrawAccountModel {
     } catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 }

@@ -26,7 +26,7 @@ class CoinModel {
 
       let cnt = await DB.cluster('slave');
       let res = await cnt.execQuery("select * from m_coin where record_status=1 order by order_by_num asc");
-      cnt.close();
+      await cnt.close();
 
       let chRes = await Promise.all(res.map((info) => {
         return cacheCnt.hset(
@@ -40,7 +40,7 @@ class CoinModel {
     } catch (error) {
       throw error;
     } finally {
-      cacheCnt.close();
+      await cacheCnt.close();
     }
   }
 
@@ -61,7 +61,7 @@ class CoinModel {
 
       let cnt = await DB.cluster('slave');
       let res = await cnt.execQuery("select * from m_coin_exchange_area where record_status=1 order by order_by_num asc");
-      cnt.close();
+      await cnt.close();
 
       let chRes = await Promise.all(res.map((info) => {
         return cacheCnt.hset(
@@ -76,7 +76,7 @@ class CoinModel {
     } catch (error) {
       throw error;
     } finally {
-      cacheCnt.close();
+      await cacheCnt.close();
     }
   }
 
@@ -136,7 +136,7 @@ class CoinModel {
                             WHERE a.record_status = 1 AND a.is_enable_trade = 1
                             ORDER BY a.order_by_num ASC`;
       let res = await cnt.execQuery(sql);
-      cnt.close();
+      await cnt.close();
 
       let chRes = await Promise.all(res.map((info) => {
         return cacheCnt.hset(
@@ -150,7 +150,7 @@ class CoinModel {
     } catch (error) {
       throw error;
     } finally {
-      cacheCnt.close();
+      await cacheCnt.close();
     }
   }
 

@@ -26,13 +26,12 @@ class UserAuthStrategyModel {
           let item = cRes[i];
           data.push(JSON.parse(item));
         }
-        cacheCnt.close();
         return data;
       }
 
       let cnt = await DB.cluster('slave');
       let res = await cnt.execQuery("select * from m_user_auth_strategy_type where record_status=1");
-      cnt.close();
+      await cnt.close();
 
       let chRes = await Promise.all(res.map((info) => {
         return cacheCnt.hset(
@@ -41,13 +40,12 @@ class UserAuthStrategyModel {
           info
         )
       }));
-      cacheCnt.close();
 
       return res;
     } catch (error) {
       throw error;
     } finally {
-      cacheCnt.close();
+      await cacheCnt.close();
     }
   }
 
@@ -66,7 +64,7 @@ class UserAuthStrategyModel {
 
       let cnt = await DB.cluster('salve');
       let res = await cnt.execQuery('select * from m_user_auth_strategy where record_status=1 and user_id = ? ', userId);
-      cnt.close();
+      await cnt.close();
 
       await Promise.all(res.map(async (row) => {
         return cache.hset(ckey, row.category_type_id, row);
@@ -79,7 +77,7 @@ class UserAuthStrategyModel {
     } catch (error) {
       throw error;
     } finally {
-      cache.close();
+      await cache.close();
     }
 
   }
@@ -96,17 +94,15 @@ class UserAuthStrategyModel {
       let ckey = config.cacheKey.User_Auth_Strategy + userId;
       let cData = await cache.hget(ckey, category_type_id);
       if (cData) {
-        cache.close();
         return cData;
       }
       await this.getUserStrategyAllByUserId(userId);
       cData = await cache.hget(ckey, category_type_id);
-      cache.close();
       return cData;
     } catch (e) {
       throw e;
     } finally {
-      cache.close()
+      await cache.close()
     }
 
 
@@ -135,7 +131,7 @@ class UserAuthStrategyModel {
     } catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -164,7 +160,7 @@ class UserAuthStrategyModel {
           category_type_id: categoryTypeId,
         }
       );
-      cnt.close();
+      await cnt.close();
       return res;
     } catch (error) {
       throw error

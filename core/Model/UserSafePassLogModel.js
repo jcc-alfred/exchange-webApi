@@ -34,7 +34,7 @@ class UserSafePassLogModel {
       console.log(e);
       return false
     } finally {
-      cache.close();
+      await cache.close();
     }
   }
 
@@ -46,7 +46,7 @@ class UserSafePassLogModel {
     } catch (e) {
       console.error(e);
     } finally {
-      cache.close();
+      await cache.close();
     }
 
     // let cnt = await DB.cluster('slave');

@@ -30,7 +30,7 @@ class EntrustModel {
       let cnt = await DB.cluster('salve');
       let sql = `select * from m_entrust where entrust_id = ? and (entrust_status = 0 or entrust_status = 1)  `;
       let res = await cnt.execReader(sql, entrustId);
-      cnt.close();
+      await cnt.close();
       if (res) {
         await cache.hset(ckey, res.entrust_id, res, 300);
       }
@@ -40,7 +40,7 @@ class EntrustModel {
       throw error;
     }
     finally {
-      cache.close();
+      await cache.close();
     }
 
   }
@@ -101,7 +101,7 @@ class EntrustModel {
       throw error;
     }
     finally {
-      cnt.close();
+      await cnt.close();
     }
     return res;
   }
@@ -143,7 +143,7 @@ class EntrustModel {
           if (await cache.exists(uckey) && await cache.hexists(uckey, entrust.entrust_id)) {
             await cache.hdel(uckey, entrust.entrust_id);
           }
-          cache.close();
+          await cache.close();
           socket.emit('entrustList', {coin_exchange_id: coinExchangeId});
           socket.emit('userEntrustList', {user_id: entrust.user_id, coin_exchange_id: coinExchangeId});
           res = 1;
@@ -160,7 +160,7 @@ class EntrustModel {
       cnt.rollback();
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
     return res;
   }
@@ -225,8 +225,8 @@ class EntrustModel {
     } catch (error) {
       throw error;
     } finally {
-      cache.close();
-      klinecache.close();
+      await cache.close();
+      await klinecache.close();
     }
   }
 
@@ -250,7 +250,7 @@ class EntrustModel {
     } catch (e) {
       console.error(e);
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -278,7 +278,7 @@ class EntrustModel {
     } catch (e) {
       console.error(e);
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -306,7 +306,7 @@ class EntrustModel {
     } catch (e) {
       console.error(e);
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -329,7 +329,7 @@ class EntrustModel {
       let cnt = await DB.cluster('slave');
       let sql = `SELECT * FROM m_order WHERE coin_exchange_id = ? ORDER BY create_time DESC LIMIT 30 `;
       let res = await cnt.execQuery(sql, coinExchangeId);
-      cnt.close();
+      await cnt.close();
       let chRes = await Promise.all(res.map((info) => {
         return cache.hset(
           ckey,
@@ -344,7 +344,7 @@ class EntrustModel {
       throw error;
     }
     finally {
-      cache.close();
+      await cache.close();
     }
   }
 
@@ -366,7 +366,7 @@ class EntrustModel {
       let cnt = await DB.cluster('slave');
       let sql = `SELECT * FROM m_entrust WHERE user_id = ? and (entrust_status = 0 or entrust_status = 1) `;
       let res = await cnt.execQuery(sql, userId);
-      cnt.close();
+      await cnt.close();
 
       let chRes = await Promise.all(res.map((info) => {
         return cache.hset(
@@ -381,7 +381,7 @@ class EntrustModel {
       throw error;
     }
     finally {
-      cache.close();
+      await cache.close();
     }
   }
 
@@ -410,7 +410,7 @@ class EntrustModel {
       console.error(e);
       return {buyList: [], sellList: []};
     } finally {
-      cache.close();
+      await cache.close();
     }
   }
 
@@ -445,8 +445,8 @@ class EntrustModel {
     } catch (error) {
       throw error;
     } finally {
-      cache.close();
-      cnt.close();
+      await cache.close();
+      await cnt.close();
     }
   }
 
@@ -482,13 +482,14 @@ class EntrustModel {
     } catch (error) {
       throw error;
     } finally {
-      cache.close();
-      cnt.close();
+      await cache.close();
+      await cnt.close();
     }
   }
 
   async getKlineData(coinExchangeId, range, refresh = false) {
     let cache = await Cache.init(config.cacheDB.kline);
+    let cnt = await DB.cluster('slave');
     try {
       let ckey = config.cacheKey.KlineData_CEID_Range + coinExchangeId + '_' + range;
       if (await cache.exists(ckey) && !refresh) {
@@ -502,7 +503,6 @@ class EntrustModel {
           return data;
         }
       }
-      let cnt = await DB.cluster('slave');
       let sql = `SELECT datestamp, timestamp, open_price, close_price, high_price, low_price, volume
                        FROM m_kline
                        WHERE coin_exchange_id_range = ?
@@ -510,7 +510,6 @@ class EntrustModel {
                        LIMIT 500`;
 
       let res = await cnt.execQuery(sql, ckey);
-      cnt.close();
 
       let chRes = await Promise.all(res.map((info) => {
         return cache.hset(
@@ -525,15 +524,16 @@ class EntrustModel {
     } catch (error) {
       throw error;
     } finally {
-      cache.close();
+      await cache.close();
+      await cnt.close();
     }
   }
 
   async ResetEntrust(coin_exchange_id, user_id) {
     let cache = await Cache.init(config.cacheDB.order);
+    let cnt = await DB.cluster('master');
     try {
       //delete mysql entrusts for coin_exchange_id
-      let cnt = await DB.cluster('master');
       let delete_entrust_sql = `delete from m_entrust where coin_exchange_id = ?`;
       let delete_entrust = await cnt.execQuery(delete_entrust_sql, coin_exchange_id);
       //delet mysql orders for coin_exchange_id
@@ -543,7 +543,6 @@ class EntrustModel {
       let delete_order = await cnt.execQuery(delete_order_sql, [coin_exchange_id]);
 
       let chRes = await Promise.all([delete_entrust, delete_order, reset_balance]);
-      cnt.close();
 
       // delete redis hash key for entrust, user,kline
       await cache.del(config.cacheKey.Buy_Entrust + coin_exchange_id);
@@ -557,7 +556,6 @@ class EntrustModel {
       }));
       cache.select(config.cacheDB.users);
       await cache.flushdb();
-      cache.close();
       return true;
 
     } catch (error) {
@@ -565,7 +563,8 @@ class EntrustModel {
       return false
     }
     finally {
-      cache.close();
+      await cnt.close();
+      await cache.close();
     }
   }
 

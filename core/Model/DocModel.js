@@ -20,7 +20,7 @@ class DocModel {
     catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -34,7 +34,7 @@ class DocModel {
       console.error(error);
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -48,7 +48,7 @@ class DocModel {
       console.error(error);
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 }

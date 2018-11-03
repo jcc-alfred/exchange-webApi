@@ -33,7 +33,7 @@ class UserAlertModel {
 
       let cnt = await DB.cluster('slave');
       let res = await cnt.execQuery("select * from m_user_alert_type where record_status=1");
-      cnt.close();
+      await cnt.close();
       let chRes = await Promise.all(res.map(async (info) => {
         return cacheCnt.hset(
           config.cacheKey.User_Alert_Type,
@@ -45,7 +45,7 @@ class UserAlertModel {
     } catch (error) {
       throw error;
     } finally {
-      cacheCnt.close();
+      await cacheCnt.close();
     }
   }
 
@@ -69,7 +69,7 @@ class UserAlertModel {
     } catch (error) {
       throw error;
     } finally {
-      cache.close();
+      await cache.close();
     }
   }
 
@@ -89,7 +89,7 @@ class UserAlertModel {
     } catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -102,7 +102,7 @@ class UserAlertModel {
     } catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 

@@ -32,7 +32,7 @@ class AssetsModel {
     } catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -66,7 +66,7 @@ class AssetsModel {
             from m_user_assets as a LEFT JOIN m_coin as b on a.coin_id = b.coin_id
             where a.record_status=1 and a.user_id = ? order by b.order_by_num asc  `;
       let res = await cnt.execQuery(sql, userId);
-      cnt.close();
+      await cnt.close();
 
 
       await Promise.all(res.map(async (row) => {
@@ -80,7 +80,7 @@ class AssetsModel {
     } catch (error) {
       throw error;
     } finally {
-      cache.close();
+      await cache.close();
     }
 
   }

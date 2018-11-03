@@ -31,7 +31,7 @@ class AssetsLogModel {
     } catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -47,13 +47,13 @@ class AssetsLogModel {
           let item = cRes[i];
           data.push(JSON.parse(item));
         }
-        cacheCnt.close();
+        await cacheCnt.close();
         return data;
       }
 
       let cnt = await DB.cluster('slave');
       let res = await cnt.execQuery("select * from m_user_assets_log_type where record_status=1 order by user_assets_log_type_id asc");
-      cnt.close();
+      await cnt.close();
 
       let chRes = await Promise.all(res.map((info) => {
         return cacheCnt.hset(
@@ -62,15 +62,12 @@ class AssetsLogModel {
           info
         )
       }));
-
-      cacheCnt.close();
-
       return res;
 
     } catch (error) {
       throw error;
     } finally {
-      cacheCnt.close();
+      await cacheCnt.close();
     }
   }
 
@@ -95,7 +92,7 @@ class AssetsLogModel {
       // console.log(sql);
       let res = cnt.page(sql, null, page, pageSize);
 
-      cnt.close();
+      await cnt.close();
       return res;
     }
     catch (error) {

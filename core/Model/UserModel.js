@@ -22,7 +22,7 @@ class UserModel {
       let cnt = await DB.cluster('slave');
       let sql = `select * from m_user where record_status=1 and user_id = ? `;
       let res = await cnt.execReader(sql, [id]);
-      cnt.close();
+      await cnt.close();
       if (res) {
         await cache.set(config.cacheKey.Users + res.user_id, res, 3600);
       }
@@ -31,7 +31,7 @@ class UserModel {
       console.error(error);
       throw error;
     } finally {
-      cache.close();
+      await cache.close();
     }
   }
 
@@ -50,8 +50,8 @@ class UserModel {
       console.error(error);
       throw error;
     } finally {
-      cnt.close();
-      cache.close();
+      await cnt.close();
+      await cache.close();
     }
   }
 
@@ -60,12 +60,12 @@ class UserModel {
       let cnt = await DB.cluster('slave');
       let sql = `select * from m_user where record_status=1 and phone_number = ?`;
       let res = await cnt.execReader(sql, [phone]);
-      cnt.close();
+      await cnt.close();
 
       if (res) {
         let cache = await Cache.init(config.cacheDB.users);
         await cache.set(config.cacheKey.Users + res.user_id, res, 3600);
-        cache.close();
+        await cache.close();
       }
 
       return res;
@@ -130,7 +130,7 @@ class UserModel {
       throw error;
     }
     finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -144,7 +144,7 @@ class UserModel {
       console.error(error);
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -157,7 +157,7 @@ class UserModel {
       console.error(error);
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
 
   }
@@ -180,7 +180,7 @@ class UserModel {
     } catch (error) {
       throw error;
     } finally {
-      cache.close();
+      await cache.close();
     }
   }
 
@@ -195,7 +195,7 @@ class UserModel {
     } catch (error) {
       throw error;
     } finally {
-      cache.close();
+      await cache.close();
     }
   }
 
@@ -216,7 +216,7 @@ class UserModel {
     } catch (error) {
       throw error;
     } finally {
-      cache.close();
+      await cache.close();
     }
   }
 

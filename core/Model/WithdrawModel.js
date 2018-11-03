@@ -26,7 +26,7 @@ class WithdrawModel {
     catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -42,7 +42,7 @@ class WithdrawModel {
     catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -89,7 +89,7 @@ class WithdrawModel {
       cnt.rollback();
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
     return res;
   }
@@ -129,7 +129,7 @@ class WithdrawModel {
       cnt.rollback();
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
     return res;
   }

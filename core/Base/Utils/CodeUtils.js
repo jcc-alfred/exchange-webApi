@@ -18,7 +18,7 @@ let CodeUtils = {
     } catch (e) {
       throw e;
     } finally {
-      cache.close();
+      await cache.close();
     }
   },
 
@@ -32,7 +32,7 @@ let CodeUtils = {
     } catch (e) {
       throw e;
     } finally {
-      cache.close();
+      await cache.close();
     }
 
   },
@@ -45,7 +45,7 @@ let CodeUtils = {
     } catch (e) {
       throw e;
     } finally {
-      cache.close();
+      await cache.close();
     }
   },
 

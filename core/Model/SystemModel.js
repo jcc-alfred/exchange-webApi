@@ -10,7 +10,6 @@ class SystemModel {
     try {
       let cRes = await  cache.hget(config.cacheKey.Sys_Lang, code);
       if (cRes) {
-        cache.close();
         return cRes
       }
       let cnt = await DB.cluster('slave');
@@ -19,13 +18,12 @@ class SystemModel {
       if (res) {
         await cache.hset(config.cacheKey.Sys_Lang, code, res);
       }
-      cache.close();
-      cnt.close();
+      await cnt.close();
       return res;
     } catch (error) {
       throw error
     } finally {
-      cache.close();
+      await cache.close();
     }
   }
 
@@ -34,7 +32,6 @@ class SystemModel {
     try {
       let cRes = await cache.hget(config.cacheKey.Sys_Lang, id);
       if (cRes) {
-        cache.close();
         return cRes
       }
 
@@ -44,13 +41,12 @@ class SystemModel {
       if (res) {
         await cache.hset(config.cacheKey.Sys_Lang, id, res);
       }
-      cache.close();
-      cnt.close();
+      await cnt.close();
       return res;
     } catch (error) {
       throw error
     } finally {
-      cache.close();
+      await cache.close();
     }
   }
 
@@ -60,7 +56,6 @@ class SystemModel {
       let cRes = await cache.hget(config.cacheKey.Sys_Msg_tpl, langId + '_' + tplType);
 
       if (cRes) {
-        cache.close();
         return cRes
       }
 
@@ -78,13 +73,12 @@ class SystemModel {
         );
       }
 
-      cache.close();
-      cnt.close();
+      await cnt.close();
       return res;
     } catch (error) {
       throw error
     } finally {
-      cache.close();
+      await cache.close();
     }
   }
 
@@ -108,7 +102,6 @@ class SystemModel {
           let item = cRes[i];
           data.push(JSON.parse(item));
         }
-        cache.close();
         return data.filter((item) => {
           return item.config_type_id == typeId
         });
@@ -128,15 +121,14 @@ class SystemModel {
         )
       }));
 
-      cache.close();
-      cnt.close();
+      await cnt.close();
       return res.filter((item) => {
         return item.config_type_id == typeId
       });
     } catch (error) {
       throw error
     } finally {
-      cache.close();
+      await cache.close();
     }
   }
 }

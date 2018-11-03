@@ -31,7 +31,7 @@ class UserBonusModel {
     } catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -46,7 +46,7 @@ class UserBonusModel {
     catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 
@@ -152,7 +152,7 @@ class UserBonusModel {
       cnt.rollback();
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 }

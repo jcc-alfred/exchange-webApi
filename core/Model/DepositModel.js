@@ -26,7 +26,7 @@ class DepositModel {
     catch (error) {
       throw error;
     } finally {
-      cnt.close();
+      await cnt.close();
     }
   }
 }
