@@ -167,7 +167,6 @@ class EntrustModel {
 
   async getMarketList(refresh = false) {
     let cache = await Cache.init(config.cacheDB.order);
-    let klinecache = await Cache.init(config.cacheDB.kline);
     try {
       let ckey = config.cacheKey.Market_List;
       if (await cache.exists(ckey) && !refresh) {
@@ -226,7 +225,6 @@ class EntrustModel {
       throw error;
     } finally {
       await cache.close();
-      await klinecache.close();
     }
   }
 
@@ -516,7 +514,7 @@ class EntrustModel {
           ckey,
           info.timestamp,
           info,
-          3600
+          86400
         )
       }));
       return res;
