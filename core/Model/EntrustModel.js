@@ -97,7 +97,6 @@ class EntrustModel {
         cnt.rollback();
       }
     } catch (error) {
-      console.error(error);
       cnt.rollback();
       throw error;
     }
@@ -115,7 +114,7 @@ class EntrustModel {
       if (entrust && entrust.user_id == userId && (entrust.entrust_status == 0 || entrust.entrust_status == 1)) {
         //0 待成交 1 部分成交 2 已完成 3 已取消
         let coinExchangeList = await CoinModel.getCoinExchangeList();
-        let coinEx = coinExchangeList.find(item => item.coin_exchange_id == coinExchangeId);
+        let coinEx = coinExchangeList.find((item) => item.coin_exchange_id == coinExchangeId);
         let totalNoCompleteAmount = Utils.checkDecimal(Utils.mul(entrust.no_completed_volume, entrust.entrust_price), coinEx.exchange_decimal_digits);
         cnt.transaction();
         let updEntrust = await cnt.edit('m_entrust', {
@@ -126,15 +125,9 @@ class EntrustModel {
         if (entrust.entrust_type_id == 1) {
           updAssets = await cnt.execQuery(`update m_user_assets set available = available + ? , frozen = frozen - ? 
                     where user_id = ? and coin_id = ? and frozen >= ?`, [totalNoCompleteAmount, totalNoCompleteAmount, userId, coinEx.exchange_coin_id, totalNoCompleteAmount]);
-          if (updAssets.affectedRows == 0) {
-            console.log(entrust);
-          }
         } else {
           updAssets = await cnt.execQuery(`update m_user_assets set available = available + ? , frozen = frozen - ? 
                     where user_id = ? and coin_id = ? and frozen >= ?`, [entrust.no_completed_volume, entrust.no_completed_volume, userId, coinEx.coin_id, entrust.no_completed_volume]);
-          if (updAssets.affectedRows == 0) {
-            console.log(entrust);
-          }
         }
         if (updEntrust.affectedRows && updAssets.affectedRows) {
           cnt.commit();
@@ -190,6 +183,7 @@ class EntrustModel {
       }
       let coinExList = await CoinModel.getCoinExchangeList();
       let marketList = [];
+      let timestamp = new Date(new Date().toLocaleDateString()).getTime() / 1000;
       await Promise.all(coinExList.map(async (item) => {
         let marketModel = {
           last_price: 0,
@@ -199,9 +193,8 @@ class EntrustModel {
           total_volume: 0,
           total_amount: 0
         };
-        let timestamp=new Date(new Date().toLocaleDateString()).getTime()/1000;
         let Day_Klinedata = await this.getKlineData(item.coin_exchange_id, 86400000);
-        let marketRes = Day_Klinedata.find(a => a.timestamp == timestamp);
+        let marketRes = Day_Klinedata.find((a) => a.timestamp == timestamp);
         if (marketRes) {
           marketModel.high_price = marketRes.high_price;
           marketModel.low_price = marketRes.low_price;
@@ -214,7 +207,7 @@ class EntrustModel {
       }));
       try {
         let coin_prices = await axios.get(config.GTdollarAPI, {timeout: 2000});
-        marketList.map(x => Object.assign(x, coin_prices.data.find(y => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
+        marketList.map(x => Object.assign(x, coin_prices.data.find((y) => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
       } catch (e) {
         console.error("error get prices from " + config.GTdollarAPI);
         console.error(e);
@@ -380,7 +373,7 @@ class EntrustModel {
           ckey,
           info.entrust_id,
           info,
-          6000
+          300
         )
       }));
       return res;
@@ -392,7 +385,7 @@ class EntrustModel {
     }
   }
 
-  async getEntrustList(coin_exchange_id, refresh = true) {
+  async getEntrustList(coin_exchange_id, refresh = false) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Entrust_List + coin_exchange_id;

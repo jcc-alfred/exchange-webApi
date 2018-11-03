@@ -31,7 +31,7 @@ const config = {
       password: '#B1L5GkgL$bb',
       database: 'MeltEx', // 前面建的user表位于这个数据库中
       port: 3306,
-      connectionLimit: 100,
+      connectionLimit: 20,
     },
     slaves: [{
       host: 'rds-slave.lan',
@@ -39,14 +39,14 @@ const config = {
       password: '#B1L5GkgL$bb',
       database: 'MeltEx', // 前面建的user表位于这个数据库中
       port: 3306,
-      connectionLimit: 100,
+      connectionLimit: 20,
     }, {
       host: 'rds-slave.lan',
       user: 'gtdollar',
       password: '#B1L5GkgL$bb',
       database: 'MeltEx', // 前面建的user表位于这个数据库中
       port: 3306,
-      connectionLimit: 100,
+      connectionLimit: 20,
     }]
   },
 

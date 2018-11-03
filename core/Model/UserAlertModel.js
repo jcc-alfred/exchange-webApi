@@ -34,7 +34,7 @@ class UserAlertModel {
       let cnt = await DB.cluster('slave');
       let res = await cnt.execQuery("select * from m_user_alert_type where record_status=1");
       cnt.close();
-      let chRes = await Promise.all(res.map((info) => {
+      let chRes = await Promise.all(res.map(async (info) => {
         return cacheCnt.hset(
           config.cacheKey.User_Alert_Type,
           info.user_alert_type_id,
@@ -60,7 +60,7 @@ class UserAlertModel {
       let cnt = await DB.cluster('salve');
       let res = await cnt.execQuery('select * from m_user_alert where record_status=1 and user_id = ? ', userId);
 
-      await Promise.all(res.map((row) => {
+      await Promise.all(res.map(async (row) => {
         return cache.hset(ckey, row.user_alert_type_id, row);
       }));
       await cache.expire(ckey, 7200);
