@@ -203,7 +203,7 @@ class EntrustModel {
           marketModel.last_price = marketRes.close_price;
         }
         marketList.push({coin_exchange_id: item.coin_exchange_id, market: marketModel, coinEx: item});
-
+        return true;
       }));
       try {
         let coin_prices = await axios.get(config.GTdollarAPI, {timeout: 2000});
