@@ -165,7 +165,7 @@ class EntrustModel {
     return res;
   }
 
-  async getMarketList(refresh = false) {
+  async getMarketList(refresh = true) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Market_List;
@@ -183,7 +183,10 @@ class EntrustModel {
       let coinExList = await CoinModel.getCoinExchangeList();
       let marketList = [];
       let timestamp = new Date(new Date().toLocaleDateString()).getTime() / 1000;
-      await Promise.all(coinExList.map(async (item) => {
+      // coinExList.map(async (item) => {
+      for (let i = 0; i < coinExList.length; i++) {
+        let item = coinExList[i];
+        // console.log('start'+item.coin_exchange_id);
         let marketModel = {
           last_price: 0,
           change_rate: 0,
@@ -203,9 +206,12 @@ class EntrustModel {
           marketModel.last_price = marketRes.close_price;
         }
         marketList.push({coin_exchange_id: item.coin_exchange_id, market: marketModel, coinEx: item});
+        // console.log('end'+item.coin_exchange_id);
+      }
 
-      }));
+      // });
       try {
+        // console.log('get price')
         let coin_prices = await axios.get(config.GTdollarAPI, {timeout: 2000});
         marketList.map(x => Object.assign(x, coin_prices.data.find((y) => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
       } catch (e) {
