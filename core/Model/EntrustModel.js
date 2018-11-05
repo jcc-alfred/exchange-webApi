@@ -114,7 +114,7 @@ class EntrustModel {
       if (entrust && entrust.user_id == userId && (entrust.entrust_status == 0 || entrust.entrust_status == 1)) {
         //0 待成交 1 部分成交 2 已完成 3 已取消
         let coinExchangeList = await CoinModel.getCoinExchangeList();
-        let coinEx = coinExchangeList.find(item => item.coin_exchange_id == coinExchangeId);
+        let coinEx = coinExchangeList.find((item) => item.coin_exchange_id == coinExchangeId);
         let totalNoCompleteAmount = Utils.checkDecimal(Utils.mul(entrust.no_completed_volume, entrust.entrust_price), coinEx.exchange_decimal_digits);
         cnt.transaction();
         let updEntrust = await cnt.edit('m_entrust', {
@@ -165,69 +165,6 @@ class EntrustModel {
     return res;
   }
 
-  // async getMarketList(refresh = true) {
-  //   let cache = await Cache.init(config.cacheDB.order);
-  //   try {
-  //     let ckey = config.cacheKey.Market_List;
-  //     if (await cache.exists(ckey) && !refresh) {
-  //       let cRes = await cache.hgetall(ckey);
-  //       if (cRes) {
-  //         let data = [];
-  //         for (let i in cRes) {
-  //           let item = cRes[i];
-  //           data.push(JSON.parse(item));
-  //         }
-  //         return data;
-  //       }
-  //     }
-  //     let coinExList = await CoinModel.getCoinExchangeList();
-  //     let marketList = [];
-  //     let timestamp = new Date(new Date().toLocaleDateString()).getTime() / 1000;
-  //     await Promise.all(coinExList.map(async (item) => {
-  //       let marketModel = {
-  //         last_price: 0,
-  //         change_rate: 0,
-  //         high_price: 0,
-  //         low_price: 0,
-  //         total_volume: 0,
-  //         total_amount: 0
-  //       };
-  //       let Day_Klinedata = await this.getKlineData(item.coin_exchange_id, 86400000);
-  //       let marketRes = Day_Klinedata.find((a) => a.timestamp == timestamp);
-  //       if (marketRes) {
-  //         marketModel.high_price = marketRes.high_price;
-  //         marketModel.low_price = marketRes.low_price;
-  //         marketModel.total_volume = marketRes.volume;
-  //         marketModel.total_amount = marketRes.volume * marketRes.close_price + item.base_amount;
-  //         marketModel.change_rate = (marketRes.close_price - marketRes.open_price) / marketRes.open_price;
-  //         marketModel.last_price = marketRes.close_price;
-  //       }
-  //       marketList.push({coin_exchange_id: item.coin_exchange_id, market: marketModel, coinEx: item});
-  //       return;
-  //     }));
-  //     try {
-  //       let coin_prices = await axios.get(config.GTdollarAPI, {timeout: 2000});
-  //       marketList.map(x => Object.assign(x, coin_prices.data.find((y) => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
-  //     } catch (e) {
-  //       console.error("error get prices from " + config.GTdollarAPI);
-  //       console.error(e);
-  //     }
-  //     let chRes = await Promise.all(marketList.map((market) => {
-  //       return cache.hset(
-  //         ckey,
-  //         market.coin_exchange_id,
-  //         market,
-  //         60
-  //       )
-  //     }));
-  //     return marketList;
-  //
-  //   } catch (error) {
-  //     throw error;
-  //   } finally {
-  //     await cache.close();
-  //   }
-  // }
   async getMarketList(refresh = false) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
@@ -240,17 +177,12 @@ class EntrustModel {
             let item = cRes[i];
             data.push(JSON.parse(item));
           }
-          cache.close();
           return data;
         }
       }
-      let cnt = await DB.cluster('slave');
-      console.log(new Date());
       let coinExList = await CoinModel.getCoinExchangeList();
       let marketList = [];
-      // let lastOrderList = await this.getLastOrder();
-      let Pre24FristOrderList = await this.getPre24FirstOrder();
-      let Pre24Market = await this.getMarkets();
+      let timestamp = new Date(new Date().toLocaleDateString()).getTime() / 1000;
       await Promise.all(coinExList.map(async (item) => {
         let marketModel = {
           last_price: 0,
@@ -260,38 +192,22 @@ class EntrustModel {
           total_volume: 0,
           total_amount: 0
         };
-        //1. LastPrice
-        let orderList = await this.getOrderListByCoinExchangeId(item.coin_exchange_id);
-        let lastOrder = orderList.sort((item1, item2) => {
-          return item2.order_id - item1.order_id
-        })[0];
-        // let lastOrder = lastOrderList.find((a) => a.coin_exchange_id == item.coin_exchange_id);
-        if (lastOrder && lastOrder.trade_price) {
-          marketModel.last_price = lastOrder.trade_price;
-          //2. highPrice lowPrice total_volume total_amount
-          let marketRes = Pre24Market.find(a => a.coin_exchange_id == item.coin_exchange_id);
-
-          // let marketSQL = `SELECT max(trade_price) as high_price,min(trade_price) as low_price,sum(trade_volume) as total_volume,sum(trade_amount) as total_amount
-          //           FROM m_order Where coin_exchange_id = ? and create_time >= (now() - interval 24 hour) `;
-          // let marketRes = await cnt.execReader(marketSQL, item.coin_exchange_id);
-          //3. pre24HourPrice
-          // let pre24PriceSQL = `SELECT trade_price FROM m_order Where coin_exchange_id = ? and create_time >= (now() - interval 24 hour) ORDER BY order_id ASC LIMIT 1 `;
-          // let pre24PriceRes = await cnt.execReader(pre24PriceSQL, item.coin_exchange_id);
-          let pre24PriceRes = Pre24FristOrderList.find(a => a.coin_exchange_id == item.coin_exchange_id);
-          if (marketRes && marketRes.high_price && pre24PriceRes && pre24PriceRes.trade_price) {
-            marketModel.high_price = marketRes.high_price;
-            marketModel.low_price = marketRes.low_price;
-            marketModel.total_volume = marketRes.total_volume;
-            marketModel.total_amount = marketRes.total_amount + item.base_amount;
-            marketModel.change_rate = (marketModel.last_price - pre24PriceRes.trade_price) / pre24PriceRes.trade_price;
-          }
+        let Day_Klinedata = await this.getKlineData(item.coin_exchange_id, 86400000);
+        let marketRes = Day_Klinedata.find((a) => a.timestamp == timestamp);
+        if (marketRes) {
+          marketModel.high_price = marketRes.high_price;
+          marketModel.low_price = marketRes.low_price;
+          marketModel.total_volume = marketRes.volume;
+          marketModel.total_amount = marketRes.volume * marketRes.close_price + item.base_amount;
+          marketModel.change_rate = (marketRes.close_price - marketRes.open_price) / marketRes.open_price;
+          marketModel.last_price = marketRes.close_price;
         }
         marketList.push({coin_exchange_id: item.coin_exchange_id, market: marketModel, coinEx: item});
+
       }));
-      cnt.close();
       try {
         let coin_prices = await axios.get(config.GTdollarAPI, {timeout: 2000});
-        marketList.map(x => Object.assign(x, coin_prices.data.find(y => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
+        marketList.map(x => Object.assign(x, coin_prices.data.find((y) => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
       } catch (e) {
         console.error("error get prices from " + config.GTdollarAPI);
         console.error(e);
@@ -309,7 +225,7 @@ class EntrustModel {
     } catch (error) {
       throw error;
     } finally {
-      cache.close()
+      await cache.close();
     }
   }
 
