@@ -212,7 +212,7 @@ class EntrustModel {
       // });
       try {
         // console.log('get price')
-        let coin_prices = await axios.get(config.GTdollarAPI, {timeout: 2000});
+        let coin_prices = await axios.get(config.GTdollarAPI, {timeout: 1000});
         marketList.map(x => Object.assign(x, coin_prices.data.find((y) => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
       } catch (e) {
         console.error("error get prices from " + config.GTdollarAPI);
