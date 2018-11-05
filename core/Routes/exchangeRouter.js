@@ -323,9 +323,9 @@ router.post('/doBatchCancelEntrust', async (req, res, next) => {
   //   })
   // }));
 
+  try {
+    for (let i = 0; i < entrust_sns.length; i++) {
 
-  for (let i = 0; i < entrust_sns.length; i++) {
-    try {
       let result = await EntrustModel.cancelEntrust({
         userId: user_id,
         entrustId: entrust_sns[i].entrustId,
@@ -333,17 +333,18 @@ router.post('/doBatchCancelEntrust', async (req, res, next) => {
         entrustTypeId: entrust_sns[i].entrustTypeId
       });
 
-      if (!(result > 0)) {
-        res.send({code: 0, msg: '操作失败' + JSON.stringify(entrust_sns[i])});
-        return;
-      }
+    }
+    res.send({code: 1, msg: '操作成功'});
+    // if (!(result > 0)) {
+    //   res.send({code: 0, msg: '操作失败' + JSON.stringify(entrust_sns[i])});
+    //   return;
+    // }
     } catch (error) {
       res.status(500).end();
       console.error(error);
     }
-  }
 
-  res.send({code: 1, msg: '操作成功'});
+
 });
 
 router.post('/getEntrustList', async (req, res, next) => {

@@ -52,6 +52,7 @@ class EntrustModel {
       let serialNum = moment().format('YYYYMMDDHHmmssSSS');
       let feesRate = entrustTypeId == 1 ? buyFeesRate : sellFeesRate;
       let totalAmount = Utils.checkDecimal(Utils.mul(entrustPrice, entrustVolume), 8);
+
       cnt.transaction();
       //冻结用户资产
       let updAssets = null;
@@ -98,7 +99,9 @@ class EntrustModel {
       }
     } catch (error) {
       cnt.rollback();
+      console.error(Utils.checkDecimal(Utils.mul(entrustPrice, entrustVolume), 8));
       throw error;
+
     }
     finally {
       await cnt.close();
@@ -156,7 +159,7 @@ class EntrustModel {
         res = -1;
       }
     } catch (error) {
-      console.error(error);
+      // console.error(error);
       cnt.rollback();
       throw error;
     } finally {
