@@ -186,7 +186,7 @@ var uploadQrcode = multer({
 
 router.post('/uploadQrcode',uploadQrcode.single('file'),(req, res)=>{
     try {
-      console.log('111111111', req.file.path);
+      // console.log('111111111', req.file.path);
         let img =  images(req.file.path);
 
       img.save(req.file.path);

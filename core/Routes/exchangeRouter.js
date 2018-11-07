@@ -375,7 +375,7 @@ router.post('/entrustList', async (req, res, next) => {
 router.post('/reset', async (req, res, next) => {
   try {
     if (config.reset && config.reset.status && config.reset.status == 1 && config.reset.token && req.body.super_token && req.body.super_token == config.reset.token) {
-      console.log(req.body.super_token == config.reset.token);
+      // console.log(req.body.super_token == config.reset.token);
       if (!req.body.exchange_pair_name) {
         return res.send({"msg": "exchange_pair_name required, example: BTC/USDT"});
       }
