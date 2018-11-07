@@ -1,10 +1,12 @@
 const config = {
 
-  socketDomain: 'http://socket.lan:5000/',
   GTdollarAPI: 'http://api.gttdollar.com/ticker.json',
-
+  coinmarket_api: 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest',
+  coinmarket_secret: 'c236b6e8-ede0-40a8-9a66-e60a039aff80',
+  currency_api: 'http://www.apilayer.net/api/live',
+  currency_secret: '0baf27b3065f8dd0ae4eb51f1ae6a24a',
   sys: {
-    domain: 'www.asiaedx.com',     //域名
+    domain: 'getdax.com',     //域名
     ipRegisterMaxNum: 100,       //IP注册最大次数
     loginPassRetryNum: 5,        //密码输入错误重试次数
     sendMsgRetryNum: 5,          //队列 向手机邮箱发送放心消息失败重试次数
@@ -15,12 +17,8 @@ const config = {
 
   token: {
     secret: 'Melt@998',
-    expire_Web: 720000,
-    expire_APP: '7d',
-  },
-  reset: {
-    status: 0,   //0 关掉reset接口， 1，打开
-    token: '7I7MWnFFXwik!5@50e6cD5jy'
+    expire_Web: 7200,
+    expire_APP: '7d'
   },
 
 
@@ -29,24 +27,24 @@ const config = {
       host: 'rds-master.lan',
       user: 'gtdollar',
       password: '#B1L5GkgL$bb',
-      database: 'MeltEx', // 前面建的user表位于这个数据库中
+      database: 'MeltEx',
       port: 3306,
-      connectionLimit: 20,
+      connectionLimit: 100,
     },
     slaves: [{
       host: 'rds-slave.lan',
       user: 'gtdollar',
       password: '#B1L5GkgL$bb',
-      database: 'MeltEx', // 前面建的user表位于这个数据库中
+      database: 'MeltEx',
       port: 3306,
-      connectionLimit: 20,
+      connectionLimit: 100,
     }, {
       host: 'rds-slave.lan',
       user: 'gtdollar',
       password: '#B1L5GkgL$bb',
-      database: 'MeltEx', // 前面建的user表位于这个数据库中
+      database: 'MeltEx',
       port: 3306,
-      connectionLimit: 20,
+      connectionLimit: 100,
     }]
   },
 
@@ -72,7 +70,6 @@ const config = {
 
     User_Auth_Strategy: 'User_Auth_Strategy_',               // 用户安全策略 data:15
     User_Auth_Strategy_Type: 'User_Auth_Strategy_Type',      // 用户安全策略类型data:15 hash
-    User_Exchange_Safe: 'User_Exchange_Safe_',                 //用户交易密码验证 策略为6，每6小时验证
 
     User_Alert: 'User_Alert_',                               // 用户通知 data:15 hash
     User_Alert_Type: 'User_Alert_Type',                      // 用户通知类型 data:15 hash
@@ -95,7 +92,7 @@ const config = {
 
     User_Assets: "User_Assets_",                             // 用户资产信息 data:15 hash
 
-    User_Assets_Log_Type: "User_Assets_Log_Type",             // 用户资产日志类型 data:15 hash
+    User_Assets_Log_Type: "User_Assets_Log_Type",            // 用户资产日志类型 data:15 hash
 
     Buy_Entrust: "Buy_Entrust_",                             //买单委托
     Sell_Entrust: "Sell_Entrust_",                           //卖单委托
@@ -104,8 +101,8 @@ const config = {
     Market_List: "Market_List",                              //盘口行情数据
     KlineData_CEID_Range: "KlineData_CEID_Range_",           //K线数据
     Entrust_List: "EntrustList_Coin_exchange_ID_",
-  },
 
+  },
   MQ: {
     protocol: 'amqp',
     hostname: 'rabbitmq53.lan',
@@ -119,8 +116,7 @@ const config = {
     Send_Code: 'Send_Code',
     Send_Alert: 'Send_Alert',
     Entrust_Queue: 'Entrust_CEId_',
-    Entrust_OTC_Queue: 'Entrust_OTC_CoinId_',
-    Order_OTC_Queue: 'Order_OTC_CoinId_',
+    Entrust_OTC_Queue: 'Entrust_OTC_CoinId_'
   },
 };
 

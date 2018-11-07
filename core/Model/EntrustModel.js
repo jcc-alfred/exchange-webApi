@@ -484,7 +484,7 @@ class EntrustModel {
     }
   }
 
-  async getEntrustList(coin_exchange_id, refresh = false) {
+  async getEntrustList(coin_exchange_id, refresh = true) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Entrust_List + coin_exchange_id;
@@ -492,18 +492,43 @@ class EntrustModel {
         let cRes = await cache.get(ckey);
         return cRes
       } else {
-        let cnt = await DB.cluster('slave');
-        let sql = 'select e.entrust_price as entrust_price, sum(e.entrust_volume) as entrust_volume, sum(e.no_completed_volume) as no_completed_volume from ' +
-          '(SELECT * FROM m_entrust WHERE coin_exchange_id = {0} and entrust_type_id = {1} and entrust_status in (0,1) ) as e ' +
-          'group by entrust_price ' +
-          'order by entrust_price {2} limit 10';
-        let buysql = Utils.formatString(sql, [coin_exchange_id, 1, "desc"]);
-        let sellsql = Utils.formatString(sql, [coin_exchange_id, 0, "asc"]);
-        let BuyList = await cnt.execQuery(buysql);
-        let SellList = await cnt.execQuery(sellsql);
-        let NewSellList = Enumerable.from(SellList).orderByDescending("parseFloat($.entrust_price)").toArray();
-        await cache.set(ckey, {"buyList": BuyList, "sellList": NewSellList}, 10);
-        return {buyList: BuyList, sellList: NewSellList};
+        let buyList = await this.getBuyEntrustListByCEId(coin_exchange_id);
+        let newBuyList = Enumerable.from(buyList)
+          .groupBy("parseFloat($.entrust_price)", null,
+            function (key, g) {
+              return {
+                entrust_price: key,
+                entrust_volume: g.sum("parseFloat($.entrust_volume)"),
+                no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
+              }
+            }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
+        let sellList = await this.getSellEntrustListByCEId(coin_exchange_id);
+        let newSellList = Enumerable.from(sellList)
+          .groupBy("parseFloat($.entrust_price)", null,
+            function (key, g) {
+              return {
+                entrust_price: key,
+                entrust_volume: g.sum("parseFloat($.entrust_volume)"),
+                no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
+              }
+            }).orderBy("parseFloat($.entrust_price)").take(10).toArray();
+        newSellList.sort((item1, item2) => {
+          return item2.entrust_price - item1.entrust_price
+        });
+        await cache.set(ckey, {"buyList": newBuyList, "sellList": newSellList}, 10);
+        return {buyList: newBuyList, sellList: newSellList};
+        // let cnt = await DB.cluster('slave');
+        // let sql = 'select e.entrust_price as entrust_price, sum(e.entrust_volume) as entrust_volume, sum(e.no_completed_volume) as no_completed_volume from ' +
+        //   '(SELECT * FROM m_entrust WHERE coin_exchange_id = {0} and entrust_type_id = {1} and entrust_status in (0,1) ) as e ' +
+        //   'group by entrust_price ' +
+        //   'order by entrust_price {2} limit 10';
+        // let buysql = Utils.formatString(sql, [coin_exchange_id, 1, "desc"]);
+        // let sellsql = Utils.formatString(sql, [coin_exchange_id, 0, "asc"]);
+        // let BuyList = await cnt.execQuery(buysql);
+        // let SellList = await cnt.execQuery(sellsql);
+        // let NewSellList = Enumerable.from(SellList).orderByDescending("parseFloat($.entrust_price)").toArray();
+        // await cache.set(ckey, {"buyList": BuyList, "sellList": NewSellList}, 10);
+        // return {buyList: BuyList, sellList: NewSellList};
       }
     } catch (e) {
       console.error(e);
@@ -529,7 +554,7 @@ class EntrustModel {
           return data;
         }
       }
-      let sql = `SELECT * FROM m_entrust WHERE coin_exchange_id = ? and entrust_type_id = 1 and entrust_status in (0,1) ORDER BY entrust_price DESC, entrust_id ASC`;
+      let sql = `SELECT * FROM m_entrust WHERE coin_exchange_id = ? and entrust_type_id = 1 and entrust_status in (0,1) ORDER BY entrust_price DESC, entrust_id ASC limit 30`;
       let res = await cnt.execQuery(sql, coinExchangeId);
       let chRes = await Promise.all(res.map((info) => {
         return cache.hset(
@@ -566,7 +591,7 @@ class EntrustModel {
         }
       }
 
-      let sql = `SELECT * FROM m_entrust WHERE coin_exchange_id = ? and entrust_type_id = 0 and entrust_status in (0,1) ORDER BY entrust_price ASC, entrust_id ASC`;
+      let sql = `SELECT * FROM m_entrust WHERE coin_exchange_id = ? and entrust_type_id = 0 and entrust_status in (0,1) ORDER BY entrust_price ASC, entrust_id ASC limit 30`;
       let res = await cnt.execQuery(sql, coinExchangeId);
       let chRes = await Promise.all(res.map((info) => {
         return cache.hset(
