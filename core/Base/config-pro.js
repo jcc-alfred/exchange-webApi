@@ -82,6 +82,7 @@ const config = {
     Sys_Coin: 'Sys_Coin',                                    // 所有币种 data:0 hash
     Sys_Coin_Exchange_Area: 'Sys_Coin_Exchange_Area',        // 交易市场 data:0 hash
     Sys_Coin_Exchange: 'Sys_Coin_Exchange',                  // 所有币种交易对 data:0 hash
+    Sys_Base_Coin_Prices: 'Sys_Base_Coin_Prices',
 
     Sys_Coin_OTC: 'Sys_Coin_OTC',                            // 所有OTC币种 data:0 hash
     User_Assets_OTC: "User_Assets_OTC_",                     // 用户OTC资产信息 data:15 hash
