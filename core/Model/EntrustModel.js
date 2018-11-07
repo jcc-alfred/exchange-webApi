@@ -10,6 +10,7 @@ let AssetsModel = require('../Model/AssetsModel');
 let CoinModel = require('../Model/CoinModel');
 let MQ = require('../Base/Data/MQ');
 let Enumerable = require('linq');
+const rp = require('request-promise');
 
 class EntrustModel {
 
@@ -31,7 +32,7 @@ class EntrustModel {
       let sql = `select * from m_entrust where entrust_id = ? and (entrust_status = 0 or entrust_status = 1)  `;
       let res = await cnt.execReader(sql, entrustId);
       await cnt.close();
-      if (res) {
+      if (res && await cache.exists(ckey)) {
         await cache.hset(ckey, res.entrust_id, res, 300);
       }
       return res;
@@ -57,11 +58,11 @@ class EntrustModel {
       //冻结用户资产
       let updAssets = null;
       if (entrustTypeId == 1) {
-        console.log('userId:', userId, 'buy coinId:', exchangeCoinId, 'totalAmount:', totalAmount);
+        // console.log('userId:', userId, 'buy coinId:', exchangeCoinId, 'totalAmount:', totalAmount);
         updAssets = await cnt.execQuery(`update m_user_assets set available = available - ? , frozen = frozen + ?
                 where user_id = ? and coin_id = ?`, [totalAmount, totalAmount, userId, exchangeCoinId]);
       } else {
-        console.log('userId:', userId, 'sell coinId:', coinId, 'totalAmount:', entrustVolume);
+        // console.log('userId:', userId, 'sell coinId:', coinId, 'totalAmount:', entrustVolume);
         updAssets = await cnt.execQuery(`update m_user_assets set available = available - ? , frozen = frozen + ?
                 where user_id = ? and coin_id = ?`, [entrustVolume, entrustVolume, userId, coinId]);
       }
@@ -150,7 +151,7 @@ class EntrustModel {
           socket.emit('entrustList', {coin_exchange_id: coinExchangeId});
           socket.emit('userEntrustList', {user_id: entrust.user_id, coin_exchange_id: coinExchangeId});
           res = 1;
-          console.log("cancel the entrust success " + entrust.entrust_id);
+          // console.log("cancel the entrust success " + entrust.entrust_id);
         } else {
           cnt.rollback();
           console.log("cancel the entrust fail " + entrust.entrust_id);
@@ -168,7 +169,95 @@ class EntrustModel {
     return res;
   }
 
-  async getMarketList(refresh = true) {
+  async getCoinexchangeBasePrice(refresh = true) {
+    let cache = await Cache.init(config.cacheDB.system);
+    try {
+      let ckey = config.cacheKey.Sys_Base_Coin_Prices;
+      if (await cache.exists(ckey) && !refresh) {
+        let cRes = await cache.hgetall(ckey);
+        if (cRes) {
+          let data = [];
+          for (let i in cRes) {
+            let item = cRes[i];
+            data.push(JSON.parse(item));
+          }
+          return data;
+        }
+      } else {
+        let res = [];
+        let currency = JSON.parse(await rp({
+          method: 'GET',
+          uri: config.currency_api,
+          qs: {
+            access_key: config.currency_secret,
+          }
+        }));
+        let gtt_value = {
+          name: 'GTT',
+          symbol: 'GTT',
+          price_usd: 1 / currency.quotes.USDCNY,
+          last_updated: new Date(currency.timestamp * 1000).toISOString()
+        };
+        res.push(gtt_value);
+        const requestOptions = {
+          method: 'GET',
+          uri: config.coinmarket_api,
+          qs: {
+            start: 1,
+            limit: 5,
+            convert: 'USD'
+          },
+          headers: {
+            'X-CMC_PRO_API_KEY': config.coinmarket_secret
+          },
+          json: true,
+          gzip: true
+        };
+
+        let response = await rp(requestOptions);
+        // console.log('API call response:', response);
+
+        if (response) {
+          let ckey = config.cacheKey.Sys_Base_Coin_Prices;
+          for (let i in response.data) {
+            let item = response.data[i];
+            let value = {
+              name: item.name,
+              symbol: item.symbol,
+              price_usd: item.quote.USD.price,
+              last_updated: item.last_updated
+            };
+            res.push(value);
+            if (item.symbol.toLowerCase() == 'btc') {
+              let GTB_BTC_CoinID = await CoinModel.getCoinIDbyName('GTB/BTC');
+              let last_order = await this.getLastOrder(GTB_BTC_CoinID);
+              if (last_order) {
+                let GTB_BTC_Price = last_order.trade_price;
+                let gtb_value = {
+                  name: 'GTB',
+                  symbol: "GTB",
+                  price_usd: GTB_BTC_Price * value.price_usd,
+                  last_updated: item.last_updated
+                };
+                res.push(gtb_value);
+              }
+            }
+          }
+          Promise.all(res.map(item => {
+            return cache.hset(ckey, item.symbol.toLowerCase(), item);
+          }));
+        }
+        return res
+      }
+    } catch (e) {
+      throw e
+    } finally {
+      cache.close();
+    }
+  }
+
+
+  async getMarketList(refresh = false) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Market_List;
@@ -184,12 +273,14 @@ class EntrustModel {
         }
       }
       let coinExList = await CoinModel.getCoinExchangeList();
+      let Base_Prices = await this.getCoinexchangeBasePrice();
+
       let marketList = [];
-      let timestamp = new Date(new Date().toLocaleDateString()).getTime() / 1000;
-      // coinExList.map(async (item) => {
-      for (let i = 0; i < coinExList.length; i++) {
-        let item = coinExList[i];
-        // console.log('start'+item.coin_exchange_id);
+      let date = new Date();
+      let timestamp = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 1000;
+
+
+      let res = await Promise.all(coinExList.map(async (item) => {
         let marketModel = {
           last_price: 0,
           change_rate: 0,
@@ -198,7 +289,10 @@ class EntrustModel {
           total_volume: 0,
           total_amount: 0
         };
+        let price_usd = 0;
+        let startk = new Date();
         let Day_Klinedata = await this.getKlineData(item.coin_exchange_id, 86400000);
+        console.log(new Date() - startk, 'end get kline for coin ' + item.coin_exchange_id);
         let marketRes = Day_Klinedata.find((a) => a.timestamp == timestamp);
         if (marketRes) {
           marketModel.high_price = marketRes.high_price;
@@ -208,27 +302,34 @@ class EntrustModel {
           marketModel.change_rate = (marketRes.close_price - marketRes.open_price) / marketRes.open_price;
           marketModel.last_price = marketRes.close_price;
         }
-        marketList.push({coin_exchange_id: item.coin_exchange_id, market: marketModel, coinEx: item});
-        // console.log('end'+item.coin_exchange_id);
-      }
-
-      // });
-      try {
-        // console.log('get price')
-        let coin_prices = await axios.get(config.GTdollarAPI, {timeout: 1000});
-        marketList.map(x => Object.assign(x, coin_prices.data.find((y) => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
-      } catch (e) {
-        console.error("error get prices from " + config.GTdollarAPI);
-        console.error(e);
-      }
+        let exchange_coin_prices = Base_Prices.find(i => i.symbol.toLowerCase() == item.exchange_coin_name.toLowerCase());
+        if (exchange_coin_prices) {
+          price_usd = marketModel.last_price * exchange_coin_prices.price_usd;
+        }
+        marketList.push({
+          coin_exchange_id: item.coin_exchange_id,
+          market: marketModel,
+          coinEx: item,
+          price_usd: price_usd
+        });
+      }));
+      // try {
+      //   let start = new Date();
+      //   let coin_prices = await axios.get(config.GTdollarAPI, {timeout: 2000});
+      //   console.log('get price', new Date() - start);
+      //   marketList.map(x => Object.assign(x, coin_prices.data.find((y) => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
+      // } catch (e) {
+      //   console.error("error get prices from " + config.GTdollarAPI);
+      //   console.error(e);
+      // }
       let chRes = await Promise.all(marketList.map((market) => {
         return cache.hset(
           ckey,
           market.coin_exchange_id,
-          market,
-          60
+          market
         )
       }));
+      await cache.expire(ckey, 60);
       return marketList;
 
     } catch (error) {
@@ -238,6 +339,90 @@ class EntrustModel {
     }
   }
 
+  // async getMarketList(refresh = true) {
+  //   let cache = await Cache.init(config.cacheDB.order);
+  //   try {
+  //     let ckey = config.cacheKey.Market_List;
+  //     if (await cache.exists(ckey) && !refresh) {
+  //       let cRes = await cache.hgetall(ckey);
+  //       if (cRes) {
+  //         let data = [];
+  //         for (let i in cRes) {
+  //           let item = cRes[i];
+  //           data.push(JSON.parse(item));
+  //         }
+  //         cache.close();
+  //         return data;
+  //       }
+  //     }
+  //     let cnt = await DB.cluster('slave');
+  //     console.log(new Date());
+  //     let coinExList = await CoinModel.getCoinExchangeList();
+  //     let marketList = [];
+  //     // let lastOrderList = await this.getLastOrder();
+  //     let Pre24FristOrderList = await this.getPre24FirstOrder();
+  //     let Pre24Market = await this.getMarkets();
+  //     await Promise.all(coinExList.map(async (item) => {
+  //       let marketModel = {
+  //         last_price: 0,
+  //         change_rate: 0,
+  //         high_price: 0,
+  //         low_price: 0,
+  //         total_volume: 0,
+  //         total_amount: 0
+  //       };
+  //       //1. LastPrice
+  //       let orderList = await this.getOrderListByCoinExchangeId(item.coin_exchange_id);
+  //       let lastOrder = orderList.sort((item1, item2) => {
+  //         return item2.order_id - item1.order_id
+  //       })[0];
+  //       // let lastOrder = lastOrderList.find((a) => a.coin_exchange_id == item.coin_exchange_id);
+  //       if (lastOrder && lastOrder.trade_price) {
+  //         marketModel.last_price = lastOrder.trade_price;
+  //         //2. highPrice lowPrice total_volume total_amount
+  //         let marketRes = Pre24Market.find(a => a.coin_exchange_id == item.coin_exchange_id);
+  //
+  //         // let marketSQL = `SELECT max(trade_price) as high_price,min(trade_price) as low_price,sum(trade_volume) as total_volume,sum(trade_amount) as total_amount
+  //         //           FROM m_order Where coin_exchange_id = ? and create_time >= (now() - interval 24 hour) `;
+  //         // let marketRes = await cnt.execReader(marketSQL, item.coin_exchange_id);
+  //         //3. pre24HourPrice
+  //         // let pre24PriceSQL = `SELECT trade_price FROM m_order Where coin_exchange_id = ? and create_time >= (now() - interval 24 hour) ORDER BY order_id ASC LIMIT 1 `;
+  //         // let pre24PriceRes = await cnt.execReader(pre24PriceSQL, item.coin_exchange_id);
+  //         let pre24PriceRes = Pre24FristOrderList.find(a => a.coin_exchange_id == item.coin_exchange_id);
+  //         if (marketRes && marketRes.high_price && pre24PriceRes && pre24PriceRes.trade_price) {
+  //           marketModel.high_price = marketRes.high_price;
+  //           marketModel.low_price = marketRes.low_price;
+  //           marketModel.total_volume = marketRes.total_volume;
+  //           marketModel.total_amount = marketRes.total_amount + item.base_amount;
+  //           marketModel.change_rate = (marketModel.last_price - pre24PriceRes.trade_price) / pre24PriceRes.trade_price;
+  //         }
+  //       }
+  //       marketList.push({coin_exchange_id: item.coin_exchange_id, market: marketModel, coinEx: item});
+  //     }));
+  //     cnt.close();
+  //     try {
+  //       let coin_prices = await axios.get(config.GTdollarAPI, {timeout: 2000});
+  //       marketList.map(x => Object.assign(x, coin_prices.data.find(y => y.symbol.toUpperCase() == x.coinEx.coin_name.toUpperCase())));
+  //     } catch (e) {
+  //       console.error("error get prices from " + config.GTdollarAPI);
+  //       console.error(e);
+  //     }
+  //     let chRes = await Promise.all(marketList.map((market) => {
+  //       return cache.hset(
+  //         ckey,
+  //         market.coin_exchange_id,
+  //         market,
+  //         60
+  //       )
+  //     }));
+  //     return marketList;
+  //
+  //   } catch (error) {
+  //     throw error;
+  //   } finally {
+  //     cache.close()
+  //   }
+  // }
   async getMarkets() {
     let cnt = await DB.cluster('slaves');
     try {
@@ -342,10 +527,10 @@ class EntrustModel {
         return cache.hset(
           ckey,
           info.order_id,
-          info,
-          600
+          info
         )
       }));
+      await cache.expire(ckey, 600);
       return res;
 
     } catch (error) {
@@ -380,10 +565,10 @@ class EntrustModel {
         return cache.hset(
           ckey,
           info.entrust_id,
-          info,
-          300
+          info
         )
       }));
+      await cache.expire(ckey, 300);
       return res;
     } catch (error) {
       throw error;
@@ -401,7 +586,7 @@ class EntrustModel {
         let cRes = await cache.get(ckey);
         return cRes
       } else {
-      let cnt = await DB.cluster('slave');
+        let cnt = await DB.cluster('slave');
         let sql = 'select e.entrust_price as entrust_price, sum(e.entrust_volume) as entrust_volume, sum(e.no_completed_volume) as no_completed_volume from ' +
           '(SELECT * FROM m_entrust WHERE coin_exchange_id = {0} and entrust_type_id = {1} and entrust_status in (0,1) ) as e ' +
           'group by entrust_price ' +
@@ -411,8 +596,8 @@ class EntrustModel {
         let BuyList = await cnt.execQuery(buysql);
         let SellList = await cnt.execQuery(sellsql);
         let NewSellList = Enumerable.from(SellList).orderByDescending("parseFloat($.entrust_price)").toArray();
-      await cache.set(ckey, {"buyList": BuyList, "sellList": NewSellList}, 10);
-      return {buyList: BuyList, sellList: NewSellList};
+        await cache.set(ckey, {"buyList": BuyList, "sellList": NewSellList}, 10);
+        return {buyList: BuyList, sellList: NewSellList};
       }
     } catch (e) {
       console.error(e);
@@ -518,15 +703,16 @@ class EntrustModel {
                        LIMIT 500`;
 
       let res = await cnt.execQuery(sql, ckey);
+      console.log('from db' + coinExchangeId);
 
       let chRes = await Promise.all(res.map((info) => {
         return cache.hset(
           ckey,
           info.timestamp,
-          info,
-          86400
+          info
         )
       }));
+      await cache.expire(ckey, 86400);
       return res;
 
     } catch (error) {
