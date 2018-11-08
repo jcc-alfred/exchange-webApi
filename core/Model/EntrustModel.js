@@ -461,6 +461,7 @@ class EntrustModel {
           }
           return data;
         }
+        x
       }
       let cnt = await DB.cluster('slave');
       let sql = `SELECT * FROM m_entrust WHERE user_id = ? and (entrust_status = 0 or entrust_status = 1) `;
@@ -515,7 +516,7 @@ class EntrustModel {
         newSellList.sort((item1, item2) => {
           return item2.entrust_price - item1.entrust_price
         });
-        await cache.set(ckey, {"buyList": newBuyList, "sellList": newSellList}, 10);
+        await cache.set(ckey, {"buyList": newBuyList, "sellList": newSellList}, 5);
         return {buyList: newBuyList, sellList: newSellList};
         // let cnt = await DB.cluster('slave');
         // let sql = 'select e.entrust_price as entrust_price, sum(e.entrust_volume) as entrust_volume, sum(e.no_completed_volume) as no_completed_volume from ' +
@@ -560,10 +561,10 @@ class EntrustModel {
         return cache.hset(
           ckey,
           info.entrust_id,
-          info,
-          300
+          info
         )
       }));
+      await cache.expire(ckey, 10);
       return res;
 
     } catch (error) {
@@ -597,10 +598,10 @@ class EntrustModel {
         return cache.hset(
           ckey,
           info.entrust_id,
-          info,
-          300
+          info
         )
       }));
+      await cache.expire(ckey, 10);
       return res;
 
     } catch (error) {
