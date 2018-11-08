@@ -169,7 +169,7 @@ class EntrustModel {
     return res;
   }
 
-  async getCoinexchangeBasePrice(refresh = true) {
+  async getCoinexchangeBasePrice(refresh = false) {
     let cache = await Cache.init(config.cacheDB.system);
     try {
       let ckey = config.cacheKey.Sys_Base_Coin_Prices;
