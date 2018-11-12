@@ -4,6 +4,7 @@
             "name": "Melt_WebAPI",
             "script": "./bin/www",
             "exec_mode": "fork",
+          "max_memory_restart": "600M",
             "watch": [
                 "core"
             ],
