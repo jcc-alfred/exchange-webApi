@@ -198,7 +198,7 @@ Utils = {
     var result = value;
     if (value !== "") {
       if (this.isNum(value) && value >= 0) {
-        var valueStr = value.toFixed(8) + "";
+        var valueStr = parseFloat(value).toFixed(8) + "";
         if (valueStr.indexOf(".") !== -1) {
           var newStr, intStr = valueStr.split(".")[0] + "",
             floatStr = valueStr.split(".")[1] + "";
