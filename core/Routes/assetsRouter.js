@@ -1,17 +1,17 @@
 
 let express = require('express');
-let router = express.Router();  
-let Utils = require('../Base/Utils/Utils')
+let router = express.Router();
+let Utils = require('../Base/Utils/Utils');
 let GoogleUtils = require('../Base/Utils/GoogleUtils');
 let CodeUtils = require('../Base/Utils/CodeUtils');
 let TokenUtils = require('../Base/Utils/TokenUtils');
 
-let config = require('../Base/config')
+let config = require('../Base/config');
 let UserModel = require('../Model/UserModel');
 
 let UserAuthStrategyModel = require('../Model/UserAuthStrategyModel');
 let UserAlertModel = require('../Model/UserAlertModel');
-let SystemModel = require('../Model/SystemModel')
+let SystemModel = require('../Model/SystemModel');
 let AssetsModel = require('../Model/AssetsModel');
 let CoinModel = require('../Model/CoinModel');
 let DepositModel = require('../Model/DepositModel');
@@ -26,7 +26,7 @@ let MQ = require('../Base/Data/MQ');
 //获取加密货币列表
 router.post('/getCoinList',async(req,res,next)=>{
     try {
-    
+
         let data =  await CoinModel.getCoinList();
         let coinList = data.map(coin => {
             let temp = {};
@@ -43,16 +43,16 @@ router.post('/getCoinList',async(req,res,next)=>{
             temp.confirm_count = coin.confirm_count;
             temp.is_enable_deposit = coin.is_enable_deposit;
             temp.is_enable_transfer = coin.is_enable_transfer;
-            temp.is_enable_withdraw = coin.is_enable_withdraw; 
-            temp.withdraw_min_amount = coin.withdraw_min_amount; 
+          temp.is_enable_withdraw = coin.is_enable_withdraw;
+          temp.withdraw_min_amount = coin.withdraw_min_amount;
             temp.withdraw_max_amount = coin.withdraw_max_amount;
             temp.withdraw_day_amount = coin.withdraw_day_amount;
-            temp.withdraw_fees_rate = coin.withdraw_fees_rate; 
+          temp.withdraw_fees_rate = coin.withdraw_fees_rate;
             temp.withdraw_min_fees_amount = coin.withdraw_min_fees_amount;
             temp.deposit_account_key = coin.deposit_account_key;
             temp.deposit_tips_key = coin.deposit_tips_key;
             temp.withdraw_tips_key = coin.withdraw_tips_key;
-            temp.order_by_num = coin.order_by_num; 
+          temp.order_by_num = coin.order_by_num;
             temp.record_status = coin.record_status;
             return temp;
         });
@@ -66,8 +66,8 @@ router.post('/getCoinList',async(req,res,next)=>{
 //获取用户资产信息列表
 router.post('/getUserAssets',async(req,res,next)=>{
     try {
-        let data =  await AssetsModel.getUserAssetsByUserId(req.token.user_id);
-        res.send({code:1,msg:'',data:data})
+      let data = await AssetsModel.getUserAssetsByUserId(req.token.user_id, req.body.refresh || false);
+      res.send({code: 1, msg: '', data: data});
     } catch (error) {
         res.status(500).end();
         throw error;
@@ -77,10 +77,10 @@ router.post('/getUserAssets',async(req,res,next)=>{
 //获取用户充值记录
 router.post('/getUserDepositListByCoinId',async(req,res,next)=>{
     try {
-    
-        if(!req.body.page || !Utils.isInt(req.body.page) || !req.body.pageSize || !Utils.isInt(req.body.pageSize) || 
+
+      if (!req.body.page || !Utils.isInt(req.body.page) || !req.body.pageSize || !Utils.isInt(req.body.pageSize) ||
         !req.body.coinId || !Utils.isInt(req.body.coinId) ){
-            res.send({code:0,msg:'参数错误'})
+        res.send({code: 0, msg: '参数错误'});
             return;
         }
 
@@ -96,9 +96,9 @@ router.post('/getUserDepositListByCoinId',async(req,res,next)=>{
 //获取用户资产账户记录
 router.post('/getUserWithdrawAccountByCoinId',async(req,res,next)=>{
     try {
-    
+
         if(!req.body.coinId || !Utils.isInt(req.body.coinId) ){
-            res.send({code:0,msg:'参数错误'})
+          res.send({code: 0, msg: '参数错误'});
             return;
         }
         let data =  await WithdrawAccountModel.getUserWithdrawAccountByCoinId(req.token.user_id,req.body.coinId);
@@ -115,7 +115,7 @@ router.post('/addUserWithdrawAccount', async (req, res, next)=>{
         if(!req.body.safePass || !Utils.getPassLevel(req.body.safePass)){
             res.send({code:0,msg:'密码格式错误'});
             return;
-        } 
+        }
         if(!req.body.blockAddress || !req.body.memo || !req.body.coinId || !Utils.isInt(req.body.coinId)){
             res.send({code:0,msg:'参数异常'});
             return
@@ -127,7 +127,7 @@ router.post('/addUserWithdrawAccount', async (req, res, next)=>{
         }
         //验证blockAddress 是否有效
         //
-        
+
         let userInfo = await UserModel.getUserById(req.token.user_id);
         if(!userInfo.safe_pass){
             res.send({code:0,msg:'您还未设置资金密码'});
@@ -155,9 +155,9 @@ router.post('/addUserWithdrawAccount', async (req, res, next)=>{
         }
 
         let result =  await WithdrawAccountModel.addUserWithdrawAccount(req.token.user_id,req.body.coinId,req.body.blockAddress,req.body.memo);
-        
+
         if(result.affectedRows == 0){
-            res.send({code:0,msg:'设置失败'})
+          res.send({code: 0, msg: '设置失败'});
             return ;
         }
 
@@ -179,9 +179,9 @@ router.post('/delUserWithdrawAccount', async (req, res, next)=>{
         }
 
         let result =  await WithdrawAccountModel.delUserWithdrawAccount(req.body.userWithdrawAccountId);
-        
+
         if(result.affectedRows == 0){
-            res.send({code:0,msg:'处理失败'})
+          res.send({code: 0, msg: '处理失败'});
             return ;
         }
         res.send({code:1,msg:'处理成功'});
@@ -194,10 +194,10 @@ router.post('/delUserWithdrawAccount', async (req, res, next)=>{
 //获取用户提现记录
 router.post('/getUserWithdrawListByCoinId',async(req,res,next)=>{
     try {
-    
-        if(!req.body.page || !Utils.isInt(req.body.page) || !req.body.pageSize || !Utils.isInt(req.body.pageSize) || 
+
+      if (!req.body.page || !Utils.isInt(req.body.page) || !req.body.pageSize || !Utils.isInt(req.body.pageSize) ||
         !req.body.coinId || !Utils.isInt(req.body.coinId) ){
-            res.send({code:0,msg:'参数错误'})
+        res.send({code: 0, msg: '参数错误'});
             return;
         }
 
@@ -212,12 +212,12 @@ router.post('/getUserWithdrawListByCoinId',async(req,res,next)=>{
 
 //用户申请提现
 router.post('/doUserWithdraw',async(req,res,next)=>{
-    
+
     try {
         if(!req.body.safePass || !Utils.getPassLevel(req.body.safePass)){
             res.send({code:0,msg:'密码格式错误'});
             return;
-        } 
+        }
         if(!req.body.toBlockAddress || !req.body.submitAmount || !req.body.coinId || !Utils.isInt(req.body.coinId)){
             res.send({code:0,msg:'参数异常'});
             return
@@ -251,7 +251,7 @@ router.post('/doUserWithdraw',async(req,res,next)=>{
             return
         }
         let strategy = await UserAuthStrategyModel.getUserStrategyByUserId(req.token.user_id,UserAuthStrategyModel.strategyTypeMap.withdraw);
-        
+
         //8.资金密码+短信/邮件验证码 9.资金密码+Google验证码 10.资金密码+Google验证码+短信/邮件验证码
 
         if(strategy.user_auth_strategy_type_id == 8){
@@ -270,8 +270,8 @@ router.post('/doUserWithdraw',async(req,res,next)=>{
             }
 
         }else if(strategy.user_auth_strategy_type_id == 9){
-            
-            let verify = GoogleUtils.verifyGoogle(req.body.googleCode,userInfo.google_secret)
+
+          let verify = GoogleUtils.verifyGoogle(req.body.googleCode, userInfo.google_secret);
 
             if(!req.body.hasOwnProperty('googleCode') || !verify){
                 res.send({code:0,msg:'Google 验证码错误'});
@@ -279,8 +279,8 @@ router.post('/doUserWithdraw',async(req,res,next)=>{
             }
 
         }else if(strategy.user_auth_strategy_type_id == 10){
-        
-            if(!req.body.hasOwnProperty('phoneCode') && !req.body.hasOwnProperty('emailCode') ){
+
+          if(!req.body.hasOwnProperty('phoneCode') && !req.body.hasOwnProperty('emailCode') ){
                 res.send({code:0,msg:'参数异常'});
                 return
             }
@@ -292,8 +292,8 @@ router.post('/doUserWithdraw',async(req,res,next)=>{
                 res.send({code:0,msg:'邮箱验证码错误'});
                 return;
             }
-            
-            let verify = GoogleUtils.verifyGoogle(req.body.googleCode,userInfo.google_secret)
+
+          let verify = GoogleUtils.verifyGoogle(req.body.googleCode, userInfo.google_secret);
 
             if(!req.body.hasOwnProperty('googleCode') || !verify){
                 res.send({code:0,msg:'Google 验证码错误'});
@@ -305,14 +305,12 @@ router.post('/doUserWithdraw',async(req,res,next)=>{
             res.send({code:-1,data:coin.withdraw_min_amount,msg:'提现数量不能小于最小提现数量'});
             return
         }
-        if (coin.withdraw_max_amount > 0 && req.body.submitAmount > coin.withdraw_max_amount)
-        {   
+        if (coin.withdraw_max_amount > 0 && req.body.submitAmount > coin.withdraw_max_amount) {
             res.send({code:-2,data:coin.withdraw_max_amount,msg:'提现数量不能大于最大提现数量'});
             return
         }
         //可用余额
-        if (userAssets.available < req.body.submitAmount || userAssets.balance < req.body.submitAmount)
-        {   
+        if (userAssets.available < req.body.submitAmount || userAssets.balance < req.body.submitAmount) {
             res.send({code:0,msg:'提现数量大于可用数量'});
             return;
         }
@@ -328,8 +326,8 @@ router.post('/doUserWithdraw',async(req,res,next)=>{
                 return
             }
         }
-        
-        var fees = Utils.mul(req.body.submitAmount,coin.withdraw_fees_rate);
+
+      var fees = Utils.mul(req.body.submitAmount,coin.withdraw_fees_rate);
         if(fees < coin.withdraw_min_fees_amount)
         {
             fees = coin.withdraw_min_fees_amount;
@@ -355,8 +353,8 @@ router.post('/doUserWithdraw',async(req,res,next)=>{
 
 //用户取消提现
 router.post('/cancelUserWithdraw',async(req,res,next)=>{
-    
-    try { 
+
+  try {
         if(!req.body.userWithdrawId || !Utils.isInt(req.body.userWithdrawId)){
             res.send({code:0,msg:'参数异常'});
             return
@@ -391,9 +389,9 @@ router.post('/getUserAssetsLogTypeList',async(req,res,next)=>{
 //获取用户资产日志列表
 router.post('/getUserAssetsLogList',async(req,res,next)=>{
     try {
-    
-        if(!req.body.page || !Utils.isInt(req.body.page) || !req.body.pageSize || !Utils.isInt(req.body.pageSize)){
-            res.send({code:0,msg:'参数错误'})
+
+      if(!req.body.page || !Utils.isInt(req.body.page) || !req.body.pageSize || !Utils.isInt(req.body.pageSize)){
+        res.send({code: 0, msg: '参数错误'});
             return;
         }
 
@@ -427,19 +425,19 @@ router.post('/getUserBonusStatics',async(req,res,next)=>{
 //获取用户推广收益明细列表
 router.post('/getUserBonusList',async(req,res,next)=>{
     try {
-    
-        if(!req.body.page || !Utils.isInt(req.body.page) || !req.body.pageSize || !Utils.isInt(req.body.pageSize)){
-            res.send({code:0,msg:'参数错误'})
+
+      if(!req.body.page || !Utils.isInt(req.body.page) || !req.body.pageSize || !Utils.isInt(req.body.pageSize)){
+        res.send({code: 0, msg: '参数错误'});
             return;
         }
- 
-        let data =  await UserBonusModel.getUserBonusListByUserId(
+
+      let data =  await UserBonusModel.getUserBonusListByUserId(
             req.token.user_id,
             req.body.page,
             req.body.pageSize
         );
-       
-        res.send({code:1,msg:'',data:data})
+
+      res.send({code:1,msg:'',data:data})
     } catch (error) {
         res.status(500).end();
         throw error;
