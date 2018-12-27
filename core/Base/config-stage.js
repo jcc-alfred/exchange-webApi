@@ -90,12 +90,12 @@ const config = {
     Sys_Coin_Exchange_Area: 'Sys_Coin_Exchange_Area',        // 交易市场 data:0 hash
     Sys_Coin_Exchange: 'Sys_Coin_Exchange',                  // 所有币种交易对 data:0 hash
 
-    Sys_Coin_OTC: 'Sys_Coin_OTC',                            // 所有OTC币种 data:0 hash
+    Sys_OTC_Coin: 'Sys_OTC_Coin',                            // 所有OTC币种 data:0 hash
     User_Assets_OTC: "User_Assets_OTC_",                     // 用户OTC资产信息 data:15 hash
     Buy_Entrust_OTC: "Buy_Entrust_OTC_",                     //买单委托OTC
     Sell_Entrust_OTC: "Sell_Entrust_OTC_",                   //卖单委托OTC
     Entrust_OTC_UserId: "Entrust_OTC_UserId_",               //用户委托OTC
-    Order_OTC_UserId: "Order_OTC_UserId_",                   //用户订单OTC
+    Order_OTC_UserId: "Order_OTC_UserId_",
 
     User_Assets: "User_Assets_",                             // 用户资产信息 data:15 hash
 
