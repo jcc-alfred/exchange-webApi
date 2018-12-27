@@ -257,7 +257,7 @@ class EntrustModel {
   }
 
 
-  async getMarketList(refresh = false) {
+  async getMarketList(refresh = true) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Market_List;
@@ -290,6 +290,7 @@ class EntrustModel {
           total_amount: 0
         };
         let price_usd = 0;
+        let price_cny = 0;
         // let startk = new Date();
         let Day_Klinedata = await this.getKlineData(item.coin_exchange_id, 86400000);
         // console.log(new Date() - startk, 'end get kline for coin ' + item.coin_exchange_id);
@@ -303,14 +304,17 @@ class EntrustModel {
           marketModel.last_price = marketRes.close_price;
         }
         let exchange_coin_prices = Base_Prices.find(i => i.symbol.toLowerCase() == item.exchange_coin_name.toLowerCase());
+        let gtt_prices = Base_Prices.find(i => i.symbol.toLowerCase() === 'gtt');
         if (exchange_coin_prices) {
           price_usd = marketModel.last_price * exchange_coin_prices.price_usd;
+          price_cny = price_usd / gtt_prices.price_usd;
         }
         marketList.push({
           coin_exchange_id: item.coin_exchange_id,
           market: marketModel,
           coinEx: item,
-          price_usd: price_usd
+          price_usd: price_usd,
+          price_cny: price_cny
         });
       }));
       let chRes = await Promise.all(marketList.map((market) => {
