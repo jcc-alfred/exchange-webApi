@@ -60,7 +60,8 @@ app.all('*', async (req, res, next) => {
         '/doc/getNewsList',
         '/doc/getNewsModelById',
         '/doc/getArticleModelById',
-
+      '/otc/coins',
+      '/otc/entrustList',
         // Add for no login
         '/exchange/getCoinExchangeList',
         '/exchange/getCoinList',
@@ -95,6 +96,7 @@ app.use('/assets', require('./Routes/assetsRouter'));
 app.use('/exchange', require('./Routes/exchangeRouter'));
 app.use('/doc', require('./Routes/docRouter'));
 app.use('/market', require('./Routes/marketRouter'));
+app.use('/otc', require('./Routes/OTC_ExchangeRouter'));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

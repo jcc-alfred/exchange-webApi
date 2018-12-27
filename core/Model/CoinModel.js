@@ -1,6 +1,7 @@
 let DB = require('../Base/Data/DB');
 let Cache = require('../Base/Data/Cache');
 let config = require('../Base/config');
+let Utils = require('../Base/Utils/Utils');
 
 class CoinModel {
 
@@ -168,6 +169,40 @@ class CoinModel {
 
     } catch (error) {
       throw error;
+    }
+  }
+
+  async getOTCExchangeArea(type = 'all', refresh = true) {
+    let cacheCnt = await Cache.init(config.cacheDB.system);
+    try {
+      if (await cacheCnt.exists(config.cacheKey.Sys_OTC_Coin && !refresh)) {
+        let cRes = await cacheCnt.get(config.cacheKey.Sys_OTC_Coin);
+        if (type === 0) {
+          return cRes.buy;
+        } else if (type === 1) {
+          return cRes.sell;
+        }
+        return cRes;
+      } else {
+        let cnt = await DB.cluster('slave');
+        let sql = `select coin_id, coin_name, order_by_num, trade_fee_rate from m_otc_exchange_area where status=1 and type = {0}`;
+        let buyCoin = await cnt.execQuery(Utils.formatString(sql, [1]));
+        let sellCoin = await cnt.execQuery(Utils.formatString(sql, [0]));
+        await cnt.close();
+        let res = {buy: buyCoin, sell: sellCoin};
+        await cacheCnt.set(config.cacheKey.Sys_OTC_Coin, res, 3600);
+        if (type === 0) {
+          return res.buy;
+        } else if (type == 1) {
+          return res.sell;
+        }
+        return res
+      }
+
+    } catch (error) {
+      throw error;
+    } finally {
+      await cacheCnt.close();
     }
   }
 
