@@ -177,9 +177,9 @@ class CoinModel {
     try {
       if (await cacheCnt.exists(config.cacheKey.Sys_OTC_Coin && !refresh)) {
         let cRes = await cacheCnt.get(config.cacheKey.Sys_OTC_Coin);
-        if (type === 0) {
+        if (type === 1) {
           return cRes.buy;
-        } else if (type === 1) {
+        } else if (type === 0) {
           return cRes.sell;
         }
         return cRes;
@@ -191,9 +191,9 @@ class CoinModel {
         await cnt.close();
         let res = {buy: buyCoin, sell: sellCoin};
         await cacheCnt.set(config.cacheKey.Sys_OTC_Coin, res, 3600);
-        if (type === 0) {
+        if (type === 1) {
           return res.buy;
-        } else if (type == 1) {
+        } else if (type == 0) {
           return res.sell;
         }
         return res

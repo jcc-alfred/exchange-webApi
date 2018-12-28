@@ -162,6 +162,17 @@ class DBHepler {
 
   }
 
+  async insertOnDuplicate(tname, data) {
+    try {
+      let dataStr = this._buildSQL(data, ',');
+      var sql = `insert into  \`${tname}\` set ${dataStr} on duplicate key update ${dataStr}`;
+      let res = await this.execQuery(sql);
+      return res;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   //组装data 或是修改值
   _buildSQL(data, join = 'and') {
     let dataArray = [];

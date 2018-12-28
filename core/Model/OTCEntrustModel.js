@@ -724,6 +724,7 @@ class OTCEntrustModel {
           entrust
         )
       }));
+      await cacheCnt.expire(ckey, 60);
       return res;
 
     } catch (error) {
@@ -768,7 +769,10 @@ class OTCEntrustModel {
     let cnt = await DB.cluster('master');
     let ckey = config.cacheKey.User_OTC_Secret_Remark;
     try {
-      let data = await cnt.execQuery('update m_otc_user_secret_remark set secret_remark = ? where user_id = ?', [secret_remark, user_id]);
+      let data = await cnt.insertOnDuplicate('m_otc_user_secret_remark', {
+        user_id: user_id,
+        secret_remark: secret_remark
+      });
       await cache.hset(ckey, user_id, {user_id: user_id, secret_remark: secret_remark});
       return true
     } catch (e) {

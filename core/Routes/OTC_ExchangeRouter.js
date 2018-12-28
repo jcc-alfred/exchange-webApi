@@ -55,7 +55,7 @@ router.post('/order/:id', async (req, res, next) => {
 router.post('/secret_remark', async (req, res, next) => {
   try {
     if (req.body.secret_remark) {
-      let update_secret_remark = await OTCEntrusModel.updateUserDefaultSecretRemark(req.token.user_id, req.secret_remark);
+      let update_secret_remark = await OTCEntrusModel.updateUserDefaultSecretRemark(req.token.user_id, req.body.secret_remark);
       res.send({code: 1, msg: "update successfully"});
 
     } else {

@@ -68,6 +68,7 @@ const config = {
     system: 0,
     order: 1,
     kline: 2,
+    otc: 3
   },
 
   cacheKey: {
