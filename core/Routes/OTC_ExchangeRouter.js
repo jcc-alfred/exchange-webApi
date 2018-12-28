@@ -91,7 +91,6 @@ router.post('/order/pay', async (req, res, next) => {
       res.status(401).end()
     }
     await OTCEntrusModel.PayOTCOrder(order);
-
     res.send({code: 1, msg: "successfully pay the order"});
   } catch (e) {
     throw e
