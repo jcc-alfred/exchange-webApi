@@ -23,6 +23,10 @@ router.post('/entrustList', async (req, res, next) => {
 router.post('/order/create', async (req, res, next) => {
   try {
     let entrust = await OTCEntrusModel.getEntrustByID(req.body.entrust_id);
+    if (!entrust) {
+      res.send({code: 0, msg: "the entrust doesn't exist"});
+      return
+    }
     let data = await OTCEntrusModel.createOTCOrder(req.token.user_id, entrust, req.body.coin_amount);
     res.send({code: 1, msg: "successfully create order", data: data});
   } catch (e) {
@@ -33,6 +37,10 @@ router.post('/order/create', async (req, res, next) => {
 router.post('/order/:id', async (req, res, next) => {
   try {
     let order = await OTCEntrusModel.getOTCOrderByID(req.params.id);
+    if (!order) {
+      res.send({code: 0, msg: "the order doesn't exist"});
+      return
+    }
     let sell_user = await UserModel.getUserById(order.sell_user_id);
     let buy_user = await UserModel.getUserById(order.buy_user_id);
     order.sell_user_name = sell_user.full_name ? sell_user.full_name : sell_user.email;
@@ -43,6 +51,23 @@ router.post('/order/:id', async (req, res, next) => {
     throw e;
   }
 });
+
+router.post('/secret_remark', async (req, res, next) => {
+  try {
+    if (req.body.secret_remark) {
+      let update_secret_remark = await OTCEntrusModel.updateUserDefaultSecretRemark(req.token.user_id, req.secret_remark);
+      res.send({code: 1, msg: "update successfully"});
+
+    } else {
+      let secret_remark = await OTCEntrusModel.getUserDefaultSecretRemark(req.token.user_id);
+      res.send({code: 0, msg: "", data: secret_remark});
+    }
+  } catch (e) {
+    res.send({code: 0, msg: e});
+    throw e;
+  }
+});
+
 
 router.post('/entrust/create', async (req, res, next) => {
   try {

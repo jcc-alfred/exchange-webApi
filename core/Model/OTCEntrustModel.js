@@ -746,17 +746,61 @@ class OTCEntrustModel {
 
   async getOTCOrderByID(order_id) {
     let cnt = await DB.cluster('slave');
+    let order = null;
     try {
       let data = await cnt.execQuery('select * from (select * from m_otc_order where id =?) a ' +
         'left join (select coin_name, coin_id ,type, trade_fee_rate from m_otc_exchange_area)b' +
         ' on a.coin_id = b.coin_id and a.trigger_type = b.type', order_id);
-      return data[0];
+      if (data.length) {
+        order = data[0];
+        order.entrust = await this.getEntrustByID(order.entrust_id);
+      }
+      return order
     } catch (e) {
       throw e;
     } finally {
       cnt.close();
     }
   }
+
+  async updateUserDefaultSecretRemark(user_id, secret_remark) {
+    let cache = await Cache.init(config.cacheDB.users);
+    let cnt = await DB.cluster('master');
+    let ckey = config.cacheKey.User_OTC_Secret_Remark;
+    try {
+      let data = await cnt.execQuery('update m_otc_user_secret_remark set secret_remark = ? where user_id = ?', [secret_remark, user_id]);
+      await cache.hset(ckey, user_id, {user_id: user_id, secret_remark: secret_remark});
+      return true
+    } catch (e) {
+      throw e;
+    } finally {
+      cache.close();
+      cnt.close();
+    }
+  }
+
+  async getUserDefaultSecretRemark(user_id) {
+    let cache = await Cache.init(config.cacheDB.users);
+    try {
+      let ckey = config.cacheKey.User_OTC_Secret_Remark;
+      let cRes = await cache.hget(ckey, user_id);
+      if (cRes) {
+        return cRes;
+      }
+      let cnt = await DB.cluster('slave');
+      let data = await cnt.execQuery('select user_id,secret_remark from m_otc_user_secret_remark where user_id = ?', user_id);
+      await cnt.close();
+      if (data) {
+        await cache.hset(ckey, user_id, data[0])
+      }
+      return data[0]
+    } catch (e) {
+      throw e;
+    } finally {
+      cache.close();
+    }
+  }
+
 
   async createOTCOrder(user_id, entrust, coin_amount) {
     let cnt = await DB.cluster('master');
@@ -787,6 +831,7 @@ class OTCEntrustModel {
         ///如果是卖的广告，创建entrust的时候已经冻结了币
       }
       let order_params = {
+        entrust_id: entrust.id,
         buy_user_id: buy_user_id,
         sell_user_id: sell_user_id,
         coin_amount: coin_amount,
