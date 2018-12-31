@@ -795,7 +795,7 @@ class OTCEntrustModel {
       let data = await cnt.execQuery('select user_id,secret_remark from m_otc_user_secret_remark where user_id = ?', user_id);
       await cnt.close();
       if (data) {
-        await cache.hset(ckey, user_id, data[0])
+        await cache.hset(ckey, user_id, data[0].secret_remark)
       }
       return data[0]
     } catch (e) {
