@@ -709,7 +709,7 @@ class OTCEntrustModel {
                     remark,
                     create_time 
                     from m_otc_entrust
-                    where status={0} and coin_id ={1} and remaining_amount>0 order by price desc`;
+                    where type={0} and coin_id ={1} and remaining_amount>0 order by price desc`;
       let res = await cnt.execQuery(Utils.formatString(sql, [type, coin_id]));
       await cnt.close();
       res = res.map(function (each) {
@@ -773,7 +773,7 @@ class OTCEntrustModel {
         user_id: user_id,
         secret_remark: secret_remark
       });
-      await cache.hset(ckey, user_id, {user_id: user_id, secret_remark: secret_remark});
+      await cache.hset(ckey, user_id, secret_remark);
       return true
     } catch (e) {
       throw e;
@@ -785,7 +785,6 @@ class OTCEntrustModel {
 
   async getUserDefaultSecretRemark(user_id) {
     let cache = await Cache.init(config.cacheDB.users);
-    user_id = 100;
     try {
       let ckey = config.cacheKey.User_OTC_Secret_Remark;
       let cRes = await cache.hget(ckey, user_id);
