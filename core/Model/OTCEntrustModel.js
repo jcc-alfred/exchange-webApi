@@ -709,7 +709,7 @@ class OTCEntrustModel {
                     remark,
                     create_time 
                     from m_otc_entrust
-                    where type={0} and coin_id ={1} and remaining_amount>0 order by price desc`;
+                    where trade_type={0} and coin_id ={1} and remaining_amount>0 order by price desc`;
       let res = await cnt.execQuery(Utils.formatString(sql, [type, coin_id]));
       await cnt.close();
       res = res.map(function (each) {
