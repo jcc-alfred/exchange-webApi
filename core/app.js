@@ -18,8 +18,8 @@ app.use(function (req, res, next) {
   res.header('Access-Control-Allow-Headers', 'Content-Type,Content-Length,Authorization,Accept,X-Requested-With,token,language');
   res.header('Access-Control-Allow-Credentials', true);
   // }
-    req.method == "OPTIONS" ? res.status(200).end() : next();
-    /*让options请求快速返回*/
+  req.method == "OPTIONS" ? res.status(200).end() : next();
+  /*让options请求快速返回*/
 });
 
 
@@ -34,61 +34,98 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(cookieSession({
-    name: 'session',
-    keys: ['melt'],
-    // maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  name: 'session',
+  keys: ['melt'],
+  // maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
 
 app.use(express.static(path.join(__dirname, '../public')));
 
+
+// let allowList = [
+//   '/',
+//   '/upload',
+//   '/photo/upload',
+//   '/uploadDocument',
+//   '/uploadQrcode',
+//   '/imgCode',
+//   '/qrcode',
+//   '/user/signUp',
+//   '/user/login',
+//   '/user/authSafety',
+//   '/user/sendCode',
+//   '/user/forgotLoginPass',
+//   '/exchange/getCoinExchangeAreaList',
+//   '/exchange/getMarketList',
+//   '/doc/getHomeNewsList',
+//   '/doc/getNewsList',
+//   '/doc/getNewsModelById',
+//   '/doc/getArticleModelById',
+//   '^/otc/coins',
+//   '/otc/entrustList',
+//   '/otc/entrust/',
+//   // Add for no login
+//   '/exchange/getCoinExchangeList',
+//   '/exchange/getCoinList',
+//   '/market/trade/kline',
+// ];
+//
+// allowList.map(url=>(
+//     app.post(allowList,async(req,res,next)=>{
+//       next();
+//     })
+//   )
+// );
+
 app.all('*', async (req, res, next) => {
-    let allowList = [
-        '/',
-        '/upload',
-      '/photo/upload',
-        '/uploadDocument',
-        '/uploadQrcode',
-        '/imgCode',
-        '/qrcode',
-        '/user/signUp',
-        '/user/login',
-        '/user/authSafety',
-        '/user/sendCode',
-        '/user/forgotLoginPass',
-        '/exchange/getCoinExchangeAreaList',
-        '/exchange/getMarketList',
-        '/doc/getHomeNewsList',
-        '/doc/getNewsList',
-        '/doc/getNewsModelById',
-        '/doc/getArticleModelById',
-      '/otc/coins',
-      '/otc/entrustList',
-        // Add for no login
-        '/exchange/getCoinExchangeList',
-        '/exchange/getCoinList',
-      '/market/trade/kline',
-    ];
-    let urlParse = url.parse(req.url);
+  let allowList = [
+    '/',
+    '/upload',
+    '/photo/upload',
+    '/uploadDocument',
+    '/uploadQrcode',
+    '/imgCode',
+    '/qrcode',
+    '/user/signUp',
+    '/user/login',
+    '/user/authSafety',
+    '/user/sendCode',
+    '/user/forgotLoginPass',
+    '/exchange/getCoinExchangeAreaList',
+    '/exchange/getMarketList',
+    '/doc/getHomeNewsList',
+    '/doc/getNewsList',
+    '/doc/getNewsModelById',
+    '/doc/getArticleModelById',
+    '/otc/coins',
+    '/otc/entrustList',
+    '/otc/entrust/',
+    // Add for no login
+    '/exchange/getCoinExchangeList',
+    '/exchange/getCoinList',
+    '/market/trade/kline',
+  ];
+  let urlParse = url.parse(req.url);
 
-    for (let aUrl of allowList) {
-        if (aUrl.toLowerCase() == urlParse.pathname.toLowerCase()) {
-            req.token = TokenUtils.decodeToken(req.headers.token) || null;
-            next();
-            return;
-        }
+  for (let aUrl of allowList) {
+    if (aUrl.toLowerCase() == urlParse.pathname.toLowerCase()) {
+      req.token = TokenUtils.decodeToken(req.headers.token) || null;
+      next();
+      return;
     }
+  }
 
-    let data = await TokenUtils.verifyToken(req.headers.token);
+  let data = await TokenUtils.verifyToken(req.headers.token);
 
-    if (data) {
-        req.token = data;
-        next();
-    } else {
-        //没有token 403 有token无效是401
-        res.status(401).end();
-    }
-
+  if (data) {
+    req.token = data;
+    next();
+  } else {
+    //没有token 403 有token无效是401
+    res.status(401).end();
+  }
 });
+
 
 app.use('/', require('./Routes/indexRouter'));
 app.use('/user', require('./Routes/userRouter'));
@@ -103,20 +140,20 @@ app.use('/photo', require('./Routes/photoRouter'));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-    var err = new Error('Not Found');
-    err.status = 404;
-    next(err);
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
 });
 
 // error handler
 app.use(function (err, req, res, next) {
-    // set locals, only providing error in development
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-    // render the error page
-    res.status(err.status || 500);
-    res.render('error');
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
 });
 
 

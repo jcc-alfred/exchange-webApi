@@ -20,6 +20,44 @@ router.post('/entrustList', async (req, res, next) => {
     throw e
   }
 });
+router.get('/entrust', async (req, res, next) => {
+  try {
+    if (!req.query.entrust_id) {
+      res.send({code: 0, msg: "entrust_id required"});
+      return;
+    }
+    let data = await OTCEntrusModel.getEntrustByID(req.query.entrust_id);
+    data ? res.send({code: 1, msg: "", data: data}) : res.send({code: 0, msg: "cannot find specific entrust"});
+  } catch (e) {
+    throw e
+  }
+});
+
+router.post('/entrust/cancel', async (req, res, next) => {
+  try {
+    if (!req.body.entrust_id) {
+      res.send({code: 0, msg: "entrust_id required"});
+      return;
+    }
+    let entrust = await OTCEntrusModel.getEntrustByID(req.body.entrust_id);
+    if (!entrust) {
+      res.send({code: 0, msg: "entrust cannot find"});
+      return
+    }
+    let data = await OTCEntrusModel.cancelEntrust(entrust);
+    res.send({code: 1, msg: "cancel entrust successfully"});
+  } catch (e) {
+    throw e
+  }
+});
+router.get('/entrust/my', async (req, res, next) => {
+  try {
+    let data = await OTCEntrusModel.getEntrustByUserID(req.token.user_id);
+    res.send({code: 1, msg: "", data: data});
+  } catch (e) {
+    throw e
+  }
+});
 router.post('/order/create', async (req, res, next) => {
   try {
     let entrust = await OTCEntrusModel.getEntrustByID(req.body.entrust_id);
@@ -58,8 +96,8 @@ router.post('/secret_remark', async (req, res, next) => {
       res.send({code: 0, msg: "secret_remark required"});
       return
     }
-      let update_secret_remark = await OTCEntrusModel.updateUserDefaultSecretRemark(req.token.user_id, req.body.secret_remark);
-      res.send({code: 1, msg: "update successfully"});
+    let update_secret_remark = await OTCEntrusModel.updateUserDefaultSecretRemark(req.token.user_id, req.body.secret_remark);
+    res.send({code: 1, msg: "update successfully"});
   } catch (e) {
     res.send({code: 0, msg: e});
     throw e;

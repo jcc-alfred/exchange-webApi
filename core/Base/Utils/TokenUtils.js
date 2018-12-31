@@ -25,7 +25,7 @@ let TokenUtils = {
         }
     },
 
-    async verifyToken(token) {
+  verifyToken(token) {
       // let cache = await Cache.init(config.cacheDB.users);
         try {
             let data = jwt.verify(token, config.token.secret);
