@@ -796,7 +796,7 @@ class OTCEntrustModel {
       await cnt.close();
       if (data.length > 0) {
         await cache.hset(ckey, user_id, data[0].secret_remark);
-        return data[0]
+        return data[0].secret_remark
       } else {
         return ""
       }
