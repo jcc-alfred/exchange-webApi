@@ -40,8 +40,12 @@ router.post('/entrust/cancel', async (req, res, next) => {
       return;
     }
     let entrust = await OTCEntrusModel.getEntrustByID(req.body.entrust_id);
-    if (!entrust) {
-      res.send({code: 0, msg: "entrust cannot find"});
+    if (!entrust || [0, 1].indexOf(entrust.status) < 0) {
+      res.send({code: 0, msg: "open entrust cannot find"});
+      return
+    }
+    if (req.token.user_id !== entrust.ad_user_id) {
+      res.status(401).end();
       return
     }
     let data = await OTCEntrusModel.cancelEntrust(entrust);
