@@ -45,6 +45,7 @@ app.all('*', async (req, res, next) => {
     let allowList = [
         '/',
         '/upload',
+      '/photo/upload',
         '/uploadDocument',
         '/uploadQrcode',
         '/imgCode',
@@ -97,6 +98,8 @@ app.use('/exchange', require('./Routes/exchangeRouter'));
 app.use('/doc', require('./Routes/docRouter'));
 app.use('/market', require('./Routes/marketRouter'));
 app.use('/otc', require('./Routes/OTC_ExchangeRouter'));
+app.use('/photo', require('./Routes/photoRouter'));
+
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

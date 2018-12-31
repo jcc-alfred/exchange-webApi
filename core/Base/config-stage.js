@@ -6,7 +6,15 @@ const config = {
   coinmarket_secret: 'c236b6e8-ede0-40a8-9a66-e60a039aff80',
   currency_api: 'http://www.apilayer.net/api/live',
   currency_secret: '0baf27b3065f8dd0ae4eb51f1ae6a24a',
-
+  aws: {
+    accessKeyId: "AKIAJWWJRUTSZMJW43TQ",
+    secretAccessKey: "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",
+    s3: {
+      buckit_name: "gtdollar-exchange",
+      file_prefix: "/images",
+      cdn_domain: "https://s3.ap-southeast-1.amazonaws.com"
+    }
+  },
   sys: {
     domain: 'getdax.com',     //域名
     ipRegisterMaxNum: 100,       //IP注册最大次数
@@ -97,7 +105,7 @@ const config = {
     Buy_Entrust_OTC: "Buy_Entrust_OTC_",                     //买单委托OTC
     Sell_Entrust_OTC: "Sell_Entrust_OTC_",                   //卖单委托OTC
     Entrust_OTC_UserId: "Entrust_OTC_UserId_",               //用户委托OTC
-    Order_OTC_UserId: "Order_OTC_UserId_",
+    Order_OTC_UserId: "Order_OTC_UserId_",                   //用户订单OTC
 
     User_Assets: "User_Assets_",                             // 用户资产信息 data:15 hash
 
