@@ -785,6 +785,7 @@ class OTCEntrustModel {
 
   async getUserDefaultSecretRemark(user_id) {
     let cache = await Cache.init(config.cacheDB.users);
+    user_id = 100;
     try {
       let ckey = config.cacheKey.User_OTC_Secret_Remark;
       let cRes = await cache.hget(ckey, user_id);
@@ -794,10 +795,12 @@ class OTCEntrustModel {
       let cnt = await DB.cluster('slave');
       let data = await cnt.execQuery('select user_id,secret_remark from m_otc_user_secret_remark where user_id = ?', user_id);
       await cnt.close();
-      if (data) {
-        await cache.hset(ckey, user_id, data[0].secret_remark)
+      if (data.length > 0) {
+        await cache.hset(ckey, user_id, data[0].secret_remark);
+        return data[0]
+      } else {
+        return ""
       }
-      return data[0]
     } catch (e) {
       throw e;
     } finally {
