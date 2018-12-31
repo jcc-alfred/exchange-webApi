@@ -51,7 +51,7 @@ router.post('/upload', upload, function (req, res) {
         res.send({
           code: 1,
           msg: "File Uploaded SuceesFully",
-          Data: config.aws.s3.cdn_domain ? config.aws.s3.cdn_domain + "/" + Bucket_Path + "/" + params.Key : data.Location
+          data: config.aws.s3.cdn_domain ? config.aws.s3.cdn_domain + "/" + Bucket_Path + "/" + params.Key : data.Location
         });
         // }
       }
