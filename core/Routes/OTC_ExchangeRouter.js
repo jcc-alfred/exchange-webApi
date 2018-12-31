@@ -54,14 +54,22 @@ router.post('/order/:id', async (req, res, next) => {
 
 router.post('/secret_remark', async (req, res, next) => {
   try {
-    if (req.body) {
+    if (!req.body.secret_remark) {
+      res.send({code: 0, msg: "secret_remark required"});
+      return
+    }
       let update_secret_remark = await OTCEntrusModel.updateUserDefaultSecretRemark(req.token.user_id, req.body.secret_remark);
       res.send({code: 1, msg: "update successfully"});
+  } catch (e) {
+    res.send({code: 0, msg: e});
+    throw e;
+  }
+});
 
-    } else {
-      let secret_remark = await OTCEntrusModel.getUserDefaultSecretRemark(req.token.user_id);
-      res.send({code: 1, msg: "", data: secret_remark});
-    }
+router.get('/secret_remark', async (req, res, next) => {
+  try {
+    let secret_remark = await OTCEntrusModel.getUserDefaultSecretRemark(req.token.user_id);
+    res.send({code: 1, msg: "", data: secret_remark});
   } catch (e) {
     res.send({code: 0, msg: e});
     throw e;
