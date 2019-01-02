@@ -39,7 +39,7 @@ class OTCEntrustModel {
                     secret_remark,
                     create_time 
                     from m_otc_entrust
-                    where id={0} and remaining_amount>0) entrust
+                    where id={0}) entrust
                     left join 
                     (select user_id,(case when full_name is null or full_name ="" then email else full_name end) name from m_user) a
                     on a.user_id =entrust.ad_user_id`;
@@ -312,7 +312,7 @@ class OTCEntrustModel {
         end_time: end_time
       };
       let order = await cnt.edit('m_otc_order', order_params);
-      let sql = 'update m_otc_entrust set remaining_amount = remaining_amount-? where id =? and remaining_amount > ?';
+      let sql = 'update m_otc_entrust set remaining_amount = remaining_amount-? where id =? and remaining_amount >= ?';
       let updateEntrust = await cnt.execQuery(sql, [coin_amount, entrust.id, coin_amount]);
       if (lock && order.affectedRows && updateEntrust.affectedRows) {
         cnt.commit();
