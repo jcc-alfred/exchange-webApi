@@ -4,7 +4,7 @@ let CoinModel = require('../Model/CoinModel');
 let OTCEntrusModel = require('../Model/OTCEntrustModel');
 let UserModel = require('../Model/UserModel');
 let UserSafePassLogModel = require('../Model/UserSafePassLogModel');
-
+let Enumerable = require('linq');
 
 
 router.post('/coins', async (req, res, next) => {
@@ -21,7 +21,14 @@ router.post('/entrustList', async (req, res, next) => {
       res.send({code: 0, msg: "params  type required"})
     }
     let data = await OTCEntrusModel.getOpenEntrustList(req.body.coin_id || 'all', req.body.type);
-    res.send({code: 1, msg: "", data: data});
+    let ordered_data = [];
+    if (req.body.type === 1) {
+      ordered_data = Enumerable.from(data).orderByDescending("$.price").toArray();
+    } else {
+      ordered_data = Enumerable.from(data).orderBy("$.price").toArray();
+    }
+
+    res.send({code: 1, msg: "", data: ordered_data});
   } catch (e) {
     throw e
   }
