@@ -46,6 +46,15 @@ class OTCEntrustModel {
       if (res.length > 0) {
         entrust = res[0];
         entrust.support_payments_id = entrust.support_payments_id.split(',');
+        let ckey = (entrust.trade_type === 1 ? config.cacheKey.Buy_Entrust_OTC : config.cacheKey.Sell_Entrust_OTC) + entrust.coin_id;
+        let ckey_all = (entrust.trade_type === 1 ? config.cacheKey.Buy_Entrust_OTC : config.cacheKey.Sell_Entrust_OTC) + "all";
+        let cache = await Cache.init(config.cacheDB.otc);
+        if (await cache.exists(ckey)) {
+          await cache.hset(ckey, entrust.id, entrust)
+        }
+        if (await cache.exists(ckey_all)) {
+          await cache.hset(ckey_all, entrust.id, entrust)
+        }
       }
       return entrust;
     } catch (error) {
@@ -389,17 +398,9 @@ class OTCEntrustModel {
       if (lock && entrust.affectedRows) {
         cnt.commit();
         ///update cache
-        entrust_params.id = entrust.insertId;
-        entrust_params.support_payments_id = payment_methods;
-        let ckey_all = (type === 1 ? config.cacheKey.Buy_Entrust_OTC : config.cacheKey.Sell_Entrust_OTC) + "all";
 
-        if (await cacheCnt.exists(ckey)) {
-          await cacheCnt.hset(ckey, entrust_params.id, entrust_params);
-        }
-        if (await cacheCnt.exists(ckey_all)) {
-          await cacheCnt.hset(ckey_all, entrust_params.id, entrust_params);
-        }
-        return entrust_params
+        let data = await this.getEntrustByID(entrust.insertId);
+        return data
       } else {
         cnt.rollback();
         return false
