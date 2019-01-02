@@ -3,6 +3,9 @@ let router = express.Router();
 let CoinModel = require('../Model/CoinModel');
 let OTCEntrusModel = require('../Model/OTCEntrustModel');
 let UserModel = require('../Model/UserModel');
+let UserSafePassLogModel = require('../Model/UserSafePassLogModel');
+
+
 
 router.post('/coins', async (req, res, next) => {
   try {
@@ -14,7 +17,10 @@ router.post('/coins', async (req, res, next) => {
 });
 router.post('/entrustList', async (req, res, next) => {
   try {
-    let data = await OTCEntrusModel.getOpenEntrustList(req.body.coin_id, req.body.type);
+    if ([0, 1].indexOf(req.body.type) < 0) {
+      res.send({code: 0, msg: "params  type required"})
+    }
+    let data = await OTCEntrusModel.getOpenEntrustList(req.body.coin_id || 'all', req.body.type);
     res.send({code: 1, msg: "", data: data});
   } catch (e) {
     throw e
@@ -70,13 +76,16 @@ router.post('/order/create', async (req, res, next) => {
       return
     }
     let data = await OTCEntrusModel.createOTCOrder(req.token.user_id, entrust, req.body.coin_amount);
-    res.send({code: 1, msg: "successfully create order", data: data});
+    data ? res.send({code: 1, msg: "successfully create order", data: data}) : res.send({
+      code: 0,
+      msg: "fail to create order"
+    });
   } catch (e) {
     res.send({code: 0, msg: e});
     throw e;
   }
 });
-router.post('/order/:id', async (req, res, next) => {
+router.post('/order/:id([0-9]+)', async (req, res, next) => {
   try {
     let order = await OTCEntrusModel.getOTCOrderByID(req.params.id);
     if (!order) {
@@ -146,6 +155,7 @@ router.post('/order/pay', async (req, res, next) => {
     throw e
   }
 });
+
 router.post('/order/confirm', async (req, res, next) => {
   try {
     if (!req.body.order_id) {
@@ -157,11 +167,28 @@ router.post('/order/confirm', async (req, res, next) => {
       res.status(401).end();
       return
     }
-    await OTCEntrusModel.ConfirmOTCOrder(order);
+    let userInfo = await UserModel.getUserById(req.token.user_id);
+    if (!userInfo.safe_pass) {
+      res.send({code: 0, msg: '您还未设置资金密码'});
+      return;
+    }
+    if (!req.body.isExchangeSafe) {
+      if (!req.body.safePass || Utils.md5(req.body.safePass) != userInfo.safe_pass) {
+        res.send({code: 0, msg: '资金密码错误'});
+        return;
+      }
+      UserSafePassLogModel.addSafePassLog(req.token.user_id);
+    }
+    let confirm_order = await OTCEntrusModel.ConfirmOTCOrder(order);
 
-    res.send({code: 1, msg: "successfully pay the order"});
+    confirm_order ? res.send({code: 1, msg: "successfully confirm the order"}) : res.send({
+      code: 0,
+      msg: "failed to confirm the order"
+    });
   } catch (e) {
+    res.status(500).end();
     throw e
+
   }
 });
 
