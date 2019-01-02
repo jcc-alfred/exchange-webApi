@@ -36,6 +36,7 @@ class OTCEntrustModel {
                     remaining_amount*price as max_money,
                     support_payments_id,valid_duration,
                     remark,
+                    secret_remark,
                     create_time 
                     from m_otc_entrust
                     where id={0} and remaining_amount>0) entrust

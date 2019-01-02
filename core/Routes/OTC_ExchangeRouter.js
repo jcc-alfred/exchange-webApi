@@ -42,7 +42,12 @@ router.get('/entrust', async (req, res, next) => {
       return;
     }
     let data = await OTCEntrusModel.getEntrustByID(req.query.entrust_id);
-    data ? res.send({code: 1, msg: "", data: data}) : res.send({code: 0, msg: "cannot find specific entrust"});
+    if (data) {
+      delete data.secret_remark;
+      res.send({code: 1, msg: "", data: data})
+    } else {
+      res.send({code: 0, msg: "cannot find specific entrust"});
+    }
   } catch (e) {
     res.status(500).end();
     throw e
@@ -110,6 +115,13 @@ router.get('/order/:id([0-9]+)', async (req, res, next) => {
     let buy_user = await UserModel.getUserById(order.buy_user_id);
     order.sell_user_name = sell_user.full_name ? sell_user.full_name : sell_user.email;
     order.buy_user_name = buy_user.full_name ? buy_user.full_name : buy_user.email;
+    if (order.type == 0) {
+      if (!order.secret_remark) {
+        order.secret_remark = await OTCEntrusModel.getUserDefaultSecretRemark(order.sell_user_id);
+      }
+    } else {
+      order.secret_remark = await OTCEntrusModel.getUserDefaultSecretRemark(order.sell_user_id);
+    }
     res.send({code: 1, msg: "", data: order});
   } catch (e) {
     res.status(500).end();
