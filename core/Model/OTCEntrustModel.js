@@ -391,8 +391,13 @@ class OTCEntrustModel {
         ///update cache
         entrust_params.id = entrust.insertId;
         entrust_params.support_payments_id = payment_methods;
+        let ckey_all = (type === 1 ? config.cacheKey.Buy_Entrust_OTC : config.cacheKey.Sell_Entrust_OTC) + "all";
+
         if (await cacheCnt.exists(ckey)) {
           await cacheCnt.hset(ckey, entrust_params.id, entrust_params);
+        }
+        if (await cacheCnt.exists(ckey_all)) {
+          await cacheCnt.hset(ckey_all, entrust_params.id, entrust_params);
         }
         return entrust_params
       } else {

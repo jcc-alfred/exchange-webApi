@@ -12,6 +12,7 @@ router.post('/coins', async (req, res, next) => {
     let OTCExchangeArea = await CoinModel.getOTCExchangeArea(req.body.type || "all");
     res.send({code: 1, msg: "", data: OTCExchangeArea});
   } catch (e) {
+    res.status(500).end();
     throw e
   }
 });
@@ -30,6 +31,7 @@ router.post('/entrustList', async (req, res, next) => {
 
     res.send({code: 1, msg: "", data: ordered_data});
   } catch (e) {
+    res.status(500).end();
     throw e
   }
 });
@@ -42,6 +44,7 @@ router.get('/entrust', async (req, res, next) => {
     let data = await OTCEntrusModel.getEntrustByID(req.query.entrust_id);
     data ? res.send({code: 1, msg: "", data: data}) : res.send({code: 0, msg: "cannot find specific entrust"});
   } catch (e) {
+    res.status(500).end();
     throw e
   }
 });
@@ -62,16 +65,19 @@ router.post('/entrust/cancel', async (req, res, next) => {
       return
     }
     let data = await OTCEntrusModel.cancelEntrust(entrust);
-    res.send({code: 1, msg: "cancel entrust successfully"});
+    data ? res.send({code: 1, msg: "cancel entrust successfully"}) : res.send({code: 0, msg: "fail to cancel entrust"});
   } catch (e) {
+    res.status(500).end();
     throw e
   }
 });
+
 router.get('/entrust/my', async (req, res, next) => {
   try {
     let data = await OTCEntrusModel.getEntrustByUserID(req.token.user_id);
     res.send({code: 1, msg: "", data: data});
   } catch (e) {
+    res.status(500).end();
     throw e
   }
 });
@@ -88,7 +94,7 @@ router.post('/order/create', async (req, res, next) => {
       msg: "fail to create order"
     });
   } catch (e) {
-    res.send({code: 0, msg: e});
+    res.status(500).end();
     throw e;
   }
 });
@@ -105,7 +111,7 @@ router.post('/order/:id([0-9]+)', async (req, res, next) => {
     order.buy_user_name = buy_user.full_name ? buy_user.full_name : buy_user.email;
     res.send({code: 1, msg: "", data: order});
   } catch (e) {
-    res.send({code: 0, msg: e});
+    res.status(500).end();
     throw e;
   }
 });
@@ -119,7 +125,7 @@ router.post('/secret_remark', async (req, res, next) => {
     let update_secret_remark = await OTCEntrusModel.updateUserDefaultSecretRemark(req.token.user_id, req.body.secret_remark);
     res.send({code: 1, msg: "update successfully"});
   } catch (e) {
-    res.send({code: 0, msg: e});
+    res.status(500).end();
     throw e;
   }
 });
@@ -129,7 +135,7 @@ router.get('/secret_remark', async (req, res, next) => {
     let secret_remark = await OTCEntrusModel.getUserDefaultSecretRemark(req.token.user_id);
     res.send({code: 1, msg: "", data: secret_remark});
   } catch (e) {
-    res.send({code: 0, msg: e});
+    res.status(500).end();
     throw e;
   }
 });
@@ -143,6 +149,7 @@ router.post('/entrust/create', async (req, res, next) => {
     );
     res.send({code: 1, msg: "", data: data});
   } catch (e) {
+    res.status(500).end();
     throw e
   }
 });
@@ -159,6 +166,7 @@ router.post('/order/pay', async (req, res, next) => {
     await OTCEntrusModel.PayOTCOrder(order);
     res.send({code: 1, msg: "successfully pay the order"});
   } catch (e) {
+    res.status(500).end();
     throw e
   }
 });
