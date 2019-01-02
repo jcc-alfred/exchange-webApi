@@ -89,16 +89,17 @@ router.post('/order/create', async (req, res, next) => {
       return
     }
     let data = await OTCEntrusModel.createOTCOrder(req.token.user_id, entrust, req.body.coin_amount);
-    data ? res.send({code: 1, msg: "successfully create order", data: data}) : res.send({
-      code: 0,
-      msg: "fail to create order"
-    });
+    if (data) {
+      res.send({code: 1, msg: "successfully create order", data: data})
+    } else {
+      res.send({code: 0, msg: "fail to create order"});
+    }
   } catch (e) {
     res.status(500).end();
     throw e;
   }
 });
-router.post('/order/:id([0-9]+)', async (req, res, next) => {
+router.get('/order/:id([0-9]+)', async (req, res, next) => {
   try {
     let order = await OTCEntrusModel.getOTCOrderByID(req.params.id);
     if (!order) {

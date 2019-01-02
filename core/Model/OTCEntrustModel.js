@@ -50,10 +50,18 @@ class OTCEntrustModel {
         let ckey_all = (entrust.trade_type === 1 ? config.cacheKey.Buy_Entrust_OTC : config.cacheKey.Sell_Entrust_OTC) + "all";
         let cache = await Cache.init(config.cacheDB.otc);
         if (await cache.exists(ckey)) {
-          await cache.hset(ckey, entrust.id, entrust)
+          if (entrust.remaining_amount > 0) {
+            await cache.hset(ckey, entrust.id, entrust);
+          } else {
+            await cache.hdel(ckey, entrust.id);
+          }
         }
         if (await cache.exists(ckey_all)) {
-          await cache.hset(ckey_all, entrust.id, entrust)
+          if (entrust.remaining_amount > 0) {
+            await cache.hset(ckey_all, entrust.id, entrust);
+          } else {
+            await cache.hdel(ckey_all, entrust.id);
+          }
         }
       }
       return entrust;
