@@ -113,7 +113,7 @@ class OTCEntrustModel {
                     (select user_id,(case when full_name is null or full_name ="" then email else full_name end) name from m_user) a
                     on a.user_id =entrust.ad_user_id`;
       let condition = "";
-      if (status) condition = 'and status =' + status;
+      if (status) condition = 'and status in ( ' + status.join(',') + ')';
       let res = await cnt.execQuery(Utils.formatString(sql, [user_id, condition]));
       res = res.map(function (each) {
         each.support_payments_id = each.support_payments_id.split(',');
@@ -126,6 +126,7 @@ class OTCEntrustModel {
       await cnt.close();
     }
   }
+
   async getOpenEntrustList(coin_id, type, refresh = false) {
     let cacheCnt = await Cache.init(config.cacheDB.otc);
     let ckey = (type === 1 ? config.cacheKey.Buy_Entrust_OTC : config.cacheKey.Sell_Entrust_OTC) + coin_id;
@@ -183,17 +184,6 @@ class OTCEntrustModel {
       await cacheCnt.close();
     }
   }
-
-  // async getEntrustByID(entrust_id) {
-  //   try {
-  //     let cnt = await DB.cluster('slave');
-  //     let entrust = await cnt.execQuery('select * from m_otc_entrust where id = ?', [entrust_id]);
-  //     cnt.close();
-  //     return entrust[0]
-  //   } catch (e) {
-  //     throw e
-  //   }
-  // }
 
   async getOTCOrderByID(order_id) {
     let cnt = await DB.cluster('slave');

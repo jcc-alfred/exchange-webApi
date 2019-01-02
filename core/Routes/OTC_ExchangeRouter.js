@@ -6,7 +6,7 @@ let UserModel = require('../Model/UserModel');
 
 router.post('/coins', async (req, res, next) => {
   try {
-    let OTCExchangeArea = await CoinModel.getOTCExchangeArea();
+    let OTCExchangeArea = await CoinModel.getOTCExchangeArea(req.body.type || "all");
     res.send({code: 1, msg: "", data: OTCExchangeArea});
   } catch (e) {
     throw e

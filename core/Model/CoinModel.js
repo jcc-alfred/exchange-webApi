@@ -172,7 +172,7 @@ class CoinModel {
     }
   }
 
-  async getOTCExchangeArea(type = 'all', refresh = true) {
+  async getOTCExchangeArea(type = 'all', refresh = false) {
     let cacheCnt = await Cache.init(config.cacheDB.system);
     try {
       if (await cacheCnt.exists(config.cacheKey.Sys_OTC_Coin && !refresh)) {
