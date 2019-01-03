@@ -92,6 +92,10 @@ router.get('/order/my', async (req, res, next) => {
     if (req.query.coin_id) {
       data = data.filter(item => item.coin_id == req.query.coin_id)
     }
+    data = data.map(function (a) {
+      a.role = req.token.user_id == a.buy_user_id ? "buy" : "sell";
+      return a;
+    });
     res.send({code: 1, msg: "", data: data});
   } catch (e) {
     res.status(500).end();
@@ -128,7 +132,7 @@ router.get('/order/:id([0-9]+)', async (req, res, next) => {
     order.entrust = await OTCEntrusModel.getEntrustByID(order.entrust_id);
     order.sell_user_name = sell_user.full_name ? sell_user.full_name : sell_user.email;
     order.buy_user_name = buy_user.full_name ? buy_user.full_name : buy_user.email;
-    if (order.type == 0) {
+    if (order.trigger_type == 0) {
       if (!order.secret_remark) {
         order.secret_remark = await OTCEntrusModel.getUserDefaultSecretRemark(order.sell_user_id);
       }

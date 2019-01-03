@@ -293,7 +293,7 @@ class OTCEntrustModel {
       let cnt = await DB.cluster('slave');
       let sql = 'select * from ' +
         '(select * from m_otc_order where buy_user_id = {0} or sell_user_id = {1} ) a ' +
-        'left join (select coin_name, coin_id ,type, trade_fee_rate from m_otc_exchange_area)b  ' +
+        'left join (select coin_name, coin_id ,type,trade_fee_rate from m_otc_exchange_area)b  ' +
         'on a.coin_id = b.coin_id and a.trigger_type = b.type';
       let res = await cnt.execQuery(Utils.formatString(sql, [user_id, user_id]));
       cnt.close();
