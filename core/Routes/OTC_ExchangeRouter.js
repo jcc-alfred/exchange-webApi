@@ -86,6 +86,18 @@ router.get('/entrust/my', async (req, res, next) => {
     throw e
   }
 });
+router.get('/order/my', async (req, res, next) => {
+  try {
+    let data = await OTCEntrusModel.getOrderByUserID(req.token.user_id);
+    if (req.query.coin_id) {
+      data = data.filter(item => item.coin_id == req.query.coin_id)
+    }
+    res.send({code: 1, msg: "", data: data});
+  } catch (e) {
+    res.status(500).end();
+    throw e
+  }
+});
 router.post('/order/create', async (req, res, next) => {
   try {
     let entrust = await OTCEntrusModel.getEntrustByID(req.body.entrust_id);

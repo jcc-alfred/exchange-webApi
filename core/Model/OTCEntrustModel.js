@@ -50,6 +50,7 @@ class OTCEntrustModel {
         entrust.support_payments_id = entrust.support_payments_id.split(',');
         let ckey = (entrust.trade_type === 1 ? config.cacheKey.Buy_Entrust_OTC : config.cacheKey.Sell_Entrust_OTC) + entrust.coin_id;
         let ckey_all = (entrust.trade_type === 1 ? config.cacheKey.Buy_Entrust_OTC : config.cacheKey.Sell_Entrust_OTC) + "all";
+        let ckey_user = config.cacheKey.Entrust_OTC_UserId + entrust.ad_user_id;
         let cache = await Cache.init(config.cacheDB.otc);
         if (await cache.exists(ckey)) {
           if (entrust.remaining_amount > 0) {
@@ -64,6 +65,9 @@ class OTCEntrustModel {
           } else {
             await cache.hdel(ckey_all, entrust.id);
           }
+        }
+        if (await cache.exists(ckey_user)) {
+          await cache.hset(ckey_user, entrust.id, entrust);
         }
       }
       return entrust;
@@ -93,7 +97,9 @@ class OTCEntrustModel {
         await AssetsModel.getUserAssetsByUserId(entrust.ad_user_id, true);
         let cache = await Cache.init(config.cacheDB.otc);
         let ckey = (entrust.trade_type === 1 ? config.cacheKey.Buy_Entrust_OTC : config.cacheKey.Sell_Entrust_OTC) + entrust.coin_id;
+        let ckey_user = config.cacheKey.Entrust_OTC_UserId + entrust.id;
         await cache.hdel(ckey, entrust.id);
+        await cache.hdel(ckey_user, entrust.id);
         await cache.close();
         return true
       } else {
@@ -106,12 +112,65 @@ class OTCEntrustModel {
     } finally {
       cnt.close();
     }
+  }
 
+  async getOrderByUserID(user_id, refresh = false) {
+    let cache = await Cache.init(config.cacheDB.otc);
+    try {
+      let ckey = config.cacheKey.Order_OTC_UserId + user_id;
+      if (await cache.exists(ckey) && !refresh) {
+        let cRes = await cache.hgetall(ckey);
+        if (cRes) {
+          let data = [];
+          for (let i in cRes) {
+            let item = cRes[i];
+            data.push(JSON.parse(item));
+          }
+          return data;
+        }
+      }
+      let cnt = await DB.cluster('slave');
+      let sql = 'select * from ' +
+        '(select * from m_otc_order where buy_user_id = {0} or sell_user_id = {1} ) a ' +
+        'left join (select coin_name, coin_id ,type, trade_fee_rate from m_otc_exchange_area)b  ' +
+        'on a.coin_id = b.coin_id and a.trigger_type = b.type';
+      let res = await cnt.execQuery(Utils.formatString(sql, [user_id, user_id]));
+      cnt.close();
+      if (res.length > 0) {
+        await Promise.all(res.map(order => {
+          return cache.hset(ckey, order.id, order);
+        }));
+      }
+      return res
+    } catch (e) {
+      throw e
+    } finally {
+      cache.close();
+    }
   }
 
   async getEntrustByUserID(user_id, status = null, refresh = false) {
-    let cnt = await DB.cluster('slave');
+    let cache = await Cache.init(config.cacheDB.otc);
     try {
+      let ckey = config.cacheKey.Entrust_OTC_UserId + user_id;
+      if (await cache.exists(ckey) && !refresh) {
+        let cRes = await cache.hgetall(ckey);
+        if (cRes) {
+          let data = [];
+          for (let i in cRes) {
+            let item = JSON.parse(cRes[i]);
+            if (status) {
+              if (status.indexOf(item.status) > 0) {
+                data.push(item);
+              }
+            } else {
+              data.push(item);
+            }
+          }
+          return data;
+        }
+      }
+      let cnt = await DB.cluster('slave');
       let sql = ` select * from 
                     (select id,ad_user_id,
                     coin_id,
@@ -129,22 +188,34 @@ class OTCEntrustModel {
                     secret_remark,
                     create_time 
                     from m_otc_entrust
-                    where ad_user_id={0}  {1})  entrust 
+                    where ad_user_id={0})  entrust 
                     left join 
                     (select user_id,(case when full_name is null or full_name ="" then email else full_name end) name from m_user) a
                     on a.user_id =entrust.ad_user_id`;
-      let condition = "";
-      if (status) condition = 'and status in ( ' + status.join(',') + ')';
-      let res = await cnt.execQuery(Utils.formatString(sql, [user_id, condition]));
+      let res = await cnt.execQuery(Utils.formatString(sql, [user_id]));
+      cnt.close();
       res = res.map(function (each) {
         each.support_payments_id = each.support_payments_id.split(',');
         return each;
       });
+      let chRes = await Promise.all(res.map((entrust) => {
+        return cache.hset(
+          ckey,
+          entrust.id,
+          entrust
+        )
+      }));
+      if (status) {
+        res = res.filter(item => status.indexOf(item.status) > 0)
+      }
+
+
+      await cache.expire(ckey, 300);
       return res;
     } catch (error) {
       throw error;
     } finally {
-      await cnt.close();
+      await cache.close();
     }
   }
 
@@ -319,16 +390,7 @@ class OTCEntrustModel {
       let updateEntrust = await cnt.execQuery(sql, [coin_amount, entrust.id, coin_amount]);
       if (lock && order.affectedRows && updateEntrust.affectedRows) {
         cnt.commit();
-        entrust.remaining_amount = entrust.remaining_amount - coin_amount;
-        let ckey = (entrust.trade_type === 1 ? config.cacheKey.Buy_Entrust_OTC : config.cacheKey.Sell_Entrust_OTC) + entrust.coin_id;
-        let cache = await Cache.init(config.cacheDB.otc);
-        if (await cache.exists(ckey)) {
-          if (entrust.remaining_amount > 0) {
-            await cache.hset(ckey, entrust.id, entrust);
-          } else {
-            await cache.hdel(ckey, entrust.id);
-          }
-        }
+        await this.getEntrustByID(entrust.id);
         return {order_id: order.insertId}
       }
       else {
@@ -356,17 +418,6 @@ class OTCEntrustModel {
     }
   }
 
-  async lockUserAsset(user_id, coin_id, amount) {
-    let cnt = DB.cluster('master');
-    try {
-      let lockasset = await cnt.execQuery(`update m_user_assets set available = available - ? , frozen = frozen + ? , balance = balance - ?
-                                                            where user_id = ? and coin_id = ? and available > ? `,
-        [amount, amount, amount, user_id, coin_id, amount]);
-      return lockasset.affectedRows;
-    } catch (e) {
-      throw e;
-    }
-  }
 
   async CreateEntrust(entrust_id, user_id, type, coin_id, amount, price, currency, min_amount, remark, secret_remark, payment_methods, valid_duration) {
     let cacheCnt = await Cache.init(config.cacheDB.otc);

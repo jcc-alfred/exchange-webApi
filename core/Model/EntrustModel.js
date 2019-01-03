@@ -243,7 +243,7 @@ class EntrustModel {
               }
             }
           }
-          Promise.all(res.map(item => {
+          await Promise.all(res.map(item => {
             return cache.hset(ckey, item.symbol.toLowerCase(), item);
           }));
         }
