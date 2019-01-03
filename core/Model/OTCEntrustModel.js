@@ -298,13 +298,11 @@ class OTCEntrustModel {
       let res = await cnt.execQuery(Utils.formatString(sql, [user_id, user_id]));
       cnt.close();
       if (res.length > 0) {
-        let chRes = await Promise.all(res.map((order) => {
-          return cache.hset(
-            ckey,
-            order.id,
-            order
-          )
-        }));
+        let ckey_other = config.cacheKey.Order_OTC_UserId + (user_id === order.buy_user_id ? order.sell_user_id : order.buy_user_id);
+        res.map(async (order) => {
+          await cache.hset(ckey, order.id, order);
+          await cache.hset(ckey_other, order.id, order);
+        });
         return res.find(item => item.id == order_id);
       }
       return null
@@ -431,7 +429,7 @@ class OTCEntrustModel {
     try {
       let pay = await cnt.execQuery('update m_otc_order set status=1 where id =?', order.id);
       if (pay.affectedRows) {
-        await this.getOrderBy
+        await this.getOrderByID(order.id, order.buy_user_id);
       }
     } catch (e) {
       throw e
