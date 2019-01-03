@@ -32,6 +32,7 @@ class OTCEntrustModel {
                     min_trade_amount,
                     trade_fee_rate,
                     trade_type,
+                    status,
                     min_trade_amount*price as min_money,
                     remaining_amount*price as max_money,
                     support_payments_id,valid_duration,
