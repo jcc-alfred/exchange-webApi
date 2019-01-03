@@ -429,7 +429,7 @@ class OTCEntrustModel {
     try {
       let pay = await cnt.execQuery('update m_otc_order set status=1 where id =?', order.id);
       if (pay.affectedRows) {
-        await this.getOrderByID(order.id, order.buy_user_id);
+        await this.getOrderByID(order.id, order.buy_user_id, true);
       }
     } catch (e) {
       throw e
