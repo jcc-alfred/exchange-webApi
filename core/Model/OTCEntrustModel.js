@@ -124,10 +124,11 @@ class OTCEntrustModel {
                     remaining_amount*price as max_money,
                     support_payments_id,valid_duration,
                     remark,
+                    status,
                     secret_remark,
                     create_time 
                     from m_otc_entrust
-                    where ad_user_id={0} and remaining_amount>0 {1})  entrust 
+                    where ad_user_id={0} and  {1})  entrust 
                     left join 
                     (select user_id,(case when full_name is null or full_name ="" then email else full_name end) name from m_user) a
                     on a.user_id =entrust.ad_user_id`;
@@ -289,7 +290,7 @@ class OTCEntrustModel {
 
         //冻结用户的币,冻结失败返回创建失败
         let lockasset = await cnt.execQuery(`update m_user_assets set available = available - ? , frozen = frozen + ? , balance = balance - ?
-                                                            where user_id = ? and coin_id = ? and available > ? `,
+                                                            where user_id = ? and coin_id = ? and available >= ? `,
           [coin_amount, coin_amount, coin_amount, user_id, entrust.coin_id, coin_amount]);
         lock = lockasset.affectedRows;
       } else {

@@ -699,54 +699,6 @@ class EntrustModel {
     }
   }
 
-  async getOpenOTCentrustList(coin_id, type, refresh = false) {
-    let cacheCnt = await Cache.init(config.cacheDB.otc);
-    let ckey = type === 1 ? config.cacheKey.Buy_Entrust_OTC : config.cacheKey.Sell_Entrust_OTC;
-    ckey = ckey + "_" + coin_id;
-    try {
-      let cRes = await cacheCnt.hgetall(ckey);
-      if (cRes) {
-        let data = [];
-        for (let i in cRes) {
-          let item = cRes[i];
-          data.push(JSON.parse(item));
-        }
-        return data;
-      }
-
-      let cnt = await DB.cluster('slave');
-      let sql = `select id,ad_user_id,
-                    coin_id,
-                    coin_name,
-                    remaining_amount,
-                    price,currency,
-                    min_trade_amount,
-                    min_trade_amount*price as min_money,
-                    remaining_amount*price as max_money,
-                    support_payments_id,valid_duration,
-                    remark,
-                    secret_remark,
-                    create_time 
-                    from m_otc_entrust
-                    where status={0} and coin_id ={1} and remaining_amount>0 order by price desc`;
-      let res = await cnt.execQuery(Utils.formatString(sql, [type, coin_id]));
-      await cnt.close();
-
-      let chRes = await Promise.all(res.map((entrust) => {
-        return cacheCnt.hset(
-          ckey,
-          entrust.id,
-          entrust
-        )
-      }));
-      return res;
-
-    } catch (error) {
-      throw error;
-    } finally {
-      await cacheCnt.close();
-    }
-  }
 
 }
 
