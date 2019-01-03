@@ -118,12 +118,13 @@ class OTCEntrustModel {
                     remaining_amount,
                     price,currency,
                     min_trade_amount,
+                    trade_fee_rate,
+                    trade_type,
                     min_trade_amount*price as min_money,
                     remaining_amount*price as max_money,
                     support_payments_id,valid_duration,
                     remark,
                     secret_remark,
-                    status,
                     create_time 
                     from m_otc_entrust
                     where ad_user_id={0} and remaining_amount>0 {1})  entrust 

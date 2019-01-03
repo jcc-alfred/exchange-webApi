@@ -131,7 +131,7 @@ router.get('/order/:id([0-9]+)', async (req, res, next) => {
 
 router.post('/secret_remark', async (req, res, next) => {
   try {
-    if (!req.body.secret_remark) {
+    if (req.body.secret_remark === undefined) {
       res.send({code: 0, msg: "secret_remark required"});
       return
     }
