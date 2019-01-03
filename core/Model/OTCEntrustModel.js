@@ -298,7 +298,14 @@ class OTCEntrustModel {
       let res = await cnt.execQuery(Utils.formatString(sql, [user_id, user_id]));
       cnt.close();
       if (res.length > 0) {
-        return res[0]
+        let chRes = await Promise.all(res.map((order) => {
+          return cache.hset(
+            ckey,
+            order.id,
+            order
+          )
+        }));
+        return res.find(item => item.id == order_id);
       }
       return null
     } catch (e) {
