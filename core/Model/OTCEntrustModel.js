@@ -128,7 +128,7 @@ class OTCEntrustModel {
                     secret_remark,
                     create_time 
                     from m_otc_entrust
-                    where ad_user_id={0} and  {1})  entrust 
+                    where ad_user_id={0}  {1})  entrust 
                     left join 
                     (select user_id,(case when full_name is null or full_name ="" then email else full_name end) name from m_user) a
                     on a.user_id =entrust.ad_user_id`;
