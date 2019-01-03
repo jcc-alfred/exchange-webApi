@@ -118,13 +118,14 @@ router.post('/order/create', async (req, res, next) => {
 });
 router.get('/order/:id([0-9]+)', async (req, res, next) => {
   try {
-    let order = await OTCEntrusModel.getOTCOrderByID(req.params.id);
+    let order = await OTCEntrusModel.getOrderByID(req.params.id, req.token.user_id);
     if (!order) {
       res.send({code: 0, msg: "the order doesn't exist"});
       return
     }
     let sell_user = await UserModel.getUserById(order.sell_user_id);
     let buy_user = await UserModel.getUserById(order.buy_user_id);
+    order.entrust = await OTCEntrusModel.getEntrustByID(order.entrust_id);
     order.sell_user_name = sell_user.full_name ? sell_user.full_name : sell_user.email;
     order.buy_user_name = buy_user.full_name ? buy_user.full_name : buy_user.email;
     if (order.type == 0) {
@@ -183,7 +184,7 @@ router.post('/order/pay', async (req, res, next) => {
     if (!req.body.order_id) {
       res.send({code: 0, msg: "order_id required"})
     }
-    let order = await OTCEntrusModel.getOTCOrderByID(req.body.order_id);
+    let order = await OTCEntrusModel.getOrderByID(req.body.order_id, req.token.user_id);
     if (order.buy_user_id !== req.token.user_id) {
       ///支付用户只能是买用户
       res.status(401).end()
@@ -201,7 +202,7 @@ router.post('/order/confirm', async (req, res, next) => {
     if (!req.body.order_id) {
       res.send({code: 0, msg: "order_id required"})
     }
-    let order = await OTCEntrusModel.getOTCOrderByID(req.body.order_id);
+    let order = await OTCEntrusModel.getOrderByID(req.body.order_id, req.token.user_id);
     if (order.sell_user_id !== req.token.user_id) {
       ///确认用户只能是卖币用户
       res.status(401).end();

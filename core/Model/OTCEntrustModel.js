@@ -141,6 +141,7 @@ class OTCEntrustModel {
           return cache.hset(ckey, order.id, order);
         }));
       }
+      await cache.expire(ckey, 300);
       return res
     } catch (e) {
       throw e
@@ -205,12 +206,10 @@ class OTCEntrustModel {
           entrust
         )
       }));
+      await cache.expire(ckey, 300);
       if (status) {
         res = res.filter(item => status.indexOf(item.status) > 0)
       }
-
-
-      await cache.expire(ckey, 300);
       return res;
     } catch (error) {
       throw error;
@@ -281,20 +280,31 @@ class OTCEntrustModel {
     }
   }
 
-  async getOTCOrderByID(order_id) {
-    let cnt = await DB.cluster('slave');
-    let order = null;
+  async getOrderByID(order_id, user_id, refresh = false) {
+    let cache = await Cache.init(config.cacheDB.otc);
     try {
-      let data = await cnt.execQuery('select * from (select * from m_otc_order where id =?) a left join (select coin_name, coin_id ,type, trade_fee_rate from m_otc_exchange_area)b  on a.coin_id = b.coin_id and a.trigger_type = b.type', order_id);
-      if (data.length) {
-        order = data[0];
-        order.entrust = await this.getEntrustByID(order.entrust_id);
+      let ckey = config.cacheKey.Order_OTC_UserId + user_id;
+      if (!refresh) {
+        let cRes = await cache.hget(ckey, order_id);
+        if (cRes) {
+          return cRes;
+        }
       }
-      return order
+      let cnt = await DB.cluster('slave');
+      let sql = 'select * from ' +
+        '(select * from m_otc_order where buy_user_id = {0} or sell_user_id = {1} ) a ' +
+        'left join (select coin_name, coin_id ,type, trade_fee_rate from m_otc_exchange_area)b  ' +
+        'on a.coin_id = b.coin_id and a.trigger_type = b.type';
+      let res = await cnt.execQuery(Utils.formatString(sql, [user_id, user_id]));
+      cnt.close();
+      if (res.length > 0) {
+        return res[0]
+      }
+      return null
     } catch (e) {
       throw e;
     } finally {
-      cnt.close();
+      cache.close();
     }
   }
 
@@ -308,6 +318,7 @@ class OTCEntrustModel {
         secret_remark: secret_remark
       });
       await cache.hset(ckey, user_id, secret_remark);
+      await cache.expire(ckey, 12 * 3600);
       return true
     } catch (e) {
       throw e;
@@ -330,6 +341,7 @@ class OTCEntrustModel {
       await cnt.close();
       if (data.length > 0) {
         await cache.hset(ckey, user_id, data[0].secret_remark);
+        await cache.expire(ckey, 12 * 3600);
         return data[0].secret_remark
       } else {
         return ""
@@ -378,6 +390,7 @@ class OTCEntrustModel {
         sell_user_id: sell_user_id,
         coin_amount: coin_amount,
         coin_id: entrust.coin_id,
+        trade_price: entrust.price,
         trade_fee: trade_fee,
         trigger_type: entrust.trade_type,
         trade_amount: trade_amount,
@@ -410,7 +423,9 @@ class OTCEntrustModel {
     // let cache = await Cache.init(config.cacheDB.otc);
     try {
       let pay = await cnt.execQuery('update m_otc_order set status=1 where id =?', order.id);
-      return true
+      if (pay.affectedRows) {
+        await this.getOrderBy
+      }
     } catch (e) {
       throw e
     } finally {
