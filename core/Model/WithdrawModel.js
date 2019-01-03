@@ -55,7 +55,7 @@ class WithdrawModel {
       let serialNum = moment().format('YYYYMMDDHHmmssSSS');
       let confirmStatus = 0;
       let confirmStatusName = '审核中';
-      cnt.transaction();
+      await cnt.transaction();
       let withdrawRes = await cnt.edit('m_user_withdraw', {
         serial_num: serialNum,
         user_id: userId,
@@ -76,7 +76,7 @@ class WithdrawModel {
         let updAssets = await cnt.execQuery(`update m_user_assets set balance = balance - ? , available = available - ? 
                 where user_id = ? and coin_id = ?`, [submitAmount, submitAmount, userId, coinId]);//, frozen = frozen + ?
         if (updAssets.affectedRows) {
-          cnt.commit();
+          await cnt.commit();
           res = 1;
         } else {
           cnt.rollback();
@@ -103,7 +103,7 @@ class WithdrawModel {
       if (withraw && withraw.user_withdraw_id) {
         let confirmStatus = -1;
         let confirmStatusName = '已取消';
-        cnt.transaction();
+        await cnt.transaction();
         let withdrawUpd = await cnt.edit('m_user_withdraw', {
           confirm_status: confirmStatus,
           confirm_status_name: confirmStatusName
@@ -113,7 +113,7 @@ class WithdrawModel {
           let updAssets = await cnt.execQuery(`update m_user_assets set balance = balance + ? , available = available + ?  
                     where user_id = ? and coin_id = ?`, [withraw.submit_amount, withraw.submit_amount, userId, withraw.coin_id]);//, frozen = frozen - ?
           if (updAssets.affectedRows) {
-            cnt.commit();
+            await cnt.commit();
             res = 1;
           } else {
             cnt.rollback();

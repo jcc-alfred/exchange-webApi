@@ -54,7 +54,7 @@ class EntrustModel {
       let feesRate = entrustTypeId == 1 ? buyFeesRate : sellFeesRate;
       let totalAmount = Utils.checkDecimal(Utils.mul(entrustPrice, entrustVolume), 8);
 
-      cnt.transaction();
+      await cnt.transaction();
       //冻结用户资产
       let updAssets = null;
       if (entrustTypeId == 1) {
@@ -92,7 +92,7 @@ class EntrustModel {
         });
       }
       if (entrustRes.affectedRows && updAssets.affectedRows && entrustMQ) {
-        cnt.commit();
+        await cnt.commit();
         await AssetsModel.getUserAssetsByUserId(userId, true);
         res = {...params, entrust_id: entrustRes.insertId, create_time: Date.now()};
       } else {
@@ -120,7 +120,7 @@ class EntrustModel {
         let coinExchangeList = await CoinModel.getCoinExchangeList();
         let coinEx = coinExchangeList.find((item) => item.coin_exchange_id == coinExchangeId);
         let totalNoCompleteAmount = Utils.checkDecimal(Utils.mul(entrust.no_completed_volume, entrust.entrust_price), coinEx.exchange_decimal_digits);
-        cnt.transaction();
+        await cnt.transaction();
         let updEntrust = await cnt.edit('m_entrust', {
           entrust_status: 3,
           entrust_status_name: '已取消'
@@ -134,7 +134,7 @@ class EntrustModel {
                     where user_id = ? and coin_id = ? and frozen >= ?`, [entrust.no_completed_volume, entrust.no_completed_volume, userId, coinEx.coin_id, entrust.no_completed_volume]);
         }
         if (updEntrust.affectedRows && updAssets.affectedRows) {
-          cnt.commit();
+          await cnt.commit();
           let refreshAssets = await AssetsModel.getUserAssetsByUserId(userId, true);
           let cache = await Cache.init(config.cacheDB.order);
           //buy or sell entrust list

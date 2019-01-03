@@ -112,7 +112,7 @@ class UserBonusModel {
       let serialNum = moment().format('YYYYMMDDHHmmssSSS');
       let [assets] = await cnt.execQuery(`select * from m_user_assets where record_status=1 and user_id=? and coin_id=?`, [userId, coinId]);
       let balanceAmount = Utils.add(assets.balance, tradeAmount);
-      cnt.transaction();
+      await cnt.transaction();
       //增加用户资产
       let updAssets = await cnt.execQuery(`update m_user_assets set balance = balance + ? , available = available + ? 
             where user_id = ? and coin_id = ?`, [tradeAmount, tradeAmount, userId, coinId]);
@@ -145,7 +145,7 @@ class UserBonusModel {
         order_id: 0,
         referral_level: level
       });
-      cnt.commit();
+      await cnt.commit();
       AssetsModel.getUserAssetsByUserId(userId, true);
     } catch (error) {
       console.error(error);

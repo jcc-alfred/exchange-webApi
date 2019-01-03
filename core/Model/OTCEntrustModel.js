@@ -82,7 +82,7 @@ class OTCEntrustModel {
     let cnt = await DB.cluster('master');
     let unlock = true;
     try {
-      cnt.transaction();
+      await cnt.transaction();
       let updateEntrust = await cnt.execQuery("update m_otc_entrust set status= 3 , remaining_amount = remaining_amount - ? where id= ? and remaining_amount >= ?", [entrust.remaining_amount, entrust.id, entrust.remaining_amount]);
       if (entrust.trade_type === 0) {
         ///unlock the asset for user
@@ -93,7 +93,7 @@ class OTCEntrustModel {
         unlock = unlockasset.affectedRows;
       }
       if (unlock && updateEntrust.affectedRows) {
-        cnt.commit();
+        await cnt.commit();
         await AssetsModel.getUserAssetsByUserId(entrust.ad_user_id, true);
         let cache = await Cache.init(config.cacheDB.otc);
         let ckey = (entrust.trade_type === 1 ? config.cacheKey.Buy_Entrust_OTC : config.cacheKey.Sell_Entrust_OTC) + entrust.coin_id;
@@ -371,7 +371,7 @@ class OTCEntrustModel {
       let trade_amount = Utils.checkDecimal(Utils.mul(coin_amount, entrust.price), 2);
       let end_time = moment().add(entrust.valid_duration, 'seconds').format("YYYY-MM-DD HH:mm:ss");
       let lock = false;
-      cnt.transaction();
+      await cnt.transaction();
       if (entrust.trade_type == 1) {
         ///如果是买的广告，需要冻结createorder的用户的币
         buy_user_id = entrust.ad_user_id;
@@ -407,7 +407,7 @@ class OTCEntrustModel {
       let sql = 'update m_otc_entrust set remaining_amount = remaining_amount-? where id =? and remaining_amount >= ?';
       let updateEntrust = await cnt.execQuery(sql, [coin_amount, entrust.id, coin_amount]);
       if (lock && order.affectedRows && updateEntrust.affectedRows) {
-        cnt.commit();
+        await cnt.commit();
         await this.getEntrustByID(entrust.id);
         return {order_id: order.insertId}
       }
@@ -447,7 +447,7 @@ class OTCEntrustModel {
     let cnt = await DB.cluster('master');
     let lock = false;
     try {
-      cnt.transaction();
+      await cnt.transaction();
       if (type === 0) {
         ///发布卖币的广告，需要冻结发广告用户资产
         let lock_amount = Utils.checkDecimal(Utils.mul(amount, Utils.add(1, coin.trade_fee_rate)), coin.decimal_digits);
@@ -479,7 +479,7 @@ class OTCEntrustModel {
       };
       let entrust = await cnt.edit('m_otc_entrust', entrust_params);
       if (lock && entrust.affectedRows) {
-        cnt.commit();
+        await cnt.commit();
         ///update cache
 
         let data = await this.getEntrustByID(entrust.insertId);
@@ -499,7 +499,7 @@ class OTCEntrustModel {
   async ConfirmOTCOrder(order) {
     let cnt = await DB.cluster('master');
     try {
-      cnt.transaction();
+      await cnt.transaction();
       let updateorder = await cnt.execQuery('update m_otc_order set status=2 where id =?', order.id);
       /// 解冻广告用户的币
       let unlocksql = 'update m_user_assets set  frozen = frozen - ? where user_id = ? and coin_id = ? ';
@@ -516,7 +516,7 @@ class OTCEntrustModel {
       let buy_user_asset_update = await cnt.execQuery(addassetsql, [buy_amount, buy_amount, order.buy_user_id, order.coin_id]);
       let sell_user_asset_update = await cnt.execQuery(unlocksql, [sell_amount, order.sell_user_id, order.coin_id]);
       if (updateorder.affectedRows && buy_user_asset_update.affectedRows && sell_user_asset_update.affectedRows) {
-        cnt.commit();
+        await cnt.commit();
         ///更新用户资产缓存
         let coins = await CoinModel.getCoinList();
         let coin = coins.find(item => item.coin_id === order.coin_id);
