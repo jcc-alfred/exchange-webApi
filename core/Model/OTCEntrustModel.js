@@ -19,7 +19,7 @@ class OTCEntrustModel {
 
   }
 
-  async getEntrustByID(entrust_id, type, refresh = false) {
+  async getEntrustByID(entrust_id, refresh = false) {
     let cnt = await DB.cluster('slave');
     let entrust = null;
     try {
@@ -40,7 +40,7 @@ class OTCEntrustModel {
                     secret_remark,
                     create_time 
                     from m_otc_entrust
-                    where id={0}) entrust
+                    where id= {0} ) entrust
                     left join 
                     (select user_id,(case when full_name is null or full_name ="" then email else full_name end) name from m_user) a
                     on a.user_id =entrust.ad_user_id`;
@@ -67,8 +67,13 @@ class OTCEntrustModel {
           }
         }
         if (await cache.exists(ckey_user)) {
-          await cache.hset(ckey_user, entrust.id, entrust);
+          if (entrust.remaining_amount > 0) {
+            await cache.hset(ckey_user, entrust.id, entrust);
+          } else {
+            await cache.hdel(ckey_user, entrust.id);
+          }
         }
+        await cache.close();
       }
       return entrust;
     } catch (error) {
@@ -81,6 +86,7 @@ class OTCEntrustModel {
   async cancelEntrust(entrust) {
     let cnt = await DB.cluster('master');
     let unlock = true;
+    let ordercancel = true;
     try {
       await cnt.transaction();
       let updateEntrust = await cnt.execQuery("update m_otc_entrust set status= 3 , remaining_amount = remaining_amount - ? where id= ? and remaining_amount >= ?", [entrust.remaining_amount, entrust.id, entrust.remaining_amount]);
@@ -92,15 +98,37 @@ class OTCEntrustModel {
           [lock_amount, lock_amount, lock_amount, entrust.ad_user_id, entrust.coin_id, lock_amount]);
         unlock = unlockasset.affectedRows;
       }
-      if (unlock && updateEntrust.affectedRows) {
+      let orderlist = await this.getOrderByEntrustID(entrust.id, [0, 1]);
+      if (orderlist.length > 0) {
+        ///cancel 正在进行的order
+        for (let i in orderlist) {
+          let order = orderlist[i];
+          let unlock = true;
+          if (entrust.trade_type == 1) {
+            let unclock_user_asset = await cnt.execQuery(`update m_user_assets set available = available + ? , frozen = frozen - ? , balance = balance + ?
+                                                          where user_id = ? and coin_id = ? and frozen >= ? `,
+              [order.coin_amount, order.coin_amount, order.coin_amount, order.sell_user_id, order.coin_amount]);
+            unlock = unclock_user_asset.affectedRows;
+          }
+          let updateorder = await cnt.execQuery(`update m_otc_order set status = 4 where id = ? and status in( 0 , 1)`, order.id);
+          let updateentrust = await cnt.execQuery(`update m_otc_entrust set remaining_amount = remaining_amount + ? where id = ?`,
+            [order.coin_amount, order.entrust_id]);
+          if (!unlock || !updateentrust.affectedRows || !updateorder.affectedRows) {
+            ordercancel = false;
+            break
+          }
+        }
+      }
+      if (unlock && updateEntrust.affectedRows && ordercancel) {
         await cnt.commit();
         await AssetsModel.getUserAssetsByUserId(entrust.ad_user_id, true);
-        let cache = await Cache.init(config.cacheDB.otc);
-        let ckey = (entrust.trade_type === 1 ? config.cacheKey.Buy_Entrust_OTC : config.cacheKey.Sell_Entrust_OTC) + entrust.coin_id;
-        let ckey_user = config.cacheKey.Entrust_OTC_UserId + entrust.id;
-        await cache.hdel(ckey, entrust.id);
-        await cache.hdel(ckey_user, entrust.id);
-        await cache.close();
+        let data = await this.getEntrustByID(entrust.id);
+        if (orderlist.length > 0) {
+          await Promise.all(orderlist.map(async (order) => {
+            await this.getEntrustByID(order.entrust_id);
+            await this.getOrderByID(order.id, order.buy_user_id, true);
+          }))
+        }
         return true
       } else {
         cnt.rollback();
@@ -112,6 +140,15 @@ class OTCEntrustModel {
     } finally {
       cnt.close();
     }
+  }
+
+  async getOrderByEntrustID(entrust_id, status) {
+    let cnt = await DB.cluster('slave');
+    let statusstring = status ? status.join(',') : '0,1,2,3,4';
+    let orderlist = await cnt.execQuery(Utils.formatString(`select * from m_otc_order where entrust_id = {0} and status in ( {1} ) `,
+      [entrust_id, statusstring]));
+    await cnt.close();
+    return orderlist
   }
 
   async getOrderByUserID(user_id, refresh = false) {
@@ -298,11 +335,11 @@ class OTCEntrustModel {
       let res = await cnt.execQuery(Utils.formatString(sql, [user_id, user_id]));
       cnt.close();
       if (res.length > 0) {
-        res.map(async (order) => {
+        let cRes = await Promise.all(res.map(async (order) => {
           let ckey_other = config.cacheKey.Order_OTC_UserId + (user_id === order.buy_user_id ? order.sell_user_id : order.buy_user_id);
           await cache.hset(ckey, order.id, order);
           await cache.hset(ckey_other, order.id, order);
-        });
+        }));
         return res.find(item => item.id == order_id);
       }
       return null
@@ -409,6 +446,7 @@ class OTCEntrustModel {
       if (lock && order.affectedRows && updateEntrust.affectedRows) {
         await cnt.commit();
         await this.getEntrustByID(entrust.id);
+        await this.getOrderByID(order.insertId, user_id);
         return {order_id: order.insertId}
       }
       else {
@@ -423,14 +461,46 @@ class OTCEntrustModel {
     }
   }
 
+
+  async cancelOrder(order) {
+    let cnt = await DB.cluster('master');
+    let unlock = true;
+    try {
+      await cnt.transaction();
+      if (entrust.trade_type == 1) {
+        let unclock_user_asset = await cnt.execQuery(`update m_user_assets set available = available + ? , frozen = frozen - ? , balance = balance + ?
+        where user_id = ? and coin_id = ? and frozen >= ? `, [order.coin_amount, order.coin_amount, order.coin_amount, order.sell_user_id, order.coin_amount]);
+        unlock = unclock_user_asset.affectedRows;
+      }
+      let updateorder = await cnt.execQuery(`update m_otc_order set status = 4 where id = ? and status in(0,1)`, order.id);
+      let updateentrust = await cnt.execQuery(`update m_otc_entrust set remaining_amount = remaining_amount + ? where id = ?`, [order.coin_amount, order.entrust_id]);
+      if (unlock && updateentrust.affectedRows && updateorder.affectedRows) {
+        await cnt.commit();
+        await this.getEntrustByID(order.entrust_id);
+        await this.getOrderByID(order.id, order.buy_user_id, true);
+        return true
+      } else {
+        await cnt.rollback();
+        return false
+      }
+
+    } catch (e) {
+      await cnt.rollback();
+      throw e
+    } finally {
+      cnt.close();
+    }
+  }
+
   async PayOTCOrder(order) {
     let cnt = await DB.cluster('master');
     // let cache = await Cache.init(config.cacheDB.otc);
     try {
-      let pay = await cnt.execQuery('update m_otc_order set status=1 where id =?', order.id);
+      let pay = await cnt.execQuery('update m_otc_order set status=1 where id =? where status=0', order.id);
       if (pay.affectedRows) {
         await this.getOrderByID(order.id, order.buy_user_id, true);
       }
+      return pay.affectedRows;
     } catch (e) {
       throw e
     } finally {
@@ -500,7 +570,10 @@ class OTCEntrustModel {
     let cnt = await DB.cluster('master');
     try {
       await cnt.transaction();
-      let updateorder = await cnt.execQuery('update m_otc_order set status=2 where id =?', order.id);
+      //更新order状态为已成交
+      let updateorder = await cnt.execQuery('update m_otc_order set status= 2 where id =?', order.id);
+      //更新entrust的状态
+      // let updateentrust = await cnt.execQuery('update m_otc_entrust = set status =1 where id = ',order.entrust_id);
       /// 解冻广告用户的币
       let unlocksql = 'update m_user_assets set  frozen = frozen - ? where user_id = ? and coin_id = ? ';
       let addassetsql = 'update m_user_assets set available = available + ? , balance = balance + ? where user_id=? and coin_id = ?';
@@ -522,6 +595,7 @@ class OTCEntrustModel {
         let coin = coins.find(item => item.coin_id === order.coin_id);
         let buy_user_asset = await AssetsModel.getUserAssetsByUserId(order.buy_user_id, true);
         let sell_user_asset = await AssetsModel.getUserAssetsByUserId(order.sell_user_id, true);
+        await this.getOrderByID(order.id, order.buy_user_id, true);
         let buy_user_coin_asset = buy_user_asset.find(item => item.coin_id === order.coin_id);
         let sell_user_coin_asset = sell_user_asset.find(item => item.coin_id === order.coin_id);
         ///更新买卖用户资产日志

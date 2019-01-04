@@ -70,7 +70,11 @@ router.post('/entrust/cancel', async (req, res, next) => {
       return
     }
     let data = await OTCEntrusModel.cancelEntrust(entrust);
-    data ? res.send({code: 1, msg: "cancel entrust successfully"}) : res.send({code: 0, msg: "fail to cancel entrust"});
+    if (data) {
+      res.send({code: 1, msg: "cancel entrust successfully"})
+    } else {
+      res.send({code: 0, msg: "fail to cancel entrust"});
+    }
   } catch (e) {
     res.status(500).end();
     throw e
@@ -102,11 +106,43 @@ router.get('/order/my', async (req, res, next) => {
     throw e
   }
 });
+router.post('/order/cancel', async (req, res, next) => {
+  try {
+    let order = await OTCEntrusModel.getOrderByID(req.body.order_id);
+    if ([order.buy_user_id, order.sell_user_id].indexOf(req.token.user_id) < 0) {
+      res.status(401).end();
+      return;
+    }
+    if (order.status == 3) {
+      res.send({code: 1, msg: "the order is already invalid"});
+      return
+    } else if (order.status == 4) {
+      res.send({code: 1, msg: "the order is already canceled"});
+      return
+    } else if (order.status == 2) {
+      res.send({code: 1, msg: "the order has been completed"});
+      return
+    }
+    if (await OTCEntrusModel.cancelOrder(order)) {
+      res.send({code: 1, msg: "cancel entrust successfully"});
+    } else {
+      res.send({code: 0, msg: "fail to cancel entrust"})
+    }
+
+  } catch (e) {
+    res.status(500).end();
+    throw e
+  }
+});
 router.post('/order/create', async (req, res, next) => {
   try {
     let entrust = await OTCEntrusModel.getEntrustByID(req.body.entrust_id);
     if (!entrust) {
       res.send({code: 0, msg: "the entrust doesn't exist"});
+      return
+    }
+    if (req.body.coin_amount < entrust.min_trade_amount) {
+      res.send({code: 0, msg: "coin amount not enough"});
       return
     }
     let data = await OTCEntrusModel.createOTCOrder(req.token.user_id, entrust, req.body.coin_amount);
