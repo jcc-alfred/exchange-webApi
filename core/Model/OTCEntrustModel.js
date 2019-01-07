@@ -496,7 +496,7 @@ class OTCEntrustModel {
     let cnt = await DB.cluster('master');
     // let cache = await Cache.init(config.cacheDB.otc);
     try {
-      let pay = await cnt.execQuery('update m_otc_order set status=1 where id =? where status=0', order.id);
+      let pay = await cnt.execQuery('update m_otc_order set status=1 where id =? and status=0', order.id);
       if (pay.affectedRows) {
         await this.getOrderByID(order.id, order.buy_user_id, true);
       }

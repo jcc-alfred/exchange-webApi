@@ -169,10 +169,21 @@ router.get('/order/:id([0-9]+)', async (req, res, next) => {
     order.sell_user_name = sell_user.full_name ? sell_user.full_name : sell_user.email;
     order.buy_user_name = buy_user.full_name ? buy_user.full_name : buy_user.email;
     if (order.trigger_type == 0) {
+      if (req.token.user_id == order.buy_user_id) {
+        order.trade_fee_rate = "0%"
+      } else {
+        order.trade_fee_rate = order.trade_fee_rate * 100 + "%"
+      }
+
       if (!order.secret_remark) {
         order.secret_remark = await OTCEntrusModel.getUserDefaultSecretRemark(order.sell_user_id);
       }
     } else {
+      if (req.token.user_id == order.sell_user_id) {
+        order.trade_fee_rate = "0%"
+      } else {
+        order.trade_fee_rate = order.trade_fee_rate * 100 + "%"
+      }
       order.secret_remark = await OTCEntrusModel.getUserDefaultSecretRemark(order.sell_user_id);
     }
     res.send({code: 1, msg: "", data: order});
@@ -222,12 +233,14 @@ router.post('/entrust/create', async (req, res, next) => {
 router.post('/order/pay', async (req, res, next) => {
   try {
     if (!req.body.order_id) {
-      res.send({code: 0, msg: "order_id required"})
+      res.send({code: 0, msg: "order_id required"});
+      return
     }
     let order = await OTCEntrusModel.getOrderByID(req.body.order_id, req.token.user_id);
     if (order.buy_user_id !== req.token.user_id) {
       ///支付用户只能是买用户
-      res.status(401).end()
+      res.send({code: 1, msg: "You are not authorized to pay the order"});
+      return
     }
     await OTCEntrusModel.PayOTCOrder(order);
     res.send({code: 1, msg: "successfully pay the order"});
