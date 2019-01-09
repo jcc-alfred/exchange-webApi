@@ -239,7 +239,6 @@ router.post('/login', async (req, res, next) => {
       } else {
         res.send({code: 0, msg: '重试次数过多', data: {}});
       }
-
       return
     }
 
@@ -247,6 +246,7 @@ router.post('/login', async (req, res, next) => {
     let strategy = await UserAuthStrategyModel.getUserStrategyByUserId(userInfo.user_id, UserAuthStrategyModel.strategyTypeMap.login);
     if (!strategy) {
       res.send({code: 0, msg: '账户异常'});
+      return
     }
 
     let token = null;
