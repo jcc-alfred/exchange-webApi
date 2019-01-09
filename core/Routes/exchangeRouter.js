@@ -276,8 +276,9 @@ router.post('/doBatchEntrust', async (req, res, next) => {
       entrustIds.push(entrustRes.entrust_id);
 
     } catch (error) {
-      res.status(500).end();
       console.error(error);
+      res.status(500).end();
+      return
     }
   }
 

@@ -125,14 +125,9 @@ class EntrustModel {
           entrust_status: 3,
           entrust_status_name: '已取消'
         }, {entrust_id: entrustId});
-        let updAssets = null;
-        if (entrust.entrust_type_id == 1) {
-          updAssets = await cnt.execQuery(`update m_user_assets set available = available + ? , frozen = frozen - ? 
-                    where user_id = ? and coin_id = ? and frozen >= ?`, [totalNoCompleteAmount, totalNoCompleteAmount, userId, coinEx.exchange_coin_id, totalNoCompleteAmount]);
-        } else {
-          updAssets = await cnt.execQuery(`update m_user_assets set available = available + ? , frozen = frozen - ? 
+
+        let updAssets = await cnt.execQuery(`update m_user_assets set available = available + ? , frozen = frozen - ? 
                     where user_id = ? and coin_id = ? and frozen >= ?`, [entrust.no_completed_volume, entrust.no_completed_volume, userId, coinEx.coin_id, entrust.no_completed_volume]);
-        }
         if (updEntrust.affectedRows && updAssets.affectedRows) {
           await cnt.commit();
           let refreshAssets = await AssetsModel.getUserAssetsByUserId(userId, true);
