@@ -172,7 +172,7 @@ class OTCEntrustModel {
         'left join (select coin_name, coin_id ,type, trade_fee_rate from m_otc_exchange_area)b  ' +
         'on a.coin_id = b.coin_id and a.trigger_type = b.type';
       let res = await cnt.execQuery(Utils.formatString(sql, [user_id, user_id]));
-      cnt.close();
+      await cnt.close();
       if (res.length > 0) {
         await Promise.all(res.map(order => {
           return cache.hset(ckey, order.id, order);
@@ -333,7 +333,7 @@ class OTCEntrustModel {
         'left join (select coin_name, coin_id ,type,trade_fee_rate from m_otc_exchange_area)b  ' +
         'on a.coin_id = b.coin_id and a.trigger_type = b.type';
       let res = await cnt.execQuery(Utils.formatString(sql, [user_id, user_id]));
-      cnt.close();
+      await cnt.close();
       if (res.length > 0) {
         let cRes = await Promise.all(res.map(async (order) => {
           let ckey_other = config.cacheKey.Order_OTC_UserId + (user_id === order.buy_user_id ? order.sell_user_id : order.buy_user_id);
@@ -346,7 +346,7 @@ class OTCEntrustModel {
     } catch (e) {
       throw e;
     } finally {
-      cache.close();
+      await cache.close();
     }
   }
 
@@ -365,8 +365,8 @@ class OTCEntrustModel {
     } catch (e) {
       throw e;
     } finally {
-      cache.close();
-      cnt.close();
+      await cache.close();
+      await cnt.close();
     }
   }
 
