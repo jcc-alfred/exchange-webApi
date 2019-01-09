@@ -151,7 +151,6 @@ class EntrustModel {
           socket.emit('entrustList', {coin_exchange_id: coinExchangeId});
           socket.emit('userEntrustList', {user_id: entrust.user_id, coin_exchange_id: coinExchangeId});
           res = 1;
-          // console.log("cancel the entrust success " + entrust.entrust_id);
         } else {
           cnt.rollback();
           console.log("cancel the entrust fail " + entrust.entrust_id);
@@ -160,7 +159,6 @@ class EntrustModel {
         res = -1;
       }
     } catch (error) {
-      // console.error(error);
       cnt.rollback();
       throw error;
     } finally {

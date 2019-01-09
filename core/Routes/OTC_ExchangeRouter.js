@@ -19,7 +19,8 @@ router.post('/coins', async (req, res, next) => {
 router.post('/entrustList', async (req, res, next) => {
   try {
     if ([0, 1].indexOf(req.body.type) < 0) {
-      res.send({code: 0, msg: "params  type required"})
+      res.send({code: 0, msg: "params  type required"});
+      return
     }
     let data = await OTCEntrusModel.getOpenEntrustList(req.body.coin_id || 'all', req.body.type);
     let ordered_data = [];

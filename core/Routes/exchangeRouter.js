@@ -101,6 +101,7 @@ router.post('/getIsExchangeSafe', async (req, res, next) => {
     let exchangeStrategy = await UserAuthStrategyModel.getUserStrategyByUserId(req.token.user_id, UserAuthStrategyModel.strategyTypeMap.exchange);
     if (!exchangeStrategy) {
       res.send({code: 0, msg: '账户异常'});
+      return
     }
     let isExchangeSafe = false;
     //5 不验证资金密码 6 每6小时验证一次资金密码 7 每次交易均验证资金密码
