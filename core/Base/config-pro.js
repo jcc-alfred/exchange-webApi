@@ -70,6 +70,7 @@ const config = {
     system: 0,
     order: 1,
     kline: 2,
+    otc: 3
   },
 
   cacheKey: {
@@ -78,8 +79,8 @@ const config = {
     User_Token: "User_Token_",                               // 用户token data:15 String
 
     User_Auth_Strategy: 'User_Auth_Strategy_',               // 用户安全策略 data:15
-    User_Auth_Strategy_Type: 'User_Auth_Strategy_Type',      // 用户安全策略类型data:15 hash
-
+    User_Auth_Strategy_Type: 'User_Auth_Strategy_Type',      // 用户安全策略类型 data:15 hash
+    User_Exchange_Safe: 'User_Exchange_Safe_',                 //用户交易密码验证 策略为6，每6小时验证
     User_Alert: 'User_Alert_',                               // 用户通知 data:15 hash
     User_Alert_Type: 'User_Alert_Type',                      // 用户通知类型 data:15 hash
     User_Code: 'User_Code_',                                 // 用户验证码
@@ -93,7 +94,9 @@ const config = {
     Sys_Coin_Exchange: 'Sys_Coin_Exchange',                  // 所有币种交易对 data:0 hash
     Sys_Base_Coin_Prices: 'Sys_Base_Coin_Prices',
 
-    Sys_Coin_OTC: 'Sys_Coin_OTC',                            // 所有OTC币种 data:0 hash
+
+    Sys_OTC_Coin: 'Sys_OTC_Coin',                            // 所有OTC币种 data:0 hash
+    User_OTC_Secret_Remark: "User_OTC_Secret_Remark",
     User_Assets_OTC: "User_Assets_OTC_",                     // 用户OTC资产信息 data:15 hash
     Buy_Entrust_OTC: "Buy_Entrust_OTC_",                     //买单委托OTC
     Sell_Entrust_OTC: "Sell_Entrust_OTC_",                   //卖单委托OTC
@@ -102,7 +105,7 @@ const config = {
 
     User_Assets: "User_Assets_",                             // 用户资产信息 data:15 hash
 
-    User_Assets_Log_Type: "User_Assets_Log_Type",            // 用户资产日志类型 data:15 hash
+    User_Assets_Log_Type: "User_Assets_Log_Type",             // 用户资产日志类型 data:15 hash
 
     Buy_Entrust: "Buy_Entrust_",                             //买单委托
     Sell_Entrust: "Sell_Entrust_",                           //卖单委托
@@ -126,7 +129,8 @@ const config = {
     Send_Code: 'Send_Code',
     Send_Alert: 'Send_Alert',
     Entrust_Queue: 'Entrust_CEId_',
-    Entrust_OTC_Queue: 'Entrust_OTC_CoinId_'
+    Entrust_OTC_Queue: 'Entrust_OTC_CoinId_',
+    Order_OTC_Queue: 'Order_OTC_CoinId_',
   },
 };
 
