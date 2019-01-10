@@ -278,8 +278,8 @@ class OTCEntrustModel {
                     remaining_amount,
                     price,currency,
                     min_trade_amount,
-                    min_trade_amount*price as min_money,
-                    remaining_amount*price as max_money,
+                    ROUND(min_trade_amount*price,2) as min_money ,
+                    ROUND(remaining_amount*price,2) as max_money,
                     support_payments_id,valid_duration,
                     remark,
                     create_time 
