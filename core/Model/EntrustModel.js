@@ -113,21 +113,28 @@ class EntrustModel {
   async cancelEntrust({userId, entrustId, coinExchangeId, entrustTypeId}) {
     let cnt = await DB.cluster('master');
     let res = 0;
+    let unlock_coin_id = null;
+    let unlcok_volume = null;
     try {
       let entrust = await this.getOpenEntrustByEntrustId(entrustId, coinExchangeId, entrustTypeId, true);
       if (entrust && entrust.user_id == userId && (entrust.entrust_status == 0 || entrust.entrust_status == 1)) {
         //0 待成交 1 部分成交 2 已完成 3 已取消
         let coinExchangeList = await CoinModel.getCoinExchangeList();
         let coinEx = coinExchangeList.find((item) => item.coin_exchange_id == coinExchangeId);
-        let totalNoCompleteAmount = Utils.checkDecimal(Utils.mul(entrust.no_completed_volume, entrust.entrust_price), coinEx.exchange_decimal_digits);
         await cnt.transaction();
         let updEntrust = await cnt.edit('m_entrust', {
           entrust_status: 3,
           entrust_status_name: '已取消'
         }, {entrust_id: entrustId});
-        let unlock_coin_id = entrustTypeId === 1 ? coinEx.exchange_coin_id : coinEx.coin_id;
+        if (entrustTypeId === 1) {
+          unlock_coin_id = coinEx.exchange_coin_id;
+          unlcok_volume = Utils.checkDecimal(Utils.mul(entrust.no_completed_volume, entrust.entrust_price), coinEx.exchange_decimal_digits);
+        } else {
+          unlock_coin_id = coinEx.coin_id;
+          unlcok_volume = entrust.no_completed_volume;
+        }
         let updAssets = await cnt.execQuery(`update m_user_assets set available = available + ? , frozen = frozen - ? 
-                    where user_id = ? and coin_id = ? and frozen >= ?`, [entrust.no_completed_volume, entrust.no_completed_volume, userId, unlock_coin_id, entrust.no_completed_volume]);
+                    where user_id = ? and coin_id = ? and frozen >= ?`, [unlcok_volume, unlcok_volume, userId, unlock_coin_id, unlcok_volume]);
         if (updEntrust.affectedRows && updAssets.affectedRows) {
           await cnt.commit();
           let refreshAssets = await AssetsModel.getUserAssetsByUserId(userId, true);

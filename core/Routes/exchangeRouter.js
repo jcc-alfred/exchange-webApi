@@ -315,16 +315,6 @@ router.post('/doBatchCancelEntrust', async (req, res, next) => {
   // if (!entrust_sns || entrust_sns.length > 10) {
   //     return res.status(400).end();
   // }
-
-  // let chRes = await Promise.all(entrust_sns.map(async(entrust) => {
-  //   return EntrustModel.cancelEntrust({
-  //     userId: user_id,
-  //     entrustId: entrust.entrustId,
-  //     coinExchangeId: entrust.coinExchangeId,
-  //     entrustTypeId: entrust.entrustTypeId
-  //   })
-  // }));
-
   try {
     for (let i = 0; i < entrust_sns.length; i++) {
 
