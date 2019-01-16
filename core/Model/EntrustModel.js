@@ -128,6 +128,7 @@ class EntrustModel {
 
         let updAssets = await cnt.execQuery(`update m_user_assets set available = available + ? , frozen = frozen - ? 
                     where user_id = ? and coin_id = ? and frozen >= ?`, [entrust.no_completed_volume, entrust.no_completed_volume, userId, coinEx.coin_id, entrust.no_completed_volume]);
+        console.log("xxxxxx updateentrust " + updEntrust.affectedRows + "update asset " + updAssets.affectedRows);
         if (updEntrust.affectedRows && updAssets.affectedRows) {
           await cnt.commit();
           let refreshAssets = await AssetsModel.getUserAssetsByUserId(userId, true);

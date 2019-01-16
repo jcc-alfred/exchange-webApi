@@ -334,14 +334,14 @@ router.post('/doBatchCancelEntrust', async (req, res, next) => {
         coinExchangeId: entrust_sns[i].coinExchangeId,
         entrustTypeId: entrust_sns[i].entrustTypeId
       });
-
+      if (!(result > 0)) {
+        res.send({code: 0, msg: '操作失败' + JSON.stringify(entrust_sns[i])});
+        return;
+      }
     }
     res.send({code: 1, msg: '操作成功'});
-    // if (!(result > 0)) {
-    //   res.send({code: 0, msg: '操作失败' + JSON.stringify(entrust_sns[i])});
-    //   return;
-    // }
-    } catch (error) {
+
+  } catch (error) {
       res.status(500).end();
       console.error(error);
     }
