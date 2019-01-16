@@ -21,11 +21,11 @@ router.post('/modifyLoginPass', async (req, res, next)=>{
         if(!req.body.loginPass || !Utils.getPassLevel(req.body.loginPass)){
             res.send({code:0,msg:'密码格式错误'});
             return;
-        } 
+        }
         if(!req.body.newLoginPass || !Utils.getPassLevel(req.body.newLoginPass)){
             res.send({code:0,msg:'密码格式错误'});
             return;
-        } 
+        }
         //短信邮件验证码
         if(!req.body.hasOwnProperty('phoneCode') && !req.body.hasOwnProperty('emailCode') ){
             res.send({code:0,msg:'参数异常'});
@@ -62,14 +62,14 @@ router.post('/modifyLoginPass', async (req, res, next)=>{
                 return;
             }
         }
-        
+
         let result =  await UserModel.edit(req.token.user_id,{
             login_pass:Utils.md5(req.body.newLoginPass),
             login_pass_level:Utils.getPassLevel(req.body.newLoginPass)
         });
-        
+
         if(result.affectedRows == 0){
-            res.send({code:0,msg:'设置失败'})
+          res.send({code: 0, msg: '设置失败'});
             return ;
         }
 
@@ -78,7 +78,7 @@ router.post('/modifyLoginPass', async (req, res, next)=>{
         req.session.imgCode = null;
         //清除验证码
 
-        CodeUtils.delCode(req.body.hasOwnProperty('emailCode') ? userInfo.email : userInfo.area_code + userInfo.phone_number)
+      CodeUtils.delCode(req.body.hasOwnProperty('emailCode') ? userInfo.email : userInfo.area_code + userInfo.phone_number);
 
         UserModel.getUserById(req.token.user_id,true);
         //增加用户日志
@@ -107,7 +107,7 @@ router.post('/addSafePass', async (req, res, next)=>{
         if(!req.body.safePass || !Utils.getPassLevel(req.body.safePass)){
             res.send({code:0,msg:'密码格式错误'});
             return;
-        } 
+        }
         //短信邮件验证码
         if(!req.body.hasOwnProperty('phoneCode') && !req.body.hasOwnProperty('emailCode') ){
             res.send({code:0,msg:'参数异常'});
@@ -145,11 +145,11 @@ router.post('/addSafePass', async (req, res, next)=>{
             safe_pass_level:Utils.getPassLevel(req.body.safePass)
         });
         if(result.affectedRows == 0){
-            res.send({code:0,msg:'设置失败'})
+          res.send({code: 0, msg: '设置失败'});
             return ;
         }
 
-        CodeUtils.delCode(req.body.hasOwnProperty('emailCode') ? userInfo.email : userInfo.area_code + userInfo.phone_number)
+      CodeUtils.delCode(req.body.hasOwnProperty('emailCode') ? userInfo.email : userInfo.area_code + userInfo.phone_number);
 
         //清理Session
         req.session.imgCode = null;
@@ -181,11 +181,11 @@ router.post('/modifySafePass', async (req, res, next)=>{
         if(!req.body.safePass || !Utils.getPassLevel(req.body.safePass)){
             res.send({code:0,msg:'密码格式错误'});
             return;
-        } 
+        }
         if(!req.body.newSafePass || !Utils.getPassLevel(req.body.newSafePass)){
             res.send({code:0,msg:'密码格式错误'});
             return;
-        } 
+        }
         //短信邮件验证码
         if(!req.body.hasOwnProperty('phoneCode') && !req.body.hasOwnProperty('emailCode') ){
             res.send({code:0,msg:'参数异常'});
@@ -225,22 +225,22 @@ router.post('/modifySafePass', async (req, res, next)=>{
                 return;
             }
         }
-        
+
         let result =  await UserModel.edit(req.token.user_id,{
             safe_pass:Utils.md5(req.body.newSafePass),
             safe_pass_level:Utils.getPassLevel(req.body.newSafePass)
         });
-        
+
         if(result.affectedRows == 0){
-            res.send({code:0,msg:'设置失败'})
+          res.send({code: 0, msg: '设置失败'});
             return ;
         }
 
         res.send({code:1,msg:'设置成功'});
         //清理Session
         req.session.imgCode = null;
-        CodeUtils.delCode(req.body.hasOwnProperty('emailCode') ? userInfo.email : userInfo.area_code + userInfo.phone_number)
-        
+      CodeUtils.delCode(req.body.hasOwnProperty('emailCode') ? userInfo.email : userInfo.area_code + userInfo.phone_number);
+
         UserModel.getUserById(req.token.user_id,true);
         //增加用户日志
         LogModel.userLog({
@@ -265,7 +265,7 @@ router.post('/modifySafePass', async (req, res, next)=>{
 router.post('/googleQRCode',async(req,res,next)=>{
     try{
         let userInfo = await UserModel.getUserById(req.token.user_id);
-        let account = userInfo.email ? userInfo.email : userInfo.phone_number
+      let account = userInfo.email ? userInfo.email : userInfo.phone_number;
 
         let secret = GoogleUtils.makeGoogleSecret(account);
         let base64 =  await QRCode.toDataURL(secret.otpauth_url);
@@ -303,7 +303,7 @@ router.post('/addGoogleAuth',async(req,res,next)=>{
 
         let userInfo = await UserModel.getUserById(req.token.user_id);
 
-      
+
         if(!userInfo){
             res.send({code:0,msg:'账户不存在'})
         }
@@ -324,8 +324,8 @@ router.post('/addGoogleAuth',async(req,res,next)=>{
 
         let result =  await UserModel.edit(req.token.user_id,{
             google_secret:req.body.secret
-        })
-        
+        });
+
         if(result.affectedRows == 0){
             res.send({code:0,msg:'设置失败'});
             return;
@@ -336,9 +336,8 @@ router.post('/addGoogleAuth',async(req,res,next)=>{
             CodeUtils.delCode(req.body.hasOwnProperty('emailCode') ? userInfo.email : userInfo.area_code + userInfo.phone_number)
         }
 
-       
-    
-        UserModel.getUserById(req.token.user_id,true);
+
+      UserModel.getUserById(req.token.user_id,true);
         //增加用户日志
         LogModel.userLog({
             user_id:req.token.user_id,
@@ -389,18 +388,18 @@ router.post('/closeGoogleAuth',async(req,res,next)=>{
         }
         let result =  await UserModel.edit(req.token.user_id,{
             google_secret:''
-        })
-        
+        });
+
         if(result.affectedRows == 0){
             res.send({code:0,msg:'设置失败'});
             return;
         }else{
             //清理Session
             req.session.imgCode = null;
-            CodeUtils.delCode(req.body.hasOwnProperty('emailCode') ? userInfo.email : userInfo.area_code + userInfo.phone_number)
+          CodeUtils.delCode(req.body.hasOwnProperty('emailCode') ? userInfo.email : userInfo.area_code + userInfo.phone_number);
             res.send({code:1,msg:'设置成功'});
         }
-        
+
         UserModel.getUserById(req.token.user_id,true);
         //增加用户日志
         LogModel.userLog({
@@ -419,7 +418,7 @@ router.post('/closeGoogleAuth',async(req,res,next)=>{
         //安全策略降级
         let loginStrategy = await UserAuthStrategyModel.getUserStrategyByUserId(req.token.user_id,UserAuthStrategyModel.strategyTypeMap.login);
         let withdrawStrategy = await UserAuthStrategyModel.getUserStrategyByUserId(req.token.user_id,UserAuthStrategyModel.strategyTypeMap.withdraw);
-        
+
         if(loginStrategy && withdrawStrategy){
             //登录 3->1 4->2
             let setLoginStrategyId = 0;
@@ -429,7 +428,7 @@ router.post('/closeGoogleAuth',async(req,res,next)=>{
                 setLoginStrategyId = 2
             }
             if(setLoginStrategyId > 0){
-                let authRes = await UserAuthStrategyModel.setUserStrategy({ 
+              let authRes = await UserAuthStrategyModel.setUserStrategy({
                     userId:req.token.user_id,
                     categoryTypeId:loginStrategy.category_type_id,
                     authStrategyTypeId:setLoginStrategyId
@@ -441,7 +440,7 @@ router.post('/closeGoogleAuth',async(req,res,next)=>{
             //提现 2->1 3->1
             if(withdrawStrategy.user_auth_strategy_type_id == 9 || withdrawStrategy.user_auth_strategy_type_id == 10){
                 let setWithdrawStrategyId = 8;
-                let authRes = await UserAuthStrategyModel.setUserStrategy({ 
+              let authRes = await UserAuthStrategyModel.setUserStrategy({
                     userId:req.token.user_id,
                     categoryTypeId:withdrawStrategy.category_type_id,
                     authStrategyTypeId:setWithdrawStrategyId
@@ -498,20 +497,20 @@ router.post('/addAccount', async (req, res, next)=>{
             let result =  await UserModel.edit(req.token.user_id,{
                 email:req.body.email.toLowerCase()
             });
-            
+
             if(result.affectedRows == 0){
-                res.send({code:0,msg:'设置失败'})
+              res.send({code: 0, msg: '设置失败'});
                 return ;
             }
 
             userInfo = await UserModel.getUserById(req.token.user_id,true);
             res.send({code:1,msg:'设置成功',data:{userInfo:Utils.userInfoFormat(userInfo)}});
-            
+
             CodeUtils.delCode(userInfo.email);
             CodeUtils.delCode(req.body.email);
             //清理Session
             req.session.imgCode = null;
-           
+
             //增加用户日志
             LogModel.userLog({
                 user_id:req.token.user_id,
@@ -565,9 +564,9 @@ router.post('/addAccount', async (req, res, next)=>{
                 area_code:req.body.areaCode,
                 phone_number:req.body.phoneNumber
             });
-            
+
             if(result.affectedRows == 0){
-                res.send({code:0,msg:'设置失败'})
+              res.send({code: 0, msg: '设置失败'});
                 return ;
             }
 
@@ -600,7 +599,7 @@ router.post('/addAccount', async (req, res, next)=>{
         else{
             res.send({code:0,msg:'账号格式错误',data:{}})
         }
-        
+
     } catch (error) {
         res.status(500).end();
         throw error;
@@ -634,7 +633,7 @@ router.post('/modifyAccount', async (req, res, next)=>{
                 res.send({code:0,msg:'邮箱验证码错误'});
                 return;
             }
-            
+
             if(!req.body.newEmailCode || !await CodeUtils.codeQuals(req.body.email,req.body.newEmailCode) ){
                 res.send({code:0,msg:'邮箱验证码错误'});
                 return;
@@ -648,15 +647,15 @@ router.post('/modifyAccount', async (req, res, next)=>{
             let result =  await UserModel.edit(req.token.user_id,{
                 email:req.body.email.toLowerCase()
             });
-            
+
             if(result.affectedRows == 0){
-                res.send({code:0,msg:'设置失败'})
+              res.send({code: 0, msg: '设置失败'});
                 return ;
             }
 
             userInfo = await UserModel.getUserById(req.token.user_id,true);
             res.send({code:1,msg:'设置成功',data:{userInfo:Utils.userInfoFormat(userInfo)}});
-           
+
             //清理Session
             req.session.imgCode = null;
             CodeUtils.delCode(userInfo.email);
@@ -703,7 +702,7 @@ router.post('/modifyAccount', async (req, res, next)=>{
                 res.send({code:0,msg:'手机验证码错误'});
                 return;
             }
-            
+
             if(!req.body.newPhoneCode || !await CodeUtils.codeQuals(req.body.areaCode + req.body.phoneNumber ,req.body.newPhoneCode) ){
                 res.send({code:0,msg:'手机验证码错误'});
                 return;
@@ -720,9 +719,9 @@ router.post('/modifyAccount', async (req, res, next)=>{
                 area_code:req.body.areaCode,
                 phone_number:req.body.phoneNumber
             });
-            
+
             if(result.affectedRows == 0){
-                res.send({code:0,msg:'设置失败'})
+              res.send({code: 0, msg: '设置失败'});
                 return ;
             }
 
@@ -752,7 +751,7 @@ router.post('/modifyAccount', async (req, res, next)=>{
         else{
             res.send({code:0,msg:'账号格式错误',data:{}})
         }
-        
+
     } catch (error) {
         res.status(500).end();
         throw error;
@@ -761,27 +760,27 @@ router.post('/modifyAccount', async (req, res, next)=>{
 
 //获取用户通知
 router.post('/getUserAlertSettings',async(req,res,next)=>{
-    
+
     try {
-    
+
         let userAlert = await UserAlertModel.getUserAlertByUserId(req.token.user_id);
         let alertTypes = await UserAlertModel.getAlertAll();
 
         let data = Object.keys(userAlert).map((key)=>{
 
             let alert =  JSON.parse(userAlert[key]);
-            let type =  alertTypes.find(alertTypes=>alertTypes.user_alert_type_id==alert.user_alert_type_id)
+          let type = alertTypes.find(alertTypes => alertTypes.user_alert_type_id == alert.user_alert_type_id);
 
             return {
                 ...alert,
                 alert_type_name:type.alert_type_name,
                 alert_type_comments:type.alert_type_comments
             }
-        })  
-    
+        });
+
         res.send({code:1,msg:'',data:data})
 
-    
+
     } catch (error) {
         res.status(500).end();
         throw error;
@@ -792,9 +791,9 @@ router.post('/getUserAlertSettings',async(req,res,next)=>{
 //设置用户通知
 router.post('/setUserAlert',async(req,res,next)=>{
     try {
-    
-        if(!req.body.alertId || !Utils.isInt(req.body.alertId) || ![0,1,'0','1'].includes(req.body.status) || !req.body.safePass){
-            res.send({code:0,msg:'参数错误'})
+
+      if(!req.body.alertId || !Utils.isInt(req.body.alertId) || ![0,1,'0','1'].includes(req.body.status) || !req.body.safePass){
+        res.send({code: 0, msg: '参数错误'});
             return;
         }
         let userInfo = await UserModel.getUserById(req.token.user_id);
@@ -811,12 +810,12 @@ router.post('/setUserAlert',async(req,res,next)=>{
             req.body.alertId,
             req.body.status
         );
-        
-        if(!result.affectedRows){
+
+      if(!result.affectedRows){
             res.send({code:0,msg:'设置失败'});
             return;
         }
-        res.send({code:1,msg:'设置成功'})
+      res.send({code: 1, msg: '设置成功'});
         //增加用户日志
         LogModel.userLog({
             user_id:req.token.user_id,
@@ -824,7 +823,7 @@ router.post('/setUserAlert',async(req,res,next)=>{
             log_location:'',
             comments:'修改通知设置',
         },LogModel.userLogTypeMap.notice);
-    
+
     } catch (error) {
         res.status(500).end();
         throw error;
@@ -834,9 +833,9 @@ router.post('/setUserAlert',async(req,res,next)=>{
 //获取用户安全日志
 router.post('/getUserLogs',async(req,res,next)=>{
     try {
-    
-        if(!req.body.page || !Utils.isInt(req.body.page) || !req.body.pageSize || !Utils.isInt(req.body.pageSize)  ){
-            res.send({code:0,msg:'参数错误'})
+
+      if(!req.body.page || !Utils.isInt(req.body.page) || !req.body.pageSize || !Utils.isInt(req.body.pageSize)  ){
+        res.send({code: 0, msg: '参数错误'});
             return;
         }
 
@@ -853,11 +852,11 @@ router.post('/getUserLogs',async(req,res,next)=>{
 router.post('/addUserKYC',async(req,res,next)=>{
     try {
         if(!req.body.areaCode || !req.body.lastName || !req.body.firstName || !req.body.cardId){
-            res.send({code:0,msg:'参数错误'})
+          res.send({code: 0, msg: '参数错误'});
             return;
         }
         if((req.body.areaCode == '86' && !Utils.isChinaCardId(req.body.cardId) || req.body.cardId.length < 6)){
-            res.send({code:0,msg:'证件号码错误'})
+          res.send({code: 0, msg: '证件号码错误'});
             return;
         }
         let userInfo = await UserModel.getUserById(req.token.user_id);
@@ -878,7 +877,7 @@ router.post('/addUserKYC',async(req,res,next)=>{
             res.send({code:0,msg:'设置失败'});
             return;
         }
-        res.send({code:1,msg:'设置成功'})
+      res.send({code: 1, msg: '设置成功'});
         await UserModel.edit(req.token.user_id,{identity_status:1,full_name:fullName,area_code:req.body.areaCode});
         UserModel.getUserById(req.token.user_id,true);
         //增加用户日志
@@ -896,33 +895,33 @@ router.post('/addUserKYC',async(req,res,next)=>{
 //用户高级级实名认证
 router.post('/addUserSeniorKYC',async(req,res,next)=>{
     try {
-       
-        if(!req.body.frontImage || !req.body.handImage){
-            res.send({code:0,msg:'参数错误'})
+
+      if(!req.body.frontImage || !req.body.handImage){
+        res.send({code: 0, msg: '参数错误'});
             return;
         }
         let userInfo = await UserModel.getUserById(req.token.user_id);
-        //0 未认证 1 初级实名认证 2 高级实名认证中 3 高级认证 4 认证失败 
+      //0 未认证 1 初级实名认证 2 高级实名认证中 3 高级认证 4 认证失败
         if(userInfo.identity_status != 1 && userInfo.identity_status != 4){
-            res.send({code:0,msg:'认证信息不能重复提交'})
+          res.send({code: 0, msg: '认证信息不能重复提交'});
             return;
         }
         if(userInfo.area_code == '86' && !req.body.backImage){
-            res.send({code:0,msg:'参数错误'})
+          res.send({code: 0, msg: '参数错误'});
             return;
         }
-        let backImg = userInfo.area_code == '86' ? req.body.backImage : '';
+      // let backImg = userInfo.area_code == '86' ? req.body.backImage : '';
         let result =  await UserIdentityModel.addUserSeniorKYC(req.token.user_id,{
             front_image:req.body.frontImage,
-            back_image: backImg,
+          back_image: req.body.backImage,
             hand_image:req.body.handImage,
         });
-        
-        if(!result.affectedRows){
+
+      if(!result.affectedRows){
             res.send({code:0,msg:'设置失败'});
             return;
         }
-        res.send({code:1,msg:'设置成功'})
+      res.send({code: 1, msg: '设置成功'});
         await UserModel.edit(req.token.user_id,{identity_status:2});
         UserModel.getUserById(req.token.user_id,true);
         //增加用户日志
@@ -941,16 +940,16 @@ router.post('/addUserSeniorKYC',async(req,res,next)=>{
 //获取用户安全策略
 router.post('/getUserSafeStrategySettings',async(req,res,next)=>{
     try {
-        
-        let userSafeInfo = await UserAuthStrategyModel.getUserStrategyAllByUserId(req.token.user_id);
+
+      let userSafeInfo = await UserAuthStrategyModel.getUserStrategyAllByUserId(req.token.user_id);
         let safeTypes = await UserAuthStrategyModel.getStrategyTypeAll();
-        let userInfo = await UserModel.getUserById(req.token.user_id)
-    
+      let userInfo = await UserModel.getUserById(req.token.user_id);
+
             let data = Object.keys(userSafeInfo).map((key)=>{
-    
-                let safe =  JSON.parse(userSafeInfo[key]);
-                let type =  safeTypes.find(type=>type.user_auth_strategy_type_id==safe.user_auth_strategy_type_id)
-                let option = safeTypes.filter(type=>type.category_type_id==safe.category_type_id)
+
+              let safe =  JSON.parse(userSafeInfo[key]);
+              let type = safeTypes.find(type => type.user_auth_strategy_type_id == safe.user_auth_strategy_type_id);
+              let option = safeTypes.filter(type => type.category_type_id == safe.category_type_id);
 
                 return {
                     ...safe,
@@ -963,11 +962,11 @@ router.post('/getUserSafeStrategySettings',async(req,res,next)=>{
                         }
                     })
                 }
-            })  
-        
+            });
+
             res.send({code:1,msg:'',data:data})
-    
-    
+
+
     } catch (error) {
         res.status(500).end();
         throw error;
@@ -993,13 +992,13 @@ router.post('/setUserSafeStrategy',async(req,res,next)=>{
             return
         }
 
-        let result = await UserAuthStrategyModel.setUserStrategy({ 
+      let result = await UserAuthStrategyModel.setUserStrategy({
             userId:req.token.user_id,
             categoryTypeId:req.body.categoryTypeId,
             authStrategyTypeId:req.body.authStrategyTypeId
         });
-        
-        if(result.affectedRows){
+
+      if(result.affectedRows){
             res.send({code:1,msg:'设置成功'});
             UserAuthStrategyModel.getUserStrategyAllByUserId(req.token.user_id,true);
             //增加用户日志
@@ -1017,7 +1016,7 @@ router.post('/setUserSafeStrategy',async(req,res,next)=>{
         }else{
             res.send({code:0,msg:'设置失败'});
         }
-    
+
     } catch (error) {
         res.status(500).end();
         throw error;
