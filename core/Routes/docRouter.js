@@ -1,5 +1,5 @@
 let express = require('express');
-let router = express.Router();  
+let router = express.Router();
 let DocModel = require('../Model/DocModel');
 
 //获取新闻、公告列表
@@ -43,5 +43,20 @@ router.post('/getArticleModelById',async(req,res,next)=>{
         res.status(500).end();
         throw error;
     }
+});
+//获取文章列表
+router.get('/getArticleList', async (req, res, next) => {
+  try {
+    let DocData = await DocModel.getArticleList();
+    res.send({
+      code: 1, msg: '', data: DocData.map(function (item) {
+        item.page_url = "/doc/article/" + item.page_doc_id;
+        return item
+      })
+    })
+  } catch (error) {
+    res.status(500).end();
+    throw error;
+  }
 });
 module.exports = router;

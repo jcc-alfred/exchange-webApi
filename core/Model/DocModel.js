@@ -51,6 +51,20 @@ class DocModel {
       await cnt.close();
     }
   }
+
+  async getArticleList() {
+    let cnt = await DB.cluster('slave');
+    try {
+      let sql = `select page_doc_id, \`doc_title\`,doc_title_en from m_page_doc where record_status=1 order by order_by_num`;
+      let res = await cnt.execQuery(sql);
+      return res;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    } finally {
+      await cnt.close();
+    }
+  }
 }
 
 module.exports = new DocModel();

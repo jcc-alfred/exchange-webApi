@@ -94,6 +94,7 @@ app.all('*', async (req, res, next) => {
     '/exchange/getCoinExchangeAreaList',
     '/exchange/getMarketList',
     '/doc/getHomeNewsList',
+    '/doc/getArticleList',
     '/doc/getNewsList',
     '/doc/getNewsModelById',
     '/doc/getArticleModelById',
