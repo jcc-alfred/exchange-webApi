@@ -55,6 +55,10 @@ class WithdrawModel {
       let serialNum = moment().format('YYYYMMDDHHmmssSSS');
       let confirmStatus = 0;
       let confirmStatusName = '审核中';
+      if (coinId = 17 && submitAmount >= 10000) {
+        confirmStatus = 1;
+        confirmStatusName = "已审核"
+      }
       await cnt.transaction();
       let withdrawRes = await cnt.edit('m_user_withdraw', {
         serial_num: serialNum,
