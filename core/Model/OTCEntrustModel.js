@@ -94,7 +94,7 @@ class OTCEntrustModel {
         ///unlock the asset for user
         let lock_amount = Utils.checkDecimal(Utils.mul(entrust.remaining_amount, Utils.add(1, entrust.trade_fee_rate)), 8);
         let unlockasset = await cnt.execQuery("update m_user_assets set available = available + ? , frozen = frozen - ? , balance = balance + ?" +
-          "                                                            where user_id = ? and coin_id = ? and frozen >= ?",
+          "where user_id = ? and coin_id = ? and frozen >= ?",
           [lock_amount, lock_amount, lock_amount, entrust.ad_user_id, entrust.coin_id, lock_amount]);
         unlock = unlockasset.affectedRows;
       }
@@ -168,7 +168,7 @@ class OTCEntrustModel {
       }
       let cnt = await DB.cluster('slave');
       let sql = 'select * from ' +
-        '(select * from m_otc_order where buy_user_id = {0} or sell_user_id = {1} ) a ' +
+        '(select * from m_otc_order where buy_user_id = {0} or sell_user_id = {1} order by  update_time) a ' +
         'left join (select coin_name, coin_id ,type, trade_fee_rate from m_otc_exchange_area)b  ' +
         'on a.coin_id = b.coin_id and a.trigger_type = b.type';
       let res = await cnt.execQuery(Utils.formatString(sql, [user_id, user_id]));
@@ -226,7 +226,7 @@ class OTCEntrustModel {
                     secret_remark,
                     create_time 
                     from m_otc_entrust
-                    where ad_user_id={0})  entrust 
+                    where ad_user_id={0} order by update_time)  entrust 
                     left join 
                     (select user_id,(case when full_name is null or full_name ="" then email else full_name end) name from m_user) a
                     on a.user_id =entrust.ad_user_id`;
