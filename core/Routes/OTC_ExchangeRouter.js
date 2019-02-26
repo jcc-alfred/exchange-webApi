@@ -109,7 +109,7 @@ router.get('/order/my', async (req, res, next) => {
 });
 router.post('/order/cancel', async (req, res, next) => {
   try {
-    let order = await OTCEntrusModel.getOrderByID(req.body.order_id);
+    let order = await OTCEntrusModel.getOrderByID(req.body.order_id, req.token.user_id);
     if ([order.buy_user_id, order.sell_user_id].indexOf(req.token.user_id) < 0) {
       res.status(401).end();
       return;
