@@ -291,9 +291,7 @@ class EntrustModel {
         };
         let price_usd = 0;
         let price_cny = 0;
-        // let startk = new Date();
         let Day_Klinedata = await this.getKlineData(item.coin_exchange_id, 86400000);
-        // console.log(new Date() - startk, 'end get kline for coin ' + item.coin_exchange_id);
         let marketRes = Day_Klinedata.find((a) => a.timestamp == timestamp);
         if (marketRes) {
           marketModel.high_price = marketRes.high_price;
