@@ -5,6 +5,9 @@ const config = {
   coinmarket_secret: 'c236b6e8-ede0-40a8-9a66-e60a039aff80',
   currency_api: 'http://www.apilayer.net/api/live',
   currency_secret: '0baf27b3065f8dd0ae4eb51f1ae6a24a',
+  internal_user_ids: [2],
+  gtb_gtt_exchangeId: 28,
+  gtt_sell_day_limit: 200000,
   aws: {
     accessKeyId: "AKIAJWWJRUTSZMJW43TQ",
     secretAccessKey: "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",

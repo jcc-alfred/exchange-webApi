@@ -131,6 +131,14 @@ router.post('/doEntrust', async (req, res, next) => {
       res.send({code: 0, msg: '您还未设置资金密码'});
       return;
     }
+
+    if (req.body.coin_exchange_id === config.gtb_gtt_exchangeId && config.internal_user_ids.indexOf(req.token.user_id) < 0 && req.body.entrustTypeId === 0) {
+      let user_gtt_transaction_today = await EntrustModel.getGttTransactionAmount(req.token.user_id);
+      if (req.body.entrustPrice * req.body.entrustVolume + user_gtt_transaction_today > config.gtt_sell_day_limit) {
+        res.send({code: 0, msg: Utils.formatString('超出日交易额-{0}', [config.gtt_sell_day_limit])});
+        return;
+      }
+    }
     if (!req.body.isExchangeSafe) {
       if (!req.body.safePass || Utils.md5(req.body.safePass) != userInfo.safe_pass) {
         res.send({code: 0, msg: '资金密码错误'});
@@ -332,9 +340,9 @@ router.post('/doBatchCancelEntrust', async (req, res, next) => {
     res.send({code: 1, msg: '操作成功'});
 
   } catch (error) {
-      res.status(500).end();
-      console.error(error);
-    }
+    res.status(500).end();
+    console.error(error);
+  }
 
 
 });
