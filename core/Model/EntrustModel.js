@@ -258,7 +258,7 @@ class EntrustModel {
   }
 
 
-  async getMarketList(refresh = true) {
+  async getMarketList(refresh = false) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Market_List;
@@ -537,7 +537,7 @@ class EntrustModel {
     }
   }
 
-  async getEntrustList(coin_exchange_id, refresh = true) {
+  async getEntrustList(coin_exchange_id, refresh = false) {
     let cache = await
       Cache.init(config.cacheDB.order);
     try {
