@@ -20,6 +20,8 @@ let AssetsLogModel = require('../Model/AssetsLogModel');
 let UserBonusModel = require('../Model/UserBonusModel');
 let Cache = require('../Base/Data/Cache');
 let MQ = require('../Base/Data/MQ');
+let verifier = require('email-verify');
+
 
 //获取加密货币列表
 router.post('/getCoinList', async (req, res, next) => {
@@ -216,7 +218,7 @@ router.post('/doUserWithdraw', async (req, res, next) => {
       res.send({code: 0, msg: '密码格式错误'});
       return;
     }
-    if (req.body.coinId !== 17 && Utils.isEmail(req.body.toBlockAddress)) {
+    if (req.body.coinId !== 17 && req.body.toBlockAddress.indexOf("@") >= 0) {
       res.send({code: 0, msg: "提款地址不合法"});
       return;
     }

@@ -28,7 +28,7 @@ Utils = {
     return /^([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+@([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$/i.test(email);
   },
   isPhone(areaCode, phone) {
-    if (areaCode == '86') {
+    if (areaCode === '86') {
       return /^1\d{10}$/.test(phone);
     } else {
       return this.isInt(phone) && phone.length >= 5;
@@ -145,9 +145,6 @@ Utils = {
     return {
       client_type: 'Web',
     }
-  },
-  isEmail: (email) => {
-    return /^([a-zA-Z0-9]+[_|.]?)*[a-zA-Z0-9]+@([a-zA-Z0-9]+[_|.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$/i.test(email);
   },
 
   userInfoFormat(userInfo) {
