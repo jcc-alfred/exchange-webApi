@@ -20,7 +20,6 @@ let AssetsLogModel = require('../Model/AssetsLogModel');
 let UserBonusModel = require('../Model/UserBonusModel');
 let Cache = require('../Base/Data/Cache');
 let MQ = require('../Base/Data/MQ');
-let verifier = require('email-verify');
 
 
 //获取加密货币列表
