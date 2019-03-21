@@ -205,10 +205,10 @@ Utils = {
           if (unit === 0) {
             result = intStr;
           } else {
-            if (floatStr.split("").length > unit) {
+            // if (floatStr.split("").length > unit) {
               newStr = intStr + "." + floatStr.substr(0, unit);
               result = newStr;
-            }
+            // }
           }
         }
       } else {
@@ -274,6 +274,7 @@ Utils = {
   }
 
 };
-
 module.exports = Utils;
+
+
 
