@@ -131,7 +131,7 @@ class OTCEntrustModel {
         }
         return true
       } else {
-        cnt.rollback();
+        await cnt.rollback();
         return false
       }
     } catch (e) {
@@ -521,8 +521,8 @@ class OTCEntrustModel {
       if (type === 0) {
         ///发布卖币的广告，需要冻结发广告用户资产
         let lock_amount = Utils.checkDecimal(Utils.mul(amount, Utils.add(1, coin.trade_fee_rate)), coin.decimal_digits);
-        let lockasset = await cnt.execQuery(`update m_user_assets set available = available - ? , frozen = frozen + ? , balance = balance - ?
-                                                            where user_id = ? and coin_id = ? and available > ? `,
+        let lockasset = await cnt.execQuery(`update m_user_assets set available = available - ?  frozen = frozen + ?  balance = balance - ?
+                                                            where user_id = ? and coin_id = ? and available >= ? `,
           [lock_amount, lock_amount, lock_amount, user_id, coin_id, lock_amount]);
         lock = lockasset.affectedRows;
       } else {
