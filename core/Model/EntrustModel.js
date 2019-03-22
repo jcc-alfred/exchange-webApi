@@ -279,7 +279,7 @@ class EntrustModel {
       let marketList = [];
       let date = new Date();
       let timestamp = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 1000;
-      // let CoinPrice = {};
+      let CoinPrice = {};
 
       let res = await Promise.all(coinExList.map(async (item) => {
         let marketModel = {
@@ -308,9 +308,9 @@ class EntrustModel {
           price_usd = marketModel.last_price * exchange_coin_prices.price_usd;
           price_cny = price_usd / gtt_prices.price_usd;
         }
-        // if (price_usd) {
-        //   CoinPrice[item.coin_id] = price_usd;
-        // }
+        if (price_usd) {
+          CoinPrice[item.coin_id] = price_usd;
+        }
         marketList.push({
           coin_exchange_id: item.coin_exchange_id,
           market: marketModel,
@@ -319,16 +319,16 @@ class EntrustModel {
           price_cny: price_cny
         });
       }));
-      // marketList = marketList.map(
-      //   function (item) {
-      //     item['price_usd'] = CoinPrice[item.coinEx.coin_id];
-      //     return item
-      //   }
-      // );
-      // let coinpricelist = Object.entries(CoinPrice);
-      // for (let i in coinpricelist) {
-      //   await cache.hset(config.cacheKey.Sys_Base_Coin_Prices, coinpricelist[i][0], coinpricelist[i][1]);
-      // }
+      marketList = marketList.map(
+        function (item) {
+          item['price_usd'] = CoinPrice[item.coinEx.coin_id];
+          return item
+        }
+      );
+      let coinpricelist = Object.entries(CoinPrice);
+      for (let i in coinpricelist) {
+        await cache.hset(config.cacheKey.Sys_Base_Coin_Prices, coinpricelist[i][0], coinpricelist[i][1]);
+      }
       let chRes = await Promise.all(marketList.map((market) => {
         return cache.hset(
           ckey,
@@ -538,14 +538,12 @@ class EntrustModel {
   }
 
   async getEntrustList(coin_exchange_id, refresh = false) {
-    let cache = await
-      Cache.init(config.cacheDB.order);
+    let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Entrust_List + coin_exchange_id;
       if (await cache.exists(ckey) && !refresh
       ) {
-        let cRes = await
-          cache.get(ckey);
+        let cRes = await cache.get(ckey);
         return cRes
       }
       else {
