@@ -20,6 +20,8 @@ let AssetsLogModel = require('../Model/AssetsLogModel');
 let UserBonusModel = require('../Model/UserBonusModel');
 let Cache = require('../Base/Data/Cache');
 let MQ = require('../Base/Data/MQ');
+let nodeEth = require('node-eth-address');
+
 
 
 //获取加密货币列表
@@ -218,6 +220,10 @@ router.post('/doUserWithdraw', async (req, res, next) => {
       return;
     }
     if (req.body.coinId !== 17 && req.body.toBlockAddress.indexOf("@") >= 0) {
+      res.send({code: 0, msg: "提款地址不合法"});
+      return;
+    }
+    if (req.body.coinId !== 1 && !nodeEth.validateAddress(req.body.toBlockAddress)) {
       res.send({code: 0, msg: "提款地址不合法"});
       return;
     }

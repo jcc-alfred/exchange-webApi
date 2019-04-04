@@ -36,6 +36,7 @@
     "axios": "^0.18.0",
     "request-promise": "^4.2.2",
     "aws-sdk": "^2.382.0",
-    "busboy": "^0.2.14"
+    "busboy": "^0.2.14",
+    "node-eth-address": "^0.1.3"
   }
 }
