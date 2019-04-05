@@ -219,14 +219,19 @@ router.post('/doUserWithdraw', async (req, res, next) => {
       res.send({code: 0, msg: '密码格式错误'});
       return;
     }
-    if (req.body.coinId !== 17 && req.body.toBlockAddress.indexOf("@") >= 0) {
-      res.send({code: 0, msg: "提款地址不合法"});
-      return;
+    if (req.body.coinId != 1) {
+      if (!nodeEth.validateAddress(req.body.toBlockAddress)) {
+        if (req.body.coinId != 17) {
+          res.send({code: 0, msg: "提款地址不合法"});
+          return;
+        } else if (req.body.toBlockAddress.indexOf("@") < 0) {
+          res.send({code: 0, msg: "提款地址不合法"});
+          return;
+        }
+      }
     }
-    if (req.body.coinId !== 1 && !nodeEth.validateAddress(req.body.toBlockAddress)) {
-      res.send({code: 0, msg: "提款地址不合法"});
-      return;
-    }
+
+
     if (!req.body.toBlockAddress || !req.body.submitAmount || !req.body.coinId || !Utils.isInt(req.body.coinId)) {
       res.send({code: 0, msg: '参数异常'});
       return
