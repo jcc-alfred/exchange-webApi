@@ -226,8 +226,7 @@ class UserModel {
       ) {
         return;
       }
-      let userInfo = await
-        this.getUserById(userId);
+      let userInfo = await this.getUserById(userId);
 
       let send = {};
       if (config.sys.sendAlertType === 1) {
@@ -280,8 +279,7 @@ class UserModel {
         send.amount = arg1;
         send.unit = arg2;
       }
-      let mRes = await
-        MQ.push(config.MQKey.Send_Alert, send);
+      let mRes = await MQ.push(config.MQKey.Send_Alert, send);
     } catch (error) {
       throw error;
     }

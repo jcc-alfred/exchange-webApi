@@ -346,15 +346,12 @@ class EntrustModel {
     }
 
     finally {
-      await
-        cache
-          .close();
+      await cache.close();
     }
   }
 
   async getMarkets() {
-    let cnt = await
-      DB.cluster('slaves');
+    let cnt = await DB.cluster('slaves');
     try {
       let sql = 'SELECT max(last24.trade_price) as high_price,' +
         'min(last24.trade_price) as low_price,' +
@@ -364,8 +361,7 @@ class EntrustModel {
         'from (select * FROM m_order Where  create_time >= (now() - interval 24 hour) ) as last24 ' +
         ' group by coin_exchange_id;';
       // console.log(sql);
-      let res = await
-        cnt.execQuery(sql);
+      let res = await cnt.execQuery(sql);
       if (res) {
         return res
       } else {
@@ -380,13 +376,11 @@ class EntrustModel {
   }
 
   async getLastOrder(coinExchangeID = null) {
-    let cnt = await
-      DB.cluster('slaves');
+    let cnt = await DB.cluster('slaves');
     try {
       if (coinExchangeID) {
         let sql = 'select * from m_order where coin_exchange_id=? order by order_id desc limit 1';
-        let res = await
-          cnt.execQuery(sql, coinExchangeID);
+        let res = await cnt.execQuery(sql, coinExchangeID);
         if (res) {
           return res[0]
         } else {
@@ -394,8 +388,7 @@ class EntrustModel {
         }
       } else {
         let sql = 'select * from m_order where order_id in (select max(order_id) from m_order where  create_time >= (now() - interval 24 hour) group by coin_exchange_id)';
-        let res = await
-          cnt.execQuery(sql);
+        let res = await cnt.execQuery(sql);
         if (res) {
           return res
         } else {
@@ -412,13 +405,11 @@ class EntrustModel {
   }
 
   async getPre24FirstOrder(coinExchangeID = null) {
-    let cnt = await
-      DB.cluster('slaves');
+    let cnt = await DB.cluster('slaves');
     try {
       if (coinExchangeID) {
         let sql = 'select * from m_order where coin_exchange_id=? and create_time >= (now() - interval 24 hour) order by order_id asc limit 1';
-        let res = await
-          cnt.execQuery(sql, coinExchangeID);
+        let res = await cnt.execQuery(sql, coinExchangeID);
         if (res) {
           return res[0]
         } else {
@@ -426,8 +417,7 @@ class EntrustModel {
         }
       } else {
         let sql = 'select coin_exchange_id,trade_price from m_order where order_id in (select min(order_id) from m_order where  create_time >= (now() - interval 24 hour) group by coin_exchange_id)';
-        let res = await
-          cnt.execQuery(sql);
+        let res = await cnt.execQuery(sql);
         if (res) {
           return res
         } else {
@@ -445,14 +435,12 @@ class EntrustModel {
 
 
   async getOrderListByCoinExchangeId(coinExchangeId, refresh = false) {
-    let cache = await
-      Cache.init(config.cacheDB.order);
+    let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Order_Coin_Exchange_Id + coinExchangeId;
       if (await cache.exists(ckey) && !refresh
       ) {
-        let cRes = await
-          cache.hgetall(ckey);
+        let cRes = await cache.hgetall(ckey);
         if (cRes) {
           let data = [];
           for (let i in cRes) {
@@ -462,13 +450,10 @@ class EntrustModel {
           return data;
         }
       }
-      let cnt = await
-        DB.cluster('slave');
+      let cnt = await DB.cluster('slave');
       let sql = `SELECT * FROM m_order WHERE coin_exchange_id = ? ORDER BY create_time DESC LIMIT 30 `;
-      let res = await
-        cnt.execQuery(sql, coinExchangeId);
-      await
-        cnt.close();
+      let res = await cnt.execQuery(sql, coinExchangeId);
+      await cnt.close();
       let chRes = await
         Promise.all(res.map((info) => {
           return cache.hset(
@@ -477,22 +462,19 @@ class EntrustModel {
             info
           )
         }));
-      await
-        cache.expire(ckey, 600);
+      await cache.expire(ckey, 600);
       return res;
 
     } catch (error) {
       throw error;
     }
     finally {
-      await
-        cache.close();
+      await cache.close();
     }
   }
 
   async getEntrustListByUserId(userId, coinExchangeId, refresh = false) {
-    let cache = await
-      Cache.init(config.cacheDB.order);
+    let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Entrust_UserId + userId;
       if (await cache.exists(ckey) && !refresh
@@ -507,33 +489,26 @@ class EntrustModel {
           }
           return data;
         }
-        x
       }
-      let cnt = await
-        DB.cluster('slave');
+      let cnt = await DB.cluster('slave');
       let sql = `SELECT * FROM m_entrust WHERE user_id = ? and (entrust_status = 0 or entrust_status = 1) `;
-      let res = await
-        cnt.execQuery(sql, userId);
-      await
-        cnt.close();
+      let res = await cnt.execQuery(sql, userId);
+      await cnt.close();
 
-      let chRes = await
-        Promise.all(res.map((info) => {
+      let chRes = await Promise.all(res.map((info) => {
           return cache.hset(
             ckey,
             info.entrust_id,
             info
           )
         }));
-      await
-        cache.expire(ckey, 300);
+      await cache.expire(ckey, 300);
       return res;
     } catch (error) {
       throw error;
     }
     finally {
-      await
-        cache.close();
+      await cache.close();
     }
   }
 
@@ -547,8 +522,7 @@ class EntrustModel {
         return cRes
       }
       else {
-        let buyList = await
-          this.getBuyEntrustListByCEId(coin_exchange_id);
+        let buyList = await this.getBuyEntrustListByCEId(coin_exchange_id);
         let newBuyList = Enumerable.from(buyList)
           .groupBy("parseFloat($.entrust_price)", null,
             function (key, g) {
@@ -558,8 +532,7 @@ class EntrustModel {
                 no_completed_volume: g.sum("parseFloat($.no_completed_volume)")
               }
             }).orderByDescending("parseFloat($.entrust_price)").take(10).toArray();
-        let sellList = await
-          this.getSellEntrustListByCEId(coin_exchange_id);
+        let sellList = await this.getSellEntrustListByCEId(coin_exchange_id);
         let newSellList = Enumerable.from(sellList)
           .groupBy("parseFloat($.entrust_price)", null,
             function (key, g) {
@@ -572,8 +545,7 @@ class EntrustModel {
         newSellList.sort((item1, item2) => {
           return item2.entrust_price - item1.entrust_price
         });
-        await
-          cache.set(ckey, {"buyList": newBuyList, "sellList": newSellList}, 5);
+        await cache.set(ckey, {"buyList": newBuyList, "sellList": newSellList}, 5);
         return {buyList: newBuyList, sellList: newSellList};
         // let cnt = await DB.cluster('slave');
         // let sql = 'select e.entrust_price as entrust_price, sum(e.entrust_volume) as entrust_volume, sum(e.no_completed_volume) as no_completed_volume from ' +
@@ -613,14 +585,12 @@ class EntrustModel {
 
   async getBuyEntrustListByCEId(coinExchangeId, refresh = true) {
     let cache = await Cache.init(config.cacheDB.order);
-    let cnt = await
-      DB.cluster('slave');
+    let cnt = await DB.cluster('slave');
     try {
       let ckey = config.cacheKey.Buy_Entrust + coinExchangeId;
       if (await cache.exists(ckey) && !refresh
       ) {
-        let buyRes = await
-          cache.hgetall(ckey);
+        let buyRes = await cache.hgetall(ckey);
         if (buyRes) {
           let data = [];
           for (let i in buyRes) {
@@ -631,8 +601,7 @@ class EntrustModel {
         }
       }
       let sql = `SELECT * FROM m_entrust WHERE coin_exchange_id = ? and entrust_type_id = 1 and entrust_status in (0,1) ORDER BY entrust_price DESC, entrust_id ASC limit 30`;
-      let res = await
-        cnt.execQuery(sql, coinExchangeId);
+      let res = await cnt.execQuery(sql, coinExchangeId);
       let chRes = await
         Promise.all(res.map((info) => {
           return cache.hset(
@@ -641,17 +610,14 @@ class EntrustModel {
             info
           )
         }));
-      await
-        cache.expire(ckey, 10);
+      await cache.expire(ckey, 10);
       return res;
 
     } catch (error) {
       throw error;
     } finally {
-      await
-        cache.close();
-      await
-        cnt.close();
+      await cache.close();
+      await cnt.close();
     }
   }
 
@@ -662,8 +628,7 @@ class EntrustModel {
       let ckey = config.cacheKey.Sell_Entrust + coinExchangeId;
       if (await cache.exists(ckey) && !refresh
       ) {
-        let sellRes = await
-          cache.hgetall(ckey);
+        let sellRes = await cache.hgetall(ckey);
         if (sellRes) {
           let data = [];
           for (let i in sellRes) {
@@ -683,17 +648,14 @@ class EntrustModel {
           info
         )
       }));
-      await
-        cache.expire(ckey, 10);
+      await cache.expire(ckey, 10);
       return res;
 
     } catch (error) {
       throw error;
     } finally {
-      await
-        cache.close();
-      await
-        cnt.close();
+      await cache.close();
+      await cnt.close();
     }
   }
 
@@ -704,8 +666,7 @@ class EntrustModel {
       let ckey = config.cacheKey.KlineData_CEID_Range + coinExchangeId + '_' + range;
       if (await cache.exists(ckey) && !refresh
       ) {
-        let cRes = await
-          cache.hgetall(ckey);
+        let cRes = await cache.hgetall(ckey);
         if (cRes) {
           let data = [];
           for (let i in cRes) {
@@ -722,25 +683,21 @@ class EntrustModel {
                        LIMIT 500`;
 
       let res = await cnt.execQuery(sql, ckey);
-      let chRes = await
-        Promise.all(res.map((info) => {
+      let chRes = await Promise.all(res.map((info) => {
           return cache.hset(
             ckey,
             info.timestamp,
             info
           )
         }));
-      await
-        cache.expire(ckey, 86400);
+      await cache.expire(ckey, 86400);
       return res;
 
     } catch (error) {
       throw error;
     } finally {
-      await
-        cache.close();
-      await
-        cnt.close();
+      await cache.close();
+      await cnt.close();
     }
   }
 
@@ -755,30 +712,22 @@ class EntrustModel {
       //delet mysql orders for coin_exchange_id
       let delete_order_sql = `delete from m_order where coin_exchange_id = ?`;
       let reset_balance_sql = `update m_user_assets set available=100000000, balance=100000000,frozen=0 where user_id=?`;
-      let reset_balance = await
-        cnt.execQuery(reset_balance_sql, [user_id]);
-      let delete_order = await
-        cnt.execQuery(delete_order_sql, [coin_exchange_id]);
+      let reset_balance = await cnt.execQuery(reset_balance_sql, [user_id]);
+      let delete_order = await cnt.execQuery(delete_order_sql, [coin_exchange_id]);
 
-      let chRes = await
-        Promise.all([delete_entrust, delete_order, reset_balance]);
+      let chRes = await Promise.all([delete_entrust, delete_order, reset_balance]);
 
       // delete redis hash key for entrust, user,kline
-      await
-        cache.del(config.cacheKey.Buy_Entrust + coin_exchange_id);
-      await
-        cache.del(config.cacheKey.Sell_Entrust + coin_exchange_id);
-      await
-        cache.del(config.cacheKey.Order_Coin_Exchange_Id + coin_exchange_id);
-      await
-        cache.del(config.cacheKey.Entrust_UserId + user_id);
-      cache.select(config.cacheDB.kline);
+      await cache.del(config.cacheKey.Buy_Entrust + coin_exchange_id);
+      await cache.del(config.cacheKey.Sell_Entrust + coin_exchange_id);
+      await cache.del(config.cacheKey.Order_Coin_Exchange_Id + coin_exchange_id);
+      await cache.del(config.cacheKey.Entrust_UserId + user_id);
+      await cache.select(config.cacheDB.kline);
       let range_list = [300000, 900000, 1800000, 14400000, 21600000, 43200000, 60000];
-      await
-        Promise.all(range_list.map((range) => {
+      await Promise.all(range_list.map((range) => {
           return cache.del(config.cacheKey.KlineData_CEID_Range + coin_exchange_id + '_' + range)
         }));
-      cache.select(config.cacheDB.users);
+      await cache.select(config.cacheDB.users);
       await cache.flushdb();
       return true;
 
@@ -787,10 +736,8 @@ class EntrustModel {
       return false;
     }
     finally {
-      await
-        cnt.close();
-      await
-        cache.close();
+      await cnt.close();
+      await cache.close();
     }
   }
 
