@@ -545,7 +545,8 @@ class EntrustModel {
         newSellList.sort((item1, item2) => {
           return item2.entrust_price - item1.entrust_price
         });
-        await cache.set(ckey, {"buyList": newBuyList, "sellList": newSellList}, 5);
+        await cache.set(ckey, {"buyList": newBuyList, "sellList": newSellList});
+        await cache.expire(ckey, 5);
         return {buyList: newBuyList, sellList: newSellList};
         // let cnt = await DB.cluster('slave');
         // let sql = 'select e.entrust_price as entrust_price, sum(e.entrust_volume) as entrust_volume, sum(e.no_completed_volume) as no_completed_volume from ' +
