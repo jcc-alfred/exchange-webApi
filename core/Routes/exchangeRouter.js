@@ -363,7 +363,7 @@ router.post('/getEntrustList', async (req, res, next) => {
 router.post('/entrustList', async (req, res, next) => {
   try {
 
-    let entrustList = await EntrustModel.getEntrustList(req.body.coinExchangeId);
+    let entrustList = await EntrustModel.getEntrustList(req.body.coinExchangeId, req.body.refresh);
     res.send({code: 1, msg: '', data: entrustList});
   } catch (error) {
     res.status(500).end();
