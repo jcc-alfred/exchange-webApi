@@ -571,7 +571,7 @@ class OTCEntrustModel {
     try {
       await cnt.transaction();
       //更新order状态为已成交
-      let updateorder = await cnt.execQuery('update m_otc_order set status= 2 where id =?', order.id);
+      let updateorder = await cnt.execQuery('update m_otc_order set status= 2 where id =? and status != 2', order.id);
       //更新entrust的状态
       // let updateentrust = await cnt.execQuery('update m_otc_entrust = set status =1 where id = ',order.entrust_id);
       /// 解冻广告用户的币
