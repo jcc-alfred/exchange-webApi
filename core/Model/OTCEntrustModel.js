@@ -98,38 +98,38 @@ class OTCEntrustModel {
           [lock_amount, lock_amount, lock_amount, entrust.ad_user_id, entrust.coin_id, lock_amount]);
         unlock = unlockasset.affectedRows;
       }
-      let orderlist = await this.getOrderByEntrustID(entrust.id, [0]);
-      if (orderlist.length > 0) {
-        ///cancel 正在进行,但没开始的order
-        for (let i in orderlist) {
-          let order = orderlist[i];
-          let unlock = true;
-          if (order.trigger_type == 1) {
-            let unclock_user_asset = await cnt.execQuery(`update m_user_assets set available = available + ? , frozen = frozen - ? , balance = balance + ?
-                                                          where user_id = ? and coin_id = ? and frozen >= ? `,
-              [order.coin_amount, order.coin_amount, order.coin_amount, order.sell_user_id, order.coin_amount]);
-            unlock = unclock_user_asset.affectedRows;
-          }
-          let updateorder = await cnt.execQuery(`update m_otc_order set status = 4 where id = ? and status = 0`, order.id);
-          let updateentrust = await cnt.execQuery(`update m_otc_entrust set remaining_amount = remaining_amount + ? where id = ?`,
-            [order.coin_amount, order.entrust_id]);
-          if (!unlock || !updateentrust.affectedRows || !updateorder.affectedRows) {
-            ordercancel = false;
-            break
-          }
-        }
-      }
-      if (unlock && updateEntrust.affectedRows && ordercancel) {
+      // let orderlist = await this.getOrderByEntrustID(entrust.id, [0]);
+      // if (orderlist.length > 0) {
+      //   ///cancel 正在进行,但没开始的order
+      //   for (let i in orderlist) {
+      //     let order = orderlist[i];
+      //     let unlock = true;
+      //     if (order.trigger_type == 1) {
+      //       let unclock_user_asset = await cnt.execQuery(`update m_user_assets set available = available + ? , frozen = frozen - ? , balance = balance + ?
+      //                                                     where user_id = ? and coin_id = ? and frozen >= ? `,
+      //         [order.coin_amount, order.coin_amount, order.coin_amount, order.sell_user_id, order.coin_amount]);
+      //       unlock = unclock_user_asset.affectedRows;
+      //     }
+      //     let updateorder = await cnt.execQuery(`update m_otc_order set status = 4 where id = ? and status = 0`, order.id);
+      //     let updateentrust = await cnt.execQuery(`update m_otc_entrust set remaining_amount = remaining_amount + ? where id = ?`,
+      //       [order.coin_amount, order.entrust_id]);
+      //     if (!unlock || !updateentrust.affectedRows || !updateorder.affectedRows) {
+      //       ordercancel = false;
+      //       break
+      //     }
+      //   }
+      // }
+      if (unlock && updateEntrust.affectedRows) {
         await cnt.commit();
         await AssetsModel.getUserAssetsByUserId(entrust.ad_user_id, true);
         let data = await this.getEntrustByID(entrust.id);
-        if (orderlist.length > 0) {
-          await Promise.all(orderlist.map(async (order) => {
-            await this.getEntrustByID(order.entrust_id);
-            await this.getOrderByID(order.id, order.buy_user_id, true);
-          }))
-        }
-        return true
+        // if (orderlist.length > 0) {
+        //   await Promise.all(orderlist.map(async (order) => {
+        //     await this.getEntrustByID(order.entrust_id);
+        //     await this.getOrderByID(order.id, order.buy_user_id, true);
+        //   }))
+        // }
+        return data
       } else {
         await cnt.rollback();
         return false
@@ -551,7 +551,6 @@ class OTCEntrustModel {
       if (lock && entrust.affectedRows) {
         await cnt.commit();
         ///update cache
-
         let data = await this.getEntrustByID(entrust.insertId);
         return data
       } else {
@@ -562,7 +561,7 @@ class OTCEntrustModel {
       throw error;
     } finally {
       await cacheCnt.close();
-      cnt.close();
+      await cnt.close();
     }
   }
 
