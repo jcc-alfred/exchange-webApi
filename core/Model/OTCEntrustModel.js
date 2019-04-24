@@ -587,8 +587,6 @@ class OTCEntrustModel {
       }
       let buy_user_asset_update = await cnt.execQuery(addassetsql, [buy_amount, buy_amount, order.buy_user_id, order.coin_id]);
       let sell_user_asset_update = await cnt.execQuery(unlocksql, [sell_amount, order.sell_user_id, order.coin_id]);
-      let buy_user_coin_asset = buy_user_asset.find(item => item.coin_id === order.coin_id);
-      let sell_user_coin_asset = sell_user_asset.find(item => item.coin_id === order.coin_id);
       if (updateorder.affectedRows && buy_user_asset_update.affectedRows && sell_user_asset_update.affectedRows) {
         await cnt.commit();
         ///更新用户资产缓存
@@ -596,10 +594,11 @@ class OTCEntrustModel {
         let coin = coins.find(item => item.coin_id === order.coin_id);
         let buy_user_asset = await AssetsModel.getUserAssetsByUserId(order.buy_user_id, true);
         let sell_user_asset = await AssetsModel.getUserAssetsByUserId(order.sell_user_id, true);
+        let buy_user_coin_asset = buy_user_asset.find(item => item.coin_id === order.coin_id);
+        let sell_user_coin_asset = sell_user_asset.find(item => item.coin_id === order.coin_id);
         await this.getOrderByID(order.id, order.buy_user_id, true);
 
         ///更新买卖用户资产日志
-        // serial_num, user_id, coin_id, coin_unit, trade_amount, balance_amount, in_out_type, user_assets_log_type_id, user_assets_log_type_name
         let buyuserasset = await AssetsLogModel.addUserAssetsLog(
           order.serial_num,
           order.buy_user_id,
