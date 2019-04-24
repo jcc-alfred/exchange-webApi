@@ -574,7 +574,7 @@ class OTCEntrustModel {
       //更新entrust的状态
       // let updateentrust = await cnt.execQuery('update m_otc_entrust = set status =1 where id = ',order.entrust_id);
       /// 解冻广告用户的币
-      let unlocksql = 'update m_user_assets set  frozen = frozen - ? where user_id = ? and coin_id = ? ';
+      let unlocksql = 'update m_user_assets set  frozen = frozen - ? where user_id = ? and coin_id = ? and frozen >=?';
       let addassetsql = 'update m_user_assets set available = available + ? , balance = balance + ? where user_id=? and coin_id = ?';
       let buy_amount = 0;
       let sell_amount = 0;
@@ -586,7 +586,7 @@ class OTCEntrustModel {
         sell_amount = Utils.add(order.coin_amount, order.trade_fee);
       }
       let buy_user_asset_update = await cnt.execQuery(addassetsql, [buy_amount, buy_amount, order.buy_user_id, order.coin_id]);
-      let sell_user_asset_update = await cnt.execQuery(unlocksql, [sell_amount, order.sell_user_id, order.coin_id]);
+      let sell_user_asset_update = await cnt.execQuery(unlocksql, [sell_amount, order.sell_user_id, order.coin_id, sell_amount]);
       if (updateorder.affectedRows && buy_user_asset_update.affectedRows && sell_user_asset_update.affectedRows) {
         await cnt.commit();
         ///更新用户资产缓存
@@ -613,7 +613,7 @@ class OTCEntrustModel {
           sell_amount, sell_user_coin_asset.balance, 1, 12, "OTC卖出");
         return true
       } else {
-        cnt.rollback();
+        await cnt.rollback();
         return false
       }
     } catch (e) {
