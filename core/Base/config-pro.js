@@ -7,7 +7,7 @@ const config = {
   currency_secret: '0baf27b3065f8dd0ae4eb51f1ae6a24a',
   internal_user_ids: [2],
   gtb_gtt_exchangeId: 28,
-  gtt_sell_day_limit: 200000,
+  gtt_sell_day_limit: 50000,
   aws: {
     accessKeyId: "AKIAJWWJRUTSZMJW43TQ",
     secretAccessKey: "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",
