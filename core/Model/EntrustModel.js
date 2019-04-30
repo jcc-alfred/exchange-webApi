@@ -60,11 +60,11 @@ class EntrustModel {
       if (entrustTypeId == 1) {
         // console.log('userId:', userId, 'buy coinId:', exchangeCoinId, 'totalAmount:', totalAmount);
         updAssets = await cnt.execQuery(`update m_user_assets set available = available - ? , frozen = frozen + ?
-                where user_id = ? and coin_id = ?`, [totalAmount, totalAmount, userId, exchangeCoinId]);
+                where user_id = ? and coin_id = ? and frozen>= ?`, [totalAmount, totalAmount, userId, exchangeCoinId, totalAmount]);
       } else {
         // console.log('userId:', userId, 'sell coinId:', coinId, 'totalAmount:', entrustVolume);
         updAssets = await cnt.execQuery(`update m_user_assets set available = available - ? , frozen = frozen + ?
-                where user_id = ? and coin_id = ?`, [entrustVolume, entrustVolume, userId, coinId]);
+                where user_id = ? and coin_id = ? and frozen >= ?`, [entrustVolume, entrustVolume, userId, coinId, entrustVolume]);
       }
       let params = {
         serial_num: serialNum,
