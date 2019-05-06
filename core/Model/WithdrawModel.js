@@ -118,7 +118,7 @@ class WithdrawModel {
         if (withdrawUpd.affectedRows) {
           //减少用户资产
           let updAssets = await cnt.execQuery(`update m_user_assets set balance = balance + ? , available = available + ?  
-                    where user_id = ? and coin_id = ?`, [withraw.submit_amount, withraw.submit_amount, userId, withraw.coin_id]);//, frozen = frozen - ?
+                    where user_id = ? and coin_id = ?`, [withraw.submit_amount, withraw.submit_amount, userId, withraw.coin_id]);
           if (updAssets.affectedRows) {
             await cnt.commit();
             res = 1;

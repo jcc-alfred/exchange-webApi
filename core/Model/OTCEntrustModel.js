@@ -93,9 +93,9 @@ class OTCEntrustModel {
       if (entrust.trade_type === 0) {
         ///unlock the asset for user
         let lock_amount = Utils.checkDecimal(Utils.mul(entrust.remaining_amount, Utils.add(1, entrust.trade_fee_rate)), 8);
-        let unlockasset = await cnt.execQuery("update m_user_assets set available = available + ? , frozen = frozen - ? , balance = balance + ?" +
+        let unlockasset = await cnt.execQuery("update m_user_assets set available = available + ? , frozen = frozen - ? " +
           "where user_id = ? and coin_id = ? and frozen >= ?",
-          [lock_amount, lock_amount, lock_amount, entrust.ad_user_id, entrust.coin_id, lock_amount]);
+          [lock_amount, lock_amount, entrust.ad_user_id, entrust.coin_id, lock_amount]);
         unlock = unlockasset.affectedRows;
       }
       // let orderlist = await this.getOrderByEntrustID(entrust.id, [0]);
@@ -415,9 +415,9 @@ class OTCEntrustModel {
         sell_user_id = user_id;
 
         //冻结用户的币,冻结失败返回创建失败
-        let lockasset = await cnt.execQuery(`update m_user_assets set available = available - ? , frozen = frozen + ? , balance = balance - ?
+        let lockasset = await cnt.execQuery(`update m_user_assets set available = available - ? , frozen = frozen + ? 
                                                             where user_id = ? and coin_id = ? and available >= ? `,
-          [coin_amount, coin_amount, coin_amount, user_id, entrust.coin_id, coin_amount]);
+          [coin_amount, coin_amount, user_id, entrust.coin_id, coin_amount]);
         lock = lockasset.affectedRows;
       } else {
         sell_user_id = entrust.ad_user_id;
@@ -467,9 +467,9 @@ class OTCEntrustModel {
     try {
       await cnt.transaction();
       let unclock_user_asset = await cnt.execQuery(`update m_user_assets 
-        set available = available + ? , frozen = frozen - ? , balance = balance + ?
+        set available = available + ? , frozen = frozen - ? 
         where user_id = ? and coin_id = ? and frozen >= ? `,
-        [order.coin_amount, order.coin_amount, order.coin_amount, order.sell_user_id, order.coin_id, order.coin_amount]);
+        [order.coin_amount, order.coin_amount, order.sell_user_id, order.coin_id, order.coin_amount]);
       let unlock = unclock_user_asset.affectedRows;
       let updateorder = await cnt.execQuery(`update m_otc_order set status = 4 where id = ? and status  = 0`, order.id);
       let updateentrust = await cnt.execQuery(`update m_otc_entrust set remaining_amount = remaining_amount + ? where id = ?`, [order.coin_amount, order.entrust_id]);
@@ -520,7 +520,7 @@ class OTCEntrustModel {
       if (type === 0) {
         ///发布卖币的广告，需要冻结发广告用户资产
         let lock_amount = Utils.checkDecimal(Utils.mul(amount, Utils.add(1, coin.trade_fee_rate)), coin.decimal_digits);
-        let lockasset = await cnt.execQuery(`update m_user_assets set available = available - ? , frozen = frozen + ? , balance = balance - ?
+        let lockasset = await cnt.execQuery(`update m_user_assets set available = available - ? , frozen = frozen + ? 
                                                             where user_id = ? and coin_id = ? and available >= ? `,
           [lock_amount, lock_amount, lock_amount, user_id, coin_id, lock_amount]);
         lock = lockasset.affectedRows;
@@ -573,7 +573,7 @@ class OTCEntrustModel {
       //更新entrust的状态
       // let updateentrust = await cnt.execQuery('update m_otc_entrust = set status =1 where id = ',order.entrust_id);
       /// 解冻广告用户的币
-      let unlocksql = 'update m_user_assets set  frozen = frozen - ? where user_id = ? and coin_id = ? and frozen >=?';
+      let unlocksql = 'update m_user_assets set  frozen = frozen - ? , balance = balance -? where user_id = ? and coin_id = ? and frozen >=?';
       let addassetsql = 'update m_user_assets set available = available + ? , balance = balance + ? where user_id=? and coin_id = ?';
       let buy_amount = 0;
       let sell_amount = 0;
@@ -585,7 +585,7 @@ class OTCEntrustModel {
         sell_amount = Utils.add(order.coin_amount, order.trade_fee);
       }
       let buy_user_asset_update = await cnt.execQuery(addassetsql, [buy_amount, buy_amount, order.buy_user_id, order.coin_id]);
-      let sell_user_asset_update = await cnt.execQuery(unlocksql, [sell_amount, order.sell_user_id, order.coin_id, sell_amount]);
+      let sell_user_asset_update = await cnt.execQuery(unlocksql, [sell_amount, sell_amount, order.sell_user_id, order.coin_id, sell_amount]);
       if (updateorder.affectedRows && buy_user_asset_update.affectedRows && sell_user_asset_update.affectedRows) {
         await cnt.commit();
         ///更新用户资产缓存
