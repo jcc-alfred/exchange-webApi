@@ -522,7 +522,7 @@ class OTCEntrustModel {
         let lock_amount = Utils.checkDecimal(Utils.mul(amount, Utils.add(1, coin.trade_fee_rate)), coin.decimal_digits);
         let lockasset = await cnt.execQuery(`update m_user_assets set available = available - ? , frozen = frozen + ? 
                                                             where user_id = ? and coin_id = ? and available >= ? `,
-          [lock_amount, lock_amount, lock_amount, user_id, coin_id, lock_amount]);
+          [lock_amount, lock_amount, user_id, coin_id, lock_amount]);
         lock = lockasset.affectedRows;
       } else {
         lock = true;
