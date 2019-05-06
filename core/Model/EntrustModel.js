@@ -321,6 +321,7 @@ class EntrustModel {
       }));
       marketList = marketList.map(
         function (item) {
+          CoinPrice[item.coinEx.coin_id] = item['price_usd'];
           item['price_usd'] = CoinPrice[item.coinEx.coin_id];
           return item
         }
