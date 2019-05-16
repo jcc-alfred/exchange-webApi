@@ -464,13 +464,16 @@ class OTCEntrustModel {
 
   async cancelOrder(order) {
     let cnt = await DB.cluster('master');
+    let unlock = true;
     try {
       await cnt.transaction();
-      let unclock_user_asset = await cnt.execQuery(`update m_user_assets 
+      if (order.trigger_type == 1) {
+        let unclock_user_asset = await cnt.execQuery(`update m_user_assets 
         set available = available + ? , frozen = frozen - ? 
         where user_id = ? and coin_id = ? and frozen >= ? `,
-        [order.coin_amount, order.coin_amount, order.sell_user_id, order.coin_id, order.coin_amount]);
-      let unlock = unclock_user_asset.affectedRows;
+          [order.coin_amount, order.coin_amount, order.sell_user_id, order.coin_id, order.coin_amount]);
+        unlock = unclock_user_asset.affectedRows;
+      }
       let updateorder = await cnt.execQuery(`update m_otc_order set status = 4 where id = ? and status  = 0`, order.id);
       let updateentrust = await cnt.execQuery(`update m_otc_entrust set remaining_amount = remaining_amount + ? where id = ?`, [order.coin_amount, order.entrust_id]);
       if (unlock && updateentrust.affectedRows && updateorder.affectedRows) {
