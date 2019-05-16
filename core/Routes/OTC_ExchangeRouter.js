@@ -225,7 +225,11 @@ router.post('/entrust/create', async (req, res, next) => {
       req.body.amount, req.body.price, req.body.currency, req.body.min_amount, req.body.remark,
       req.body.secret_remark, req.body.methods, req.body.valid_duration
     );
-    res.send({code: 1, msg: "", data: data});
+    if (data) {
+      res.send({code: 1, msg: "", data: data});
+    } else {
+      res.send({code: 0, msg: "", data: 'entrust create failed'});
+    }
   } catch (e) {
     res.status(500).end();
     throw e
