@@ -85,14 +85,13 @@ class EntrustModel {
       };
       let entrustRes = await cnt.edit('m_entrust', params);
       let entrustMQ = false;
-      if (entrustRes) {
+
+      if (entrustRes.affectedRows && updAssets.affectedRows && entrustMQ) {
+        await cnt.commit();
         entrustMQ = await MQ.push(config.MQKey.Entrust_Queue + coinExchangeId, {
           ...{...params, entrust_id: entrustRes.insertId, create_time: Date.now()}
           , comments: '发送委托了'
         });
-      }
-      if (entrustRes.affectedRows && updAssets.affectedRows && entrustMQ) {
-        await cnt.commit();
         await AssetsModel.getUserAssetsByUserId(userId, true);
         res = {...params, entrust_id: entrustRes.insertId, create_time: Date.now()};
       } else {
