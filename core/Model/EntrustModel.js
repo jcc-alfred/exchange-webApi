@@ -84,11 +84,10 @@ class EntrustModel {
         entrust_status_name: '待成交'
       };
       let entrustRes = await cnt.edit('m_entrust', params);
-      let entrustMQ = false;
 
-      if (entrustRes.affectedRows && updAssets.affectedRows && entrustMQ) {
+      if (entrustRes.affectedRows && updAssets.affectedRows) {
         await cnt.commit();
-        entrustMQ = await MQ.push(config.MQKey.Entrust_Queue + coinExchangeId, {
+        let entrustMQ = await MQ.push(config.MQKey.Entrust_Queue + coinExchangeId, {
           ...{...params, entrust_id: entrustRes.insertId, create_time: Date.now()}
           , comments: '发送委托了'
         });
