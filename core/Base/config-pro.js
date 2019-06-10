@@ -1,5 +1,5 @@
 const config = {
-  socketDomain: 'http://socket.lan:5000',
+  socketDomain: 'http://socket.breakex.lan:5000',
   GTdollarAPI: 'http://api.gttdollar.com/ticker.json',
   coinmarket_api: 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest',
   coinmarket_secret: 'c236b6e8-ede0-40a8-9a66-e60a039aff80',
