@@ -36,7 +36,7 @@ const config = {
 
   DB: {
     master: {
-      host: 'rds-master.lan',
+      host: 'rds-breakex.lan',
       user: 'gtdollar',
       password: '#B1L5GkgL$bb',
       database: 'MeltEx',
@@ -44,14 +44,14 @@ const config = {
       connectionLimit: 100,
     },
     slaves: [{
-      host: 'rds-slave.lan',
+      host: 'rds-breakex.lan',
       user: 'gtdollar',
       password: '#B1L5GkgL$bb',
       database: 'MeltEx',
       port: 3306,
       connectionLimit: 100,
     }, {
-      host: 'rds-slave.lan',
+      host: 'rds-breakex.lan',
       user: 'gtdollar',
       password: '#B1L5GkgL$bb',
       database: 'MeltEx',
@@ -65,7 +65,7 @@ const config = {
     host: 'redis.lan',
     port: '6379',
     db: 0,
-    prefix: 'c_'
+    prefix: 'b_'
   },
 
   cacheDB: {
@@ -125,7 +125,7 @@ const config = {
     port: 5672,
     username: 'admin',
     password: 'admin',
-    vhost: '/',
+    vhost: '/breakex',
     connectionLimit: 5,
   },
   MQKey: {
