@@ -162,7 +162,7 @@ class CoinModel {
       let [coin_name, exchange_coin_name] = exchangeName.toUpperCase().split('/');
       // console.log(coin_name,exchange_coin_name);
       let exchange = data.filter((item) => item.coin_name == coin_name).filter((item) => item.exchange_coin_name == exchange_coin_name);
-      if (exchange) {
+      if (exchange && exchange[0]) {
         return exchange[0].coin_exchange_id
       }
       return null;
