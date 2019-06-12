@@ -81,19 +81,21 @@ class CoinModel {
     }
   }
 
-  async getCoinExchangeList() {
+  async getCoinExchangeList(refresh = false) {
     let cacheCnt = await Cache.init(config.cacheDB.system);
     try {
-      let cRes = await cacheCnt.hgetall(config.cacheKey.Sys_Coin_Exchange);
+      if (!refresh) {
+        let cRes = await cacheCnt.hgetall(config.cacheKey.Sys_Coin_Exchange);
 
-      if (cRes) {
+        if (cRes) {
 
-        let data = [];
-        for (let i in cRes) {
-          let item = cRes[i];
-          data.push(JSON.parse(item));
+          let data = [];
+          for (let i in cRes) {
+            let item = cRes[i];
+            data.push(JSON.parse(item));
+          }
+          return data;
         }
-        return data;
       }
 
       let cnt = await DB.cluster('slave');
@@ -108,6 +110,7 @@ class CoinModel {
                             c.coin_symbol,
                             c.decimal_digits,
                             a.exchange_coin_id,
+                            a.day_transaction_limit,
                             d.coin_name as exchange_coin_name,
                             d.coin_unit as exchange_coin_unit,
                             d.coin_symbol as exchange_coin_symbol,

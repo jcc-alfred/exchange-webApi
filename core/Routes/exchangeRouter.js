@@ -132,13 +132,14 @@ router.post('/doEntrust', async (req, res, next) => {
       return;
     }
 
-    if (req.body.coin_exchange_id === config.gtb_gtt_exchangeId && config.internal_user_ids.indexOf(req.token.user_id) < 0 && req.body.entrustTypeId === 0) {
-      let user_gtt_transaction_today = await EntrustModel.getGttTransactionAmount(req.token.user_id);
-      if (req.body.entrustPrice * req.body.entrustVolume + user_gtt_transaction_today > config.gtt_sell_day_limit) {
-        res.send({code: 0, msg: '超出日交易额限制'});
-        return;
-      }
-    }
+
+    // if (req.body.coin_exchange_id === config.gtb_gtt_exchangeId && config.internal_user_ids.indexOf(req.token.user_id) < 0 && req.body.entrustTypeId === 0) {
+    //   let user_gtt_transaction_today = await EntrustModel.getGttTransactionAmount(req.token.user_id);
+    //   if (req.body.entrustPrice * req.body.entrustVolume + user_gtt_transaction_today > config.gtt_sell_day_limit) {
+    //     res.send({code: 0, msg: '超出日交易额限制'});
+    //     return;
+    //   }
+    // }
     if (!req.body.isExchangeSafe) {
       if (!req.body.safePass || Utils.md5(req.body.safePass) != userInfo.safe_pass) {
         res.send({code: 0, msg: '资金密码错误'});
@@ -148,10 +149,13 @@ router.post('/doEntrust', async (req, res, next) => {
     }
     let coinExchangeListRes = await CoinModel.getCoinExchangeList();
     let coinEx = coinExchangeListRes.find((item) => item.coin_exchange_id == req.body.coin_exchange_id);
+
+
     if (coinEx.is_enable_trade !== 1 || userInfo.is_enable_trade !== 1) {
       res.send({code: 0, msg: '暂不支持交易功能'});
       return;
     }
+
     if (coinEx.entrust_min_price > req.body.entrustPrice) {
       res.send({code: 0, msg: '委托价格不能低于：' + coinEx.entrust_min_price});
       return;
@@ -159,6 +163,14 @@ router.post('/doEntrust', async (req, res, next) => {
     if (coinEx.entrust_min_amount > req.body.entrustVolume) {
       res.send({code: 0, msg: '委托数量不能低于：' + coinEx.entrust_min_amount});
       return;
+    }
+    if (req.token.user_id != 2 && coinEx.day_transaction_limit) {
+      let log_type = req.body.entrustTypeId === 0 ? 3 : 4;
+      let day_transactions = await EntrustModel.getTransactionAmount(req.token.user_id, coinEx.exchange_coin_id, log_type);
+      if (req.body.entrustPrice * req.body.entrustVolume + day_transactions > coinEx.day_transaction_limit) {
+        res.send({code: 0, msg: '超出日交易额限制'});
+        return;
+      }
     }
     let assetsList = await AssetsModel.getUserAssetsByUserId(req.token.user_id);
     let assets = assetsList.find((item) => item.coin_id == coinEx.coin_id);

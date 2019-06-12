@@ -569,13 +569,12 @@ class EntrustModel {
     }
   }
 
-  async getGttTransactionAmount(user_id, date = moment(new Date()).format('YYYY-MM-DD')) {
+  async getTransactionAmount(user_id, coin_id, type, date = moment(new Date()).format('YYYY-MM-DD')) {
     let cnt = await DB.cluster('slave');
     try {
-      let sql = 'select sum(trade_amount) as amount ,user_id from m_user_assets_log where user_id=? and user_assets_log_type_id=3  and date(create_time)=? and coin_id =17';
-      let user_gtt_transaction = await cnt.execQuery(sql, [user_id, date]);
+      let sql = 'select sum(trade_amount) as amount ,user_id from m_user_assets_log where user_id=? and user_assets_log_type_id=?  and date(create_time)=? and coin_id =?';
+      let user_gtt_transaction = await cnt.execQuery(sql, [user_id, type, date, coin_id]);
       return user_gtt_transaction[0].amount > 0 ? user_gtt_transaction[0].amount : 0
-
     } catch (e) {
       throw e
     } finally {
