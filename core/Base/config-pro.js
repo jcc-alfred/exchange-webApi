@@ -1,5 +1,5 @@
 const config = {
-  socketDomain: 'http://socket.breakex.lan:5000',
+  socketDomain: 'http://socket.lan:5000',
   GTdollarAPI: 'http://api.gttdollar.com/ticker.json',
   coinmarket_api: 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest',
   coinmarket_secret: 'c236b6e8-ede0-40a8-9a66-e60a039aff80',
@@ -36,7 +36,7 @@ const config = {
 
   DB: {
     master: {
-      host: 'rds-breakex.lan',
+      host: 'rds-master.lan',
       user: 'gtdollar',
       password: '#B1L5GkgL$bb',
       database: 'MeltEx',
@@ -44,14 +44,14 @@ const config = {
       connectionLimit: 100,
     },
     slaves: [{
-      host: 'rds-breakex.lan',
+      host: 'rds-slave.lan',
       user: 'gtdollar',
       password: '#B1L5GkgL$bb',
       database: 'MeltEx',
       port: 3306,
       connectionLimit: 100,
     }, {
-      host: 'rds-breakex.lan',
+      host: 'rds-slave.lan',
       user: 'gtdollar',
       password: '#B1L5GkgL$bb',
       database: 'MeltEx',
@@ -65,7 +65,7 @@ const config = {
     host: 'redis.lan',
     port: '6379',
     db: 0,
-    prefix: 'b_'
+    prefix: 'c_'
   },
 
   cacheDB: {
@@ -125,7 +125,7 @@ const config = {
     port: 5672,
     username: 'admin',
     password: 'admin',
-    vhost: '/breakex',
+    vhost: '/',
     connectionLimit: 5,
   },
   MQKey: {
