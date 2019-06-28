@@ -1,6 +1,8 @@
 let express = require('express');
 let router = express.Router();
 let EntrustModel = require('../Model/EntrustModel');
+let Enumerable = require('linq');
+
 
 router.post('/trade/kline',async(req,res,next)=>{
   try {
@@ -17,7 +19,7 @@ router.post('/trade/kline',async(req,res,next)=>{
     } else {
       limit = 100;
     }
-    klineList = klineList.slice(0, limit);
+    klineList = Enumerable.from(klineList).orderByDescending("parseFloat($.timestamp)").take(10).toArray();
     klineList.forEach(item => {
       let tmpArray = [item.timestamp * 1000,item.open_price,item.high_price,item.low_price,item.close_price,item.volume];
       klineArray.push(tmpArray);
