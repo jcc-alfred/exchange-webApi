@@ -19,7 +19,7 @@ router.post('/trade/kline',async(req,res,next)=>{
     } else {
       limit = 100;
     }
-    klineList = Enumerable.from(klineList).orderByDescending("parseFloat($.timestamp)").take(10).toArray();
+    klineList = Enumerable.from(klineList).orderByDescending("parseFloat($.timestamp)").take(limit).toArray();
     klineList.forEach(item => {
       let tmpArray = [item.timestamp * 1000,item.open_price,item.high_price,item.low_price,item.close_price,item.volume];
       klineArray.push(tmpArray);
