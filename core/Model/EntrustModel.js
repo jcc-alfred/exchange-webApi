@@ -202,8 +202,7 @@ class EntrustModel {
           method: 'GET',
           uri: config.coinmarket_api,
           qs: {
-            start: 1,
-            limit: 5,
+            symbol: 'BTC,ETH,XRP,EOS,LTC,USDT',
             convert: 'USD'
           },
           headers: {
