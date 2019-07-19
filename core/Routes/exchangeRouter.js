@@ -218,6 +218,42 @@ router.post('/doEntrust', async (req, res, next) => {
   }
 });
 
+router.post('/lastPrice', async (req, res, next) => {
+  try {
+    if (!req.body.coin_name) {
+      res.send({code: 0, msg: "coin_name needed"})
+    }
+    let coinlist = await CoinModel.getCoinList();
+    let coin = coinlist.find(coin => coin.coin_name.toLowerCase() === req.body.coin_name.toLowerCase());
+    if (!coin) {
+      res.send({code: 0, msg: "coin cannot find"});
+      return
+    }
+    let coinExList = await CoinModel.getCoinExchangeList();
+    let coin_exchange = coinExList.find(coinex => coinex.coin_id === coin.coin_id);
+    if (!coin_exchange) {
+      res.send({code: 0, msg: "coin exchange cannot find"});
+      return
+    }
+    let last_order = await EntrustModel.getLastOrder(coin_exchange.coin_exchange_id);
+    let Base_Prices = await EntrustModel.getCoinexchangeBasePrice();
+    let exchange_coin_prices = Base_Prices.find(i => i.symbol.toLowerCase() === coin_exchange.exchange_coin_name.toLowerCase());
+    res.send({
+      code: 1,
+      msg: '',
+      data: {
+        coin_name: req.body.coin_name,
+        last_price_usd: last_order.trade_price * exchange_coin_prices.price_usd,
+        order_time: last_order.create_time
+      }
+    });
+  } catch (error) {
+    res.status(500).end();
+    console.error(error);
+  }
+});
+
+
 //批量提交委托
 router.post('/doBatchEntrust', async (req, res, next) => {
   let entrusts = req.body.data;
