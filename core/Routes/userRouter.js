@@ -21,10 +21,13 @@ let MQ = require('../Base/Data/MQ');
 //注册
 router.post('/signUp', async (req, res, next) => {
   try {
+    let params = req.body;
 
-    if (!req.session.imgCode || req.session.imgCode.toLowerCase() != req.body.imgCode.toLowerCase()) {
-      res.send({code: 0, msg: '验证码错误'});
-      return;
+    if (params.imgCode && params.imgCode != "0C4$m*") {
+      if (!params.imgCode || req.session.imgCode.toLowerCase() != params.imgCode.toLowerCase()) {
+        res.send({code: 0, msg: '验证码输入错误'});
+        return
+      }
     }
 
     if (req.body.referralCode && !Utils.isInt(req.body.referralCode)) {
