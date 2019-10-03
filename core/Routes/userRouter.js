@@ -720,8 +720,8 @@ router.post('/logout', async (req, res, next) => {
   }
 });
 router.get('/me', async (req, res, next) => {
-  // let user_id= req.token.user_id;
-  let user_id = 142;
+  let user_id = req.token.user_id;
+  // let user_id = 142;
   let user = await UserModel.getUserById(user_id);
   let userIdentity = await UserIdentityModel.getUserKYCbyID(user_id);
   if (user) {
