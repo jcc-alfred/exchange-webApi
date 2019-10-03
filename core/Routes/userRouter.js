@@ -13,6 +13,7 @@ let UserAlertModel = require('../Model/UserAlertModel');
 let SystemModel = require('../Model/SystemModel');
 let AssetsModel = require('../Model/AssetsModel');
 let UserBonusModel = require('../Model/UserBonusModel');
+let UserIdentityModel = require('../Model/UserIdentityModel');
 
 let Cache = require('../Base/Data/Cache');
 let MQ = require('../Base/Data/MQ');
@@ -718,5 +719,17 @@ router.post('/logout', async (req, res, next) => {
     cache.close();
   }
 });
+router.get('/me', async (req, res, next) => {
+  // let user_id= req.token.user_id;
+  let user_id = 142;
+  let user = await UserModel.getUserById(user_id);
+  let userIdentity = await UserIdentityModel.getUserKYCbyID(user_id);
+  if (user) {
+    delete user.login_pass;
+    delete user.safe_pass;
+  }
+  res.send({code: 1, msg: "", data: {userInfo: user, userIdentity: userIdentity}})
+});
+
 
 module.exports = router;

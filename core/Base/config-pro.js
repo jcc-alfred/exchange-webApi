@@ -17,8 +17,9 @@ const config = {
       cdn_domain: "https://s3.ap-southeast-1.amazonaws.com"
     }
   },
+  imgUrlPrefix: "https://www.asiaedx.com",
   sys: {
-    domain: 'getdax.com',     //域名
+    domain: 'www.asiaedx.com',     //域名
     ipRegisterMaxNum: 100,       //IP注册最大次数
     loginPassRetryNum: 5,        //密码输入错误重试次数
     sendMsgRetryNum: 5,          //队列 向手机邮箱发送放心消息失败重试次数

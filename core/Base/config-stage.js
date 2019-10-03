@@ -18,6 +18,8 @@ const config = {
       cdn_domain: "https://s3.ap-southeast-1.amazonaws.com"
     }
   },
+  imgUrlPrefix: "http://54.169.107.53",
+
   sys: {
     domain: 'getdax.com',     //域名
     ipRegisterMaxNum: 100,       //IP注册最大次数

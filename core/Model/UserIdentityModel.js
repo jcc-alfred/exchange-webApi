@@ -47,6 +47,24 @@ class UserIdentityModel {
     }
   }
 
+  async getUserKYCbyID(userId) {
+    let cnt = await DB.cluster('slave');
+    try {
+      let sql = 'select * from m_user_identity where user_id =?';
+      // let identity_status = 2;//0 未认证 1 初级实名认证 2 高级实名认证中 3 高级认证 4 认证失败
+      let res = await cnt.execQuery(sql, [userId]);
+      if (res.length > 0) {
+        return res[0];
+      } else {
+        return {}
+      }
+    } catch (error) {
+      throw error;
+    } finally {
+      await cnt.close();
+    }
+  }
+
 }
 
 module.exports = new UserIdentityModel();
