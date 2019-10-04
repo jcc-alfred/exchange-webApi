@@ -93,6 +93,7 @@ app.all('*', async (req, res, next) => {
     '/user/forgotLoginPass',
     '/exchange/getCoinExchangeAreaList',
     '/exchange/getMarketList',
+    '/exchange/getCoinPrice',
     '/exchange/lastPrice',
     '/doc/getHomeNewsList',
     '/doc/getArticleList',

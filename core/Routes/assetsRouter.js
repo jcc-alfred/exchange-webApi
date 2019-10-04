@@ -1,3 +1,4 @@
+let EntrustModel = require("../Model/EntrustModel");
 let express = require('express');
 let router = express.Router();
 let Utils = require('../Base/Utils/Utils');
@@ -21,7 +22,6 @@ let UserBonusModel = require('../Model/UserBonusModel');
 let Cache = require('../Base/Data/Cache');
 let MQ = require('../Base/Data/MQ');
 let nodeEth = require('node-eth-address');
-
 
 
 //获取加密货币列表
@@ -68,6 +68,29 @@ router.post('/getCoinList', async (req, res, next) => {
 router.post('/getUserAssets', async (req, res, next) => {
   try {
     let data = await AssetsModel.getUserAssetsByUserId(req.token.user_id, req.body.refresh || false);
+    res.send({code: 1, msg: '', data: data});
+  } catch (error) {
+    res.status(500).end();
+    throw error;
+  }
+});
+
+router.post('/getUserAssetsValue', async (req, res, next) => {
+  try {
+    let data = await AssetsModel.getUserAssetsByUserId(req.token.user_id, req.body.refresh || false);
+    let CoinPrices = await EntrustModel.getCoinPrice();
+    let BTCPrice = CoinPrices.find(i => i.symbol.toLowerCase() === 'btc').price_usd;
+    data.map((i, index) => {
+      let PriceUSD = CoinPrices.find(item => item.symbol.toLowerCase() === i.coin_name.toLowerCase());
+      if (PriceUSD) {
+        data[index]['value_USD'] = (PriceUSD.price_usd * i.balance).toFixed(2);
+        data[index]['value_BTC'] = (data[index]['value_USD'] / BTCPrice).toFixed(8);
+      } else {
+        data[index]['value_USD'] = 0;
+        data[index]['value_BTC'] = 0
+      }
+    });
+
     res.send({code: 1, msg: '', data: data});
   } catch (error) {
     res.status(500).end();

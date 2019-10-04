@@ -117,6 +117,19 @@ router.post('/getMarketList', async (req, res, next) => {
     console.error(error);
   }
 });
+
+//获取市场行情列表
+router.post('/getCoinPrice', async (req, res, next) => {
+  try {
+
+    let data = await EntrustModel.getCoinPrice();
+    res.send({code: 1, msg: '', data: data})
+  } catch (error) {
+    res.status(500).end();
+    console.error(error);
+  }
+});
+
 //获取交易是否安全
 router.post('/getIsExchangeSafe', async (req, res, next) => {
   try {

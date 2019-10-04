@@ -254,6 +254,38 @@ class EntrustModel {
     }
   }
 
+  async getCoinPrice(refresh = false) {
+    let cache = await Cache.init(config.cacheDB.system);
+    try {
+      let ckey = config.cacheKey.Sys_Base_Coin_Prices;
+      if (await cache.exists(ckey) && !refresh) {
+        let cRes = await cache.hgetall(ckey);
+        if (cRes) {
+          let data = [];
+          for (let i in cRes) {
+            let item = cRes[i];
+            data.push(JSON.parse(item));
+          }
+          return data;
+        }
+      }
+      await this.getMarketList(true);
+      let cRes = await cache.hgetall(ckey);
+      if (cRes) {
+        let data = [];
+        for (let i in cRes) {
+          let item = cRes[i];
+          data.push(JSON.parse(item));
+        }
+        return data;
+      }
+    } catch (e) {
+      throw e
+    } finally {
+      cache.close()
+    }
+  }
+
 
   async getMarketList(refresh = false) {
     let cache = await Cache.init(config.cacheDB.order);
@@ -306,7 +338,7 @@ class EntrustModel {
           price_cny = price_usd / gtt_prices.price_usd;
         }
         if (price_usd) {
-          CoinPrice[item.coin_id] = price_usd;
+          CoinPrice[item.coin_name] = price_usd;
         }
         marketList.push({
           coin_exchange_id: item.coin_exchange_id,
@@ -318,14 +350,22 @@ class EntrustModel {
       }));
       marketList = marketList.map(
         function (item) {
-          CoinPrice[item.coinEx.coin_id] = item['price_usd'];
-          item['price_usd'] = CoinPrice[item.coinEx.coin_id];
+          if (Object.keys(CoinPrice).indexOf(item.coinEx.coin_name.toLowerCase()) < 0) {
+            CoinPrice[item.coinEx.coin_name.toLowerCase()] = item['price_usd'];
+          }
+          item['price_usd'] = CoinPrice[item.coinEx.coin_name.toLowerCase()];
           return item
         }
       );
       let coinpricelist = Object.entries(CoinPrice);
       for (let i in coinpricelist) {
-        await cache.hset(config.cacheKey.Sys_Base_Coin_Prices, coinpricelist[i][0], coinpricelist[i][1]);
+        await cache.select(0);
+        await cache.hset(config.cacheKey.Sys_Base_Coin_Prices, coinpricelist[i][0], {
+          "name": coinpricelist[i][0].toUpperCase(),
+          "symbol": coinpricelist[i][0].toUpperCase(),
+          "price_usd": coinpricelist[i][1],
+          "last_update": moment().format("YYYY-MM-DDTHH:mm:ss")
+        });
       }
       let chRes = await Promise.all(marketList.map((market) => {
         return cache.hset(
@@ -337,13 +377,9 @@ class EntrustModel {
       await cache.expire(ckey, 60);
       return marketList;
 
-    }
-
-    catch (error) {
+    } catch (error) {
       throw error;
-    }
-
-    finally {
+    } finally {
       await cache.close();
     }
   }
@@ -494,12 +530,12 @@ class EntrustModel {
       await cnt.close();
 
       let chRes = await Promise.all(res.map((info) => {
-          return cache.hset(
-            ckey,
-            info.entrust_id,
-            info
-          )
-        }));
+        return cache.hset(
+          ckey,
+          info.entrust_id,
+          info
+        )
+      }));
       await cache.expire(ckey, 300);
       return res;
     } catch (error) {
@@ -682,12 +718,12 @@ class EntrustModel {
 
       let res = await cnt.execQuery(sql, ckey);
       let chRes = await Promise.all(res.map((info) => {
-          return cache.hset(
-            ckey,
-            info.timestamp,
-            info
-          )
-        }));
+        return cache.hset(
+          ckey,
+          info.timestamp,
+          info
+        )
+      }));
       await cache.expire(ckey, 86400);
       return res;
 
@@ -737,8 +773,8 @@ class EntrustModel {
       await cache.select(config.cacheDB.kline);
       let range_list = [300000, 900000, 1800000, 14400000, 21600000, 43200000, 60000];
       await Promise.all(range_list.map((range) => {
-          return cache.del(config.cacheKey.KlineData_CEID_Range + coin_exchange_id + '_' + range)
-        }));
+        return cache.del(config.cacheKey.KlineData_CEID_Range + coin_exchange_id + '_' + range)
+      }));
       await cache.select(config.cacheDB.users);
       await cache.flushdb();
       return true;
