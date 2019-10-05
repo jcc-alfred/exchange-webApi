@@ -55,10 +55,13 @@ class WithdrawModel {
       let serialNum = moment().format('YYYYMMDDHHmmssSSS');
       let confirmStatus = 0;
       let confirmStatusName = '审核中';
-      if ([17, 22].indexOf(coinId) >= 0 && submitAmount <= 10000) {
+      if ([17].indexOf(coinId) >= 0 && submitAmount <= 10000) {
         confirmStatus = 1;
         confirmStatusName = "已审核"
-      } else if (coinId === 8) {
+      } else if ([8, 22].indexOf(coinId)) {
+        confirmStatus = 1;
+        confirmStatusName = "已审核"
+      } else if (coinId === 5 && submitAmount <= 300) {
         confirmStatus = 1;
         confirmStatusName = "已审核"
       }
