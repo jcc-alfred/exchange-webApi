@@ -70,9 +70,9 @@ router.post('/getUserEntrustList', async (req, res, next) => {
 });
 router.post('/getUserHistoryEntrustList', async (req, res, next) => {
   let allUserEntrustList = await EntrustModel.getHistoryEntrustListByUserId(req.token.user_id, req.body.coinExchangeId);
-  if (req.body.coinExchangeId) {
-    allUserEntrustList = allUserEntrustList.filter((item) => item.coin_exchange_id === req.body.coinExchangeId);
-  }
+  // if (req.body.coinExchangeId) {
+  //   allUserEntrustList = allUserEntrustList.filter((item) => item.coin_exchange_id === req.body.coinExchangeId);
+  // }
   let userEntrustListTmp = allUserEntrustList.sort((item1, item2) => {
     return item2.entrust_id - item1.entrust_id;
   });

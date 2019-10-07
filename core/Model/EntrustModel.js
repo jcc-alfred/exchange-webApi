@@ -507,7 +507,7 @@ class EntrustModel {
     }
   }
 
-  async getEntrustListByUserId(userId, coinExchangeId, refresh = false) {
+  async getEntrustListByUserId(userId, refresh = false) {
     let cache = await Cache.init(config.cacheDB.order);
     try {
       let ckey = config.cacheKey.Entrust_UserId + userId;
@@ -738,8 +738,12 @@ class EntrustModel {
   async getHistoryEntrustListByUserId(userId, coinExchangeId, limit = 50) {
     let cnt = await DB.cluster('slave');
     try {
-      let sql = `SELECT * FROM m_entrust WHERE user_id = ? and coin_exchange_id = ? and entrust_status in (2,3) order by entrust_id desc limit ? `;
-      let res = await cnt.execQuery(sql, [userId, coinExchangeId, limit]);
+      let condition = '';
+      if (coinExchangeId) {
+        condition = `and coin_exchange_id=${coinExchangeId}`
+      }
+      let sql = `SELECT * FROM m_entrust WHERE user_id = ${userId} and entrust_status in (2,3)  ${condition} order by entrust_id desc limit ${limit} `;
+      let res = await cnt.execQuery(sql);
       return res;
 
     } catch (error) {
