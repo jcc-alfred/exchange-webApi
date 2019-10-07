@@ -59,23 +59,21 @@ router.post('/getCoinList', async (req, res, next) => {
 });
 
 router.post('/getUserEntrustList', async (req, res, next) => {
-  if (!req.body.coinExchangeId) {
-    res.send({code: 0, msg: "coinExchangeId required"})
-  }
   let allUserEntrustList = await EntrustModel.getEntrustListByUserId(req.token.user_id);
-  let userEntrustList = allUserEntrustList.filter((item) => item.coin_exchange_id === req.body.coinExchangeId);
-  let userEntrustListTmp = userEntrustList.sort((item1, item2) => {
+  if (req.body.coinExchangeId) {
+    allUserEntrustList = allUserEntrustList.filter((item) => item.coin_exchange_id === req.body.coinExchangeId);
+  }
+  let userEntrustListTmp = allUserEntrustList.sort((item1, item2) => {
     return item2.entrust_id - item1.entrust_id;
   });
   res.send({code: 1, msg: "", data: userEntrustListTmp})
 });
 router.post('/getUserHistoryEntrustList', async (req, res, next) => {
-  if (!req.body.coinExchangeId) {
-    res.send({code: 0, msg: "coinExchangeId required"})
-  }
   let allUserEntrustList = await EntrustModel.getHistoryEntrustListByUserId(req.token.user_id, req.body.coinExchangeId);
-  let userEntrustList = allUserEntrustList.filter((item) => item.coin_exchange_id === req.body.coinExchangeId);
-  let userEntrustListTmp = userEntrustList.sort((item1, item2) => {
+  if (req.body.coinExchangeId) {
+    allUserEntrustList = allUserEntrustList.filter((item) => item.coin_exchange_id === req.body.coinExchangeId);
+  }
+  let userEntrustListTmp = allUserEntrustList.sort((item1, item2) => {
     return item2.entrust_id - item1.entrust_id;
   });
   res.send({code: 1, msg: "", data: userEntrustListTmp})

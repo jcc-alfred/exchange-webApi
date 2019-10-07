@@ -3,6 +3,7 @@ let Cache = require('../Base/Data/Cache');
 let config = require('../Base/config');
 let Utils = require('../Base/Utils/Utils');
 let moment = require('moment');
+let DepositModel = require('../Model/DepositModel');
 
 let AssetsModel = require('../Model/AssetsModel');
 
@@ -46,6 +47,7 @@ class WithdrawModel {
     }
   }
 
+
   async addUserWithdraw(userId, coinId, toBlockAddress, submitAmount, balance, fees, feesRate) {
     let cnt = await DB.cluster('master');
     let res = 0;
@@ -58,12 +60,18 @@ class WithdrawModel {
       if ([17].indexOf(coinId) >= 0 && submitAmount <= 10000) {
         confirmStatus = 1;
         confirmStatusName = "已审核"
-      } else if ([8, 22].indexOf(coinId)) {
+      } else if ([8, 22].indexOf(coinId) >= 0) {
+        confirmStatus = 1;
+        confirmStatusName = "已审核"
+      } else if ([22].indexOf(coinId) >= 0) {
         confirmStatus = 1;
         confirmStatusName = "已审核"
       } else if (coinId === 5 && submitAmount <= 300) {
-        confirmStatus = 1;
-        confirmStatusName = "已审核"
+        let AIM_Deposit = await DepositModel.getUserDepositListByCoinId(userId, 22, 1, 10);
+        if (AIM_Deposit.count > 0) {
+          confirmStatus = 1;
+          confirmStatusName = "已审核"
+        }
       }
       await cnt.transaction();
       let withdrawRes = await cnt.edit('m_user_withdraw', {
