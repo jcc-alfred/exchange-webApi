@@ -67,8 +67,8 @@ class WithdrawModel {
         confirmStatus = 1;
         confirmStatusName = "已审核"
       } else if (coinId === 5 && submitAmount <= 300) {
-        let AIM_Deposit = await DepositModel.getUserDepositListByCoinId(userId, "22", "1", "10");
-        if (AIM_Deposit.rowCount > 0) {
+        let AIM_Deposit_Count = await DepositModel.getUserDepositCountByCoinId(userId, "22");
+        if (AIM_Deposit_Count.count > 0) {
           confirmStatus = 1;
           confirmStatusName = "已审核"
         }
