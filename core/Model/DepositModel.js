@@ -19,7 +19,8 @@ class DepositModel {
         coinId
       ];
 
-      return cnt.page(sql, params, page, pageSize);
+      let res = await cnt.page(sql, params, page, pageSize);
+      return res
 
     }
     catch (error) {
@@ -30,15 +31,17 @@ class DepositModel {
   }
 
   async getUserDepositCountByCoinId(userId, coinId) {
-    let cnt = await DB.cluster('slave');
+    let cnt = await DB.cluster('master');
     try {
 
-      let sql = "select count(1) as count from m_user_deposit where record_status=1 and user_id=? and coin_id = ?";
-      var params = [
-        userId,
-        coinId
-      ];
-      return cnt.execQuery(sql, params);
+      let sql = `select count(1) as count from m_user_deposit where record_status=1 and user_id=${userId} and coin_id = ${coinId}`;
+
+      let res = await cnt.execQuery(sql);
+      if (res.length > 0) {
+        return res[0].count
+      } else {
+        return 0
+      }
 
     }
     catch (error) {
