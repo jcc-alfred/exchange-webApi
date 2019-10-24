@@ -367,8 +367,9 @@ class EntrustModel {
           "last_update": moment().format("YYYY-MM-DDTHH:mm:ss")
         });
       }
-      let chRes = await Promise.all(marketList.map((market) => {
-        return cache.hset(
+      await cache.select(config.cacheDB.order);
+      let chRes = await Promise.all(marketList.map(async (market) => {
+        return await cache.hset(
           ckey,
           market.coin_exchange_id,
           market
