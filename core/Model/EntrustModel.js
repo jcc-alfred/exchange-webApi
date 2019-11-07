@@ -360,7 +360,7 @@ class EntrustModel {
       let coinpricelist = Object.entries(CoinPrice);
       for (let i in coinpricelist) {
         await cache.select(0);
-        await cache.hset(config.cacheKey.Sys_Base_Coin_Prices, coinpricelist[i][0], {
+        await cache.hset(config.cacheKey.Sys_Base_Coin_Prices, coinpricelist[i][0].toUpperCase(), {
           "name": coinpricelist[i][0].toUpperCase(),
           "symbol": coinpricelist[i][0].toUpperCase(),
           "price_usd": coinpricelist[i][1],
