@@ -85,6 +85,7 @@ app.all('*', async (req, res, next) => {
     '/uploadDocument',
     '/uploadQrcode',
     '/imgCode',
+    '/sendEmailSMS',
     '/qrcode',
     '/user/signUp',
     '/user/login',
