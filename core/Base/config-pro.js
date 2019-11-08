@@ -136,6 +136,15 @@ const config = {
     Entrust_OTC_Queue: 'Entrust_OTC_CoinId_',
     Order_OTC_Queue: 'Order_OTC_CoinId_',
   },
+  AIMMail: {
+    host: 'smtpdm-ap-southeast-1.aliyun.com',
+    port: '465',
+    secure: true,
+    secureConnection: true,
+    user: 'admin@aimpro.co',
+    pass: 'WnT57JxQqRLo',
+    mailFrom: 'admin@aimpro.co'
+  }
 };
 
 module.exports = config;
