@@ -15,9 +15,10 @@ class SMS_AWS {
     let params = {
       Message: msg, /* required */
       PhoneNumber: "+" + area_code + phone_number,
+      Subject: title,
       MessageAttributes: {
         'AWS.SNS.SMS.SenderID': {'DataType': 'String', 'StringValue': title},
-        'AWS.SNS.SMS.SMSType': {'DataType': 'String', 'StringValue': 'Promotional'}
+        'AWS.SNS.SMS.SMSType': {'DataType': 'String', 'StringValue': 'Transactional'}
       }
     };
     let res = await this.client.publish(params).promise();
