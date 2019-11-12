@@ -4,7 +4,7 @@ const config = {
   coinmarket_api: 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest',
   coinmarket_secret: 'c236b6e8-ede0-40a8-9a66-e60a039aff80',
   currency_api: 'http://www.apilayer.net/api/live',
-  currency_secret: '0baf27b3065f8dd0ae4eb51f1ae6a24a',
+  currency_secret: 'e1a28f4ff94b410787a1a3e581dc468c',
   internal_user_ids: [2],
   gtb_gtt_exchangeId: 28,
   gtt_sell_day_limit: 50000,
