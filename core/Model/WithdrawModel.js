@@ -60,13 +60,10 @@ class WithdrawModel {
       if ([17].indexOf(coinId) >= 0 && submitAmount <= 10000) {
         confirmStatus = 1;
         confirmStatusName = "已审核"
-      } else if ([8, 22].indexOf(coinId) >= 0) {
+      } else if ([8].indexOf(coinId) >= 0) {
         confirmStatus = 1;
         confirmStatusName = "已审核"
-      } else if ([22].indexOf(coinId) >= 0) {
-        confirmStatus = 1;
-        confirmStatusName = "已审核"
-      }
+      } 
      
       await cnt.transaction();
       let withdrawRes = await cnt.edit('m_user_withdraw', {
