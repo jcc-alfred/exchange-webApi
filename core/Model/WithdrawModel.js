@@ -63,13 +63,14 @@ class WithdrawModel {
       } else if ([8].indexOf(coinId) >= 0) {
         confirmStatus = 1;
         confirmStatusName = "已审核"
-      } else if (coinId === 5 && submitAmount <= 300) {
-        let AIM_Deposit = await DepositModel.getUserDepositCountByCoinId(userId, 22);
-        if (AIM_Deposit > 0) {
-          confirmStatus = 1;
-          confirmStatusName = "已审核"
-        }
       }
+      // else if (coinId === 5 && submitAmount <= 300) {
+      //   let AIM_Deposit = await DepositModel.getUserDepositCountByCoinId(userId, 22);
+      //   if (AIM_Deposit > 0) {
+      //     confirmStatus = 1;
+      //     confirmStatusName = "已审核"
+      //   }
+      // }
 
       await cnt.transaction();
       let withdrawRes = await cnt.edit('m_user_withdraw', {
