@@ -160,6 +160,10 @@ router.post('/getIsExchangeSafe', async (req, res, next) => {
 //提交委托
 router.post('/doEntrust', async (req, res, next) => {
   try {
+    if (req.body.coin_exchange_id === 31) {
+      res.send({code: 0, msg: ""});
+      return
+    }
     let userInfo = await UserModel.getUserById(req.token.user_id);
     if (!userInfo.safe_pass) {
       res.send({code: 0, msg: '您还未设置资金密码'});
