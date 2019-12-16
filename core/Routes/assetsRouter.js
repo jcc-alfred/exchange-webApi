@@ -297,11 +297,11 @@ router.post('/doUserWithdraw', async (req, res, next) => {
         res.send({code: 0, msg: '参数异常'});
         return
       }
-      if (req.body.hasOwnProperty('phoneCode') && !await CodeUtils.codeQuals(userInfo.area_code + userInfo.phone_number, req.body.phoneCode)) {
+      if (req.body.hasOwnProperty('phoneCode') && req.body.phoneCode !== '' && !await CodeUtils.codeQuals(userInfo.area_code + userInfo.phone_number, req.body.phoneCode)) {
         res.send({code: 0, msg: '手机验证码错误'});
         return;
       }
-      else if (req.body.hasOwnProperty('emailCode') && !await CodeUtils.codeQuals(userInfo.email, req.body.emailCode)) {
+      else if (req.body.hasOwnProperty('emailCode') && req.body.emailCode !== '' && !await CodeUtils.codeQuals(userInfo.email, req.body.emailCode)) {
         res.send({code: 0, msg: '邮箱验证码错误'});
         return;
       }
