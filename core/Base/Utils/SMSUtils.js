@@ -21,7 +21,9 @@ class SMS_AWS {
         'AWS.SNS.SMS.SMSType': {'DataType': 'String', 'StringValue': 'Transactional'}
       }
     };
+
     let res = await this.client.publish(params).promise();
+    console.log(JSON.stringify(params) + '-----' + JSON.stringify(res));
     return res
   }
 
