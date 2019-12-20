@@ -42,40 +42,7 @@ app.use(cookieSession({
 app.use(express.static(path.join(__dirname, '../public')));
 
 
-// let allowList = [
-//   '/',
-//   '/upload',
-//   '/photo/upload',
-//   '/uploadDocument',
-//   '/uploadQrcode',
-//   '/imgCode',
-//   '/qrcode',
-//   '/user/signUp',
-//   '/user/login',
-//   '/user/authSafety',
-//   '/user/sendCode',
-//   '/user/forgotLoginPass',
-//   '/exchange/getCoinExchangeAreaList',
-//   '/exchange/getMarketList',
-//   '/doc/getHomeNewsList',
-//   '/doc/getNewsList',
-//   '/doc/getNewsModelById',
-//   '/doc/getArticleModelById',
-//   '^/otc/coins',
-//   '/otc/entrustList',
-//   '/otc/entrust/',
-//   // Add for no login
-//   '/exchange/getCoinExchangeList',
-//   '/exchange/getCoinList',
-//   '/market/trade/kline',
-// ];
-//
-// allowList.map(url=>(
-//     app.post(allowList,async(req,res,next)=>{
-//       next();
-//     })
-//   )
-// );
+
 
 app.all('*', async (req, res, next) => {
   let allowList = [
@@ -95,6 +62,7 @@ app.all('*', async (req, res, next) => {
     '/exchange/getCoinExchangeAreaList',
     '/exchange/getMarketList',
     '/exchange/getCoinPrice',
+    '/exchange/getOrderListByCoinExchangeId',
     '/exchange/lastPrice',
     '/doc/getHomeNewsList',
     '/doc/getArticleList',
@@ -104,6 +72,7 @@ app.all('*', async (req, res, next) => {
     '/otc/coins',
     '/otc/entrustList',
     '/otc/entrust/',
+
     // Add for no login
     '/exchange/getCoinExchangeList',
     '/exchange/getCoinList',

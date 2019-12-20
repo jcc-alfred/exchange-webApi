@@ -128,6 +128,24 @@ router.post('/getCoinPrice', async (req, res, next) => {
   }
 });
 
+router.post('/getOrderListByCoinExchangeId', async (req, res, next) => {
+  try {
+    if (!req.body.coinExchangeId) {
+      res.send({code: 0, msg: "coinExchangeId[int] required"})
+    }
+    // let data = await EntrustModel.getOrderListByCoinExchangeId(req.body.coinExchangeId);
+    let orderList = await EntrustModel.getOrderListByCoinExchangeId(req.body.coinExchangeId);
+    let orderListTmp = orderList.sort((item1, item2) => {
+      return item2.order_id - item1.order_id;
+    }).slice(0, 25);
+    res.send({code: 1, msg: '', data: orderListTmp})
+  } catch (error) {
+    res.status(500).end();
+    console.error(error);
+  }
+});
+
+
 //获取交易是否安全
 router.post('/getIsExchangeSafe', async (req, res, next) => {
   try {
