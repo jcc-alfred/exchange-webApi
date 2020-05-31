@@ -95,7 +95,7 @@ class EntrustModel {
         res = {...params, entrust_id: entrustRes.insertId, create_time: Date.now()};
       } else {
         cnt.rollback();
-      }
+      }1
     } catch (error) {
       cnt.rollback();
       console.error(Utils.checkDecimal(Utils.mul(entrustPrice, entrustVolume), 8));
